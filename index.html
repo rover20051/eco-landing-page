@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECO — Escuchar, Conocer y Obedecer</title>
+    <meta name="description" content="ECO es un movimiento de formación y liderazgo para jóvenes que buscan trascender su realidad a través de la fe, la comunidad y el servicio.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- SECTION 1: HEADER + HERO                       -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <header class="header" id="header">
+        <nav class="nav">
+            <a href="#" class="logo" aria-label="ECO - Inicio">ECO</a>
+            <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#que-es">¿Qué es?</a></li>
+                <li><a href="#fases">Fases</a></li>
+                <li><a href="#pilares">Mentores</a></li>
+                <li><a href="#inscripcion">Inscripción</a></li>
+            </ul>
+            <a href="#inscripcion" class="btn btn-red nav-cta">INSCRÍBETE</a>
+        </nav>
+    </header>
+
+    <section class="hero" id="hero">
+        <div class="hero-bg">
+            <img src="images/hero-bg.png" alt="Multitud adorando" loading="eager">
+            <div class="hero-overlay"></div>
+        </div>
+        <div class="hero-content">
+            <h1 class="hero-title fade-up">TRASCIENDE<br>TU REALIDAD</h1>
+            <p class="hero-subtitle fade-up delay-1">Un programa de formación integral para jóvenes líderes que quieren impactar su generación con propósito y fe.</p>
+            <a href="#inscripcion" class="btn btn-yellow fade-up delay-2">EMPEZAR AHORA</a>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- SECTION 2: ¿QUÉ ES ECO?                       -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section class="que-es" id="que-es">
+        <div class="container que-es-grid">
+            <div class="que-es-text fade-up">
+                <span class="section-tag">DESCUBRE</span>
+                <h2 class="section-title">¿QUÉ ES<br><span class="highlight">ECO</span>?</h2>
+                <p class="section-desc">ECO es más que una escuela, es un movimiento. Creemos en el potencial de las nuevas generaciones para transformar su entorno. A través de un programa integral de enseñanza bíblica, mentorías y entrenamiento práctico, preparamos jóvenes líderes para impactar sus comunidades.</p>
+                <p class="section-desc">Cada joven lleva en su interior la capacidad de cambiar el mundo. Nuestro trabajo es ayudarte a descubrirla y activarla.</p>
+                <a href="#fases" class="btn btn-blue">CONOCE MÁS</a>
+            </div>
+            <div class="que-es-media fade-up delay-1">
+                <div class="video-wrapper" id="videoWrapper">
+                    <img src="images/video-thumb.png" alt="Video: Conoce ECO" class="video-thumb" id="videoThumb">
+                    <button class="play-btn" id="playBtn" aria-label="Reproducir video">
+                        <svg viewBox="0 0 80 80" fill="none">
+                            <circle cx="40" cy="40" r="39" stroke="white" stroke-width="2"/>
+                            <polygon points="32,24 58,40 32,56" fill="white"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- SECTION 3: PILARES DE LA ESCUELA               -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section class="pilares" id="pilares">
+        <div class="container">
+            <span class="section-tag section-tag-light">NUESTRA BASE</span>
+            <h2 class="section-title section-title-light">PILARES DE LA<br><span class="highlight-yellow">ESCUELA</span></h2>
+            <div class="pilares-grid">
+                <div class="pilar-card fade-up">
+                    <div class="pilar-icon">
+                        <svg viewBox="0 0 64 64" fill="none">
+                            <circle cx="32" cy="32" r="30" stroke="#E8B931" stroke-width="2"/>
+                            <path d="M22 18h20v28H22z" stroke="#E8B931" stroke-width="1.5"/>
+                            <line x1="32" y1="18" x2="32" y2="46" stroke="#E8B931" stroke-width="1.5"/>
+                            <line x1="26" y1="24" x2="30" y2="24" stroke="#E8B931" stroke-width="1"/>
+                            <line x1="26" y1="28" x2="30" y2="28" stroke="#E8B931" stroke-width="1"/>
+                            <line x1="34" y1="24" x2="38" y2="24" stroke="#E8B931" stroke-width="1"/>
+                            <line x1="34" y1="28" x2="38" y2="28" stroke="#E8B931" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <h3 class="pilar-title">Fundamentos Bíblicos</h3>
+                    <p class="pilar-desc">Construimos liderazgo sobre la base sólida de la Palabra de Dios, formando convicciones que resisten la prueba del tiempo.</p>
+                </div>
+                <div class="pilar-card fade-up delay-1">
+                    <div class="pilar-icon">
+                        <svg viewBox="0 0 64 64" fill="none">
+                            <circle cx="32" cy="32" r="30" stroke="#E8B931" stroke-width="2"/>
+                            <circle cx="32" cy="22" r="6" stroke="#E8B931" stroke-width="1.5"/>
+                            <circle cx="20" cy="30" r="4" stroke="#E8B931" stroke-width="1.5"/>
+                            <circle cx="44" cy="30" r="4" stroke="#E8B931" stroke-width="1.5"/>
+                            <path d="M24 42c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="#E8B931" stroke-width="1.5"/>
+                            <path d="M14 40c0-3.3 2.7-6 6-6" stroke="#E8B931" stroke-width="1.5"/>
+                            <path d="M50 40c0-3.3-2.7-6-6-6" stroke="#E8B931" stroke-width="1.5"/>
+                        </svg>
+                    </div>
+                    <h3 class="pilar-title">Vida en Comunidad</h3>
+                    <p class="pilar-desc">No caminamos solos. El crecimiento real sucede cuando nos rodeamos de personas que comparten nuestra visión y nos desafían a ir más lejos.</p>
+                </div>
+                <div class="pilar-card fade-up delay-2">
+                    <div class="pilar-icon">
+                        <svg viewBox="0 0 64 64" fill="none">
+                            <circle cx="32" cy="32" r="30" stroke="#E8B931" stroke-width="2"/>
+                            <circle cx="32" cy="32" r="14" stroke="#E8B931" stroke-width="1.5"/>
+                            <ellipse cx="32" cy="32" rx="6" ry="14" stroke="#E8B931" stroke-width="1.5"/>
+                            <line x1="18" y1="32" x2="46" y2="32" stroke="#E8B931" stroke-width="1"/>
+                            <line x1="32" y1="18" x2="32" y2="46" stroke="#E8B931" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <h3 class="pilar-title">Entrenamiento Práctico</h3>
+                    <p class="pilar-desc">Aprender haciendo. Nuestro programa combina la enseñanza teórica con experiencias prácticas de servicio, misiones y liderazgo activo.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- SECTION 4: FASES DE LA ESCUELA                 -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section class="fases" id="fases">
+        <div class="container">
+            <span class="section-tag">EL CAMINO</span>
+            <h2 class="section-title">FASES DE LA<br><span class="highlight">ESCUELA</span></h2>
+            <div class="fases-grid">
+                <div class="fase-card fase-card-blue fade-up">
+                    <span class="fase-number">01</span>
+                    <h3 class="fase-title">DESPERTAR</h3>
+                    <p class="fase-desc">El primer paso es reconocer el llamado. En esta fase descubrirás tu identidad, propósito y potencial como líder en el Reino de Dios.</p>
+                    <div class="fase-img-wrapper">
+                        <img src="images/hero-bg.png" alt="Fase Despertar" loading="lazy">
+                    </div>
+                </div>
+                <div class="fase-card fase-card-red fade-up delay-1">
+                    <span class="fase-number">02</span>
+                    <h3 class="fase-title">EQUIPAR</h3>
+                    <p class="fase-desc">Es hora de prepararte. Recibirás herramientas bíblicas, pastorales y prácticas para liderar con excelencia y carácter.</p>
+                    <div class="fase-img-wrapper">
+                        <img src="images/video-thumb.png" alt="Fase Equipar" loading="lazy">
+                    </div>
+                </div>
+                <div class="fase-card fase-card-light fade-up delay-2">
+                    <span class="fase-number">03</span>
+                    <h3 class="fase-title">ENVIAR</h3>
+                    <p class="fase-desc">El propósito de todo lo aprendido es servir. En esta fase serás enviado a poner en acción tu liderazgo en tu comunidad y más allá.</p>
+                    <div class="fase-img-wrapper">
+                        <img src="images/testimonial-larissa.png" alt="Fase Enviar" loading="lazy">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- SECTION 5: BANNER "HAZLO OTRA VEZ"             -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section class="banner-cta" id="banner-cta">
+        <div class="container">
+            <h2 class="banner-title fade-up">
+                <span class="banner-blue">HAZLO OTRA VEZ</span><br>
+                <span class="banner-red">POR UNA NUEVA GENERACIÓN</span>
+            </h2>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- SECTION 6: TESTIMONIOS "ALGO MAYOR"            -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section class="testimonios" id="testimonios">
+        <div class="container">
+            <div class="testimonios-header fade-up">
+                <h2 class="testimonios-title-cursive">Algo Mayor</h2>
+                <span class="testimonios-subtitle">TESTIMONIOS REALES</span>
+            </div>
+            <div class="testimonios-grid">
+                <div class="testimonio-card testimonio-yellow fade-up">
+                    <p class="testimonio-text">"ECO transformó mi manera de ver el ministerio. Aprendí que el liderazgo no se trata de posiciones, sino de servicio."</p>
+                    <span class="testimonio-author">— Matheus H.</span>
+                </div>
+                <div class="testimonio-card testimonio-blue fade-up delay-1">
+                    <p class="testimonio-text">"Encontré una comunidad que me desafió a crecer. Los mentores me acompañaron en cada paso del proceso."</p>
+                    <span class="testimonio-author">— Victor Bonfim</span>
+                </div>
+                <div class="testimonio-card testimonio-photo fade-up delay-1">
+                    <img src="images/testimonial-larissa.png" alt="Larissa Lopes" loading="lazy">
+                    <div class="testimonio-photo-overlay">
+                        <span class="testimonio-author-photo">Larissa Lopes</span>
+                    </div>
+                </div>
+                <div class="testimonio-card testimonio-white fade-up delay-2">
+                    <p class="testimonio-text">"Antes de ECO sentía que no estaba lista para liderar. Hoy entiendo que Dios me preparó para esto. Solo necesitaba el impulso."</p>
+                    <span class="testimonio-author">— Andressa Assis</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- SECTION 7: FAQ (PREGUNTAS FRECUENTES)          -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section class="faq" id="faq">
+        <div class="container">
+            <span class="section-tag section-tag-light">RESUELVE TUS DUDAS</span>
+            <h2 class="section-title section-title-light">Preguntas<br><span class="highlight-yellow">Frecuentes</span></h2>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>¿Puedo trabajar durante el programa?</span>
+                        <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Sí, el programa está diseñado para ser compatible con horarios laborales y académicos. Las sesiones se organizan en horarios flexibles y algunos módulos están disponibles de forma asincrónica para que puedas avanzar a tu ritmo.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>¿Es necesario hablar inglés?</span>
+                        <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p>No, todo el programa se imparte en español. Algunos materiales complementarios pueden estar en otros idiomas, pero no es un requisito.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>¿Qué edad debo tener para aplicar?</span>
+                        <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p>El programa está diseñado para jóvenes entre 16 y 30 años. Sin embargo, evaluamos cada caso de forma individual, por lo que si estás fuera de este rango pero tienes pasión por el liderazgo, no dudes en aplicar.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>¿Tendré acompañamiento pastoral?</span>
+                        <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p>¡Absolutamente! Cada estudiante es asignado a un mentor pastoral que le acompaña durante todo el programa. Además, tendrás acceso a sesiones de consejería y apoyo espiritual permanente.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- SECTION 8: FOOTER                              -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <footer class="footer" id="inscripcion">
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <a href="#" class="logo footer-logo">ECO</a>
+                <p class="footer-desc">Formando líderes que trascienden su realidad para impactar su generación con propósito, fe y excelencia.</p>
+                <div class="footer-socials">
+                    <a href="#" aria-label="Instagram" class="social-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg>
+                    </a>
+                    <a href="#" aria-label="YouTube" class="social-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="4"/><polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none"/></svg>
+                    </a>
+                    <a href="mailto:contacto@eco.org" aria-label="Email" class="social-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">PROGRAMA</h4>
+                <ul class="footer-links">
+                    <li><a href="#que-es">Sobre Nosotros</a></li>
+                    <li><a href="#pilares">Nuestros Profesores</a></li>
+                    <li><a href="#testimonios">Testimonios</a></li>
+                    <li><a href="#">Blog</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">AYUDA</h4>
+                <ul class="footer-links">
+                    <li><a href="#faq">FAQ</a></li>
+                    <li><a href="#inscripcion">Inscripción</a></li>
+                    <li><a href="#">Contacto</a></li>
+                    <li><a href="#">Privacidad</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 ECO Program. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
