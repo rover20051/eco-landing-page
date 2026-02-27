@@ -6,7 +6,10 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // ── Scroll Reveal Animations ─────────────────────────
-    const fadeElements = document.querySelectorAll('.fade-up');
+    // Supports: .fade-up, .scale-in, .slide-left, .slide-right, .text-reveal
+    const animatedElements = document.querySelectorAll(
+        '.fade-up, .scale-in, .slide-left, .slide-right, .text-reveal'
+    );
 
     const revealObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -20,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rootMargin: '0px 0px -60px 0px'
     });
 
-    fadeElements.forEach(el => revealObserver.observe(el));
+    animatedElements.forEach(el => revealObserver.observe(el));
 
 
     // ── Header Scroll Effect ─────────────────────────────
@@ -109,10 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (playBtn && videoWrapper) {
         playBtn.addEventListener('click', () => {
-            // Replace thumbnail with an embedded video iframe or placeholder
-            const videoThumb = document.getElementById('videoThumb');
-            
-            // Create a video placeholder message (replace with actual video URL)
             const videoOverlay = document.createElement('div');
             videoOverlay.style.cssText = `
                 position: absolute;
@@ -124,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 z-index: 10;
                 color: white;
                 font-size: 1.2rem;
-                font-family: var(--font-body);
+                font-family: 'Playfair Display', serif;
                 text-align: center;
                 padding: 24px;
                 cursor: pointer;
@@ -139,7 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
-            // Click overlay to close
             videoOverlay.addEventListener('click', () => {
                 videoOverlay.remove();
                 playBtn.style.display = '';
@@ -172,13 +170,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // ── Parallax on Hero (subtle) ────────────────────────
-    const heroBg = document.querySelector('.hero-bg img');
-    if (heroBg) {
+    // ── Parallax on Hero Video (subtle) ──────────────────
+    const heroVideo = document.querySelector('.hero-bg video');
+    if (heroVideo) {
         window.addEventListener('scroll', () => {
             const scroll = window.scrollY;
             if (scroll < window.innerHeight) {
-                heroBg.style.transform = `translateY(${scroll * 0.3}px) scale(1.1)`;
+                heroVideo.style.transform = `translateY(${scroll * 0.25}px) scale(1.1)`;
             }
         }, { passive: true });
     }
@@ -207,5 +205,64 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { threshold: 0.5 });
 
     faseNumbers.forEach(num => faseObserver.observe(num));
+
+
+    // ── Magnetic Hover Effect on Buttons ──────────────────
+    const magneticBtns = document.querySelectorAll('.btn');
+
+    magneticBtns.forEach(btn => {
+        btn.addEventListener('mousemove', (e) => {
+            const rect = btn.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            btn.style.transform = `translate(${x * 0.15}px, ${y * 0.15}px)`;
+        });
+
+        btn.addEventListener('mouseleave', () => {
+            btn.style.transform = '';
+        });
+    });
+
+
+    // ── Tilt Effect on Cards ─────────────────────────────
+    const tiltCards = document.querySelectorAll('.pilar-card, .testimonio-card');
+
+    tiltCards.forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width;
+            const y = (e.clientY - rect.top) / rect.height;
+            const tiltX = (y - 0.5) * 6;
+            const tiltY = (x - 0.5) * -6;
+
+            card.style.transform = `perspective(600px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateY(-6px)`;
+        });
+
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = '';
+        });
+    });
+
+
+    // ── Smooth Section Indicator (scroll progress) ───────
+    const progressBar = document.createElement('div');
+    progressBar.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--yellow, #E8B931), var(--red, #CC2A12));
+        z-index: 10000;
+        transition: width 0.1s ease;
+        width: 0%;
+    `;
+    document.body.appendChild(progressBar);
+
+    window.addEventListener('scroll', () => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = (scrollTop / docHeight) * 100;
+        progressBar.style.width = `${progress}%`;
+    }, { passive: true });
 
 });

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECO | Plataforma E-Learning</title>
+
+    <!-- Google Fonts: Playfair Display for headings & Inter for dashboard UI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Custom CSS Base -->
+    <link rel="stylesheet" href="styles.css"> <!-- Reusing global colors and basic resets -->
+    <!-- Elearning specific CSS -->
+    <link rel="stylesheet" href="elearning.css">
+
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body class="elearning-body bg-light">
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" class="logo">
+                    <img src="images/eco-logo.png" alt="ECO Logo" class="logo-img logo-dark">
+                </a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-view="dashboard">
+                    <svg viewBox="0 0 24 24" fill="none" class="icon">
+                        <path d="M4 4h6v6H4zm10 0h6v6h-6zM4 14h6v6H4zm10 0h6v6h-6z" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" data-view="modulos">
+                    <svg viewBox="0 0 24 24" fill="none" class="icon">
+                        <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2" />
+                        <path d="M3 10h18" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                    <span>Módulos</span>
+                </button>
+                <button class="nav-item" data-view="logros">
+                    <svg viewBox="0 0 24 24" fill="none" class="icon">
+                        <path d="M12 2l2.4 7.4h7.6l-6 4.6 2.3 7.5L12 17.2l-6.3 4.3 2.3-7.5-6-4.6h7.6z"
+                            stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                    </svg>
+                    <span>Logros</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="theme-toggle" id="themeToggle">
+                    <svg viewBox="0 0 24 24" fill="none" class="icon">
+                        <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <span>Modo Noche</span>
+                </button>
+
+                <div class="user-profile">
+                    <div class="avatar">MA</div>
+                    <div class="user-info">
+                        <span class="user-name">Mateo Arriaga</span>
+                        <span class="user-level">Nivel 4 Participante</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="mainContent">
+
+            <!-- View: Dashboard -->
+            <section id="view-dashboard" class="view-section active">
+                <header class="top-bar">
+                    <div class="header-left">
+                        <h1 class="page-title">¡Hola, Mateo!</h1>
+                        <p class="page-subtitle">Es un gran día para seguir creciendo y transformando tu entorno.</p>
+                    </div>
+                </header>
+
+                <div class="dashboard-content">
+                    <!-- Continuar donde lo dejaste -->
+                    <div class="dash-quick-access">
+                        <h2 class="dash-section-title">Continuar donde lo dejaste</h2>
+                        <div class="resume-card" onclick="window.location.hash='#leccion'" style="cursor: pointer;">
+                            <div class="resume-video-thumb">
+                                <img src="images/teens-worshipping.png" alt="Lección 3"
+                                    style="filter: hue-rotate(180deg);" class="resume-img">
+                                <div class="play-overlay">
+                                    <svg viewBox="0 0 24 24" fill="white">
+                                        <path d="M8 5v14l11-7z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="resume-info">
+                                <span class="module-tag tag-blue">MÓDULO 2 • LECCIÓN 3</span>
+                                <h3>Cómo el <span class="eco-font">ECO</span> transforma tus relaciones diarias</h3>
+                                <div class="resume-progress">
+                                    <div class="progress-bar-bg"
+                                        style="flex:1; height:6px; background:#E5E7EB; border-radius:3px; overflow:hidden;">
+                                        <div class="progress-bar-fill"
+                                            style="width: 65%; height:100%; background:var(--red);"></div>
+                                    </div>
+                                    <span class="progress-text"
+                                        style="font-size:0.8rem; color:#6B7280; font-weight:600; white-space:nowrap;">12:04
+                                        / 18:30</span>
+                                </div>
+                                <button class="btn-primary-full btn-resume" style="margin-top:auto;">REANUDAR
+                                    LECCIÓN</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dash-bottom-grid">
+                        <!-- Métricas de Impacto -->
+                        <div class="dash-metrics">
+                            <h2 class="dash-section-title">Tu Impacto</h2>
+                            <div class="metrics-grid">
+                                <div class="metric-card bg-light-yellow">
+                                    <div class="metric-icon stat-icon-yellow">
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                        </svg>
+                                    </div>
+                                    <span class="metric-value">2,450</span>
+                                    <span class="metric-label"><span class="eco-font">ECO</span> Puntos</span>
+                                </div>
+                                <div class="metric-card bg-light-blue">
+                                    <div class="metric-icon stat-icon-blue">
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z" />
+                                        </svg>
+                                    </div>
+                                    <span class="metric-value">14 días</span>
+                                    <span class="metric-label">Racha Activa</span>
+                                </div>
+                                <div class="metric-card bg-light-gray" style="background:#F3F4F6;">
+                                    <div class="metric-icon" style="background: var(--blue-dark); color: white;">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+                                            <path d="M22 4L12 14.01l-3-3"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="metric-value">3 / 8</span>
+                                    <span class="metric-label">Módulos OK</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Próximos Pasos -->
+                        <div class="dash-next-steps">
+                            <h2 class="dash-section-title">Próximos Pasos</h2>
+                            <ul class="steps-list">
+                                <li class="step-item">
+                                    <div class="step-date">
+                                        <span class="date-day">15</span>
+                                        <span class="date-month">OCT</span>
+                                    </div>
+                                    <div class="step-info">
+                                        <h4>Zoom de Mentoría Grupal</h4>
+                                        <p>19:00 hs - Link en tu correo</p>
+                                    </div>
+                                </li>
+                                <li class="step-item">
+                                    <div class="step-date warning">
+                                        <span class="date-day">18</span>
+                                        <span class="date-month">OCT</span>
+                                    </div>
+                                    <div class="step-info">
+                                        <h4>Entrega Tarea Módulo 2</h4>
+                                        <p>Reflexión personal sobre el servicio</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View: Mis Logros -->
+            <section id="view-logros" class="view-section">
+                <header class="top-bar">
+                    <div class="header-left">
+                        <h1 class="page-title">Mis Logros</h1>
+                        <p class="page-subtitle">Tu camino como líder ECO se refleja en tus insignias.</p>
+                    </div>
+                    <div class="header-right stats-container">
+                        <div class="stat-pill">
+                            <div class="stat-icon stat-icon-yellow">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                </svg>
+                            </div>
+                            <div class="stat-details">
+                                <span class="stat-label">PUNTOS</span>
+                                <span class="stat-value">2,450</span>
+                            </div>
+                        </div>
+                        <div class="stat-pill">
+                            <div class="stat-icon stat-icon-blue">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 15l-4-4h8l-4 4zm0-10l4 4H8l4-4z" />
+                                </svg>
+                            </div>
+                            <div class="stat-details">
+                                <span class="stat-label">RANGO</span>
+                                <span class="stat-value">#14</span>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="logros-content">
+                    <!-- Progress Bar -->
+                    <div class="progress-section">
+                        <div class="progress-header">
+                            <span class="progress-title"><strong>Colección Total</strong> 8 de 24 insignias
+                                desbloqueadas</span>
+                            <span class="progress-percent">33%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: 33%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Badges Grid -->
+                    <div class="badges-grid">
+                        <!-- Unlocked Badge 1 -->
+                        <div class="badge-card unlocked">
+                            <div class="badge-icon-wrapper red-bg">
+                                <svg class="badge-svg" viewBox="0 0 24 24" fill="white">
+                                    <path
+                                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                                </svg>
+                                <div class="badge-check"><svg viewBox="0 0 24 24" fill="none" stroke="white"
+                                        stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg></div>
+                            </div>
+                            <h3 class="badge-title">Reflexivo Nivel 2</h3>
+                            <p class="badge-desc">Por completar 10 reflexiones profundas</p>
+                            <span class="badge-status">DESBLOQUEADO</span>
+                        </div>
+
+                        <!-- Unlocked Badge 2 -->
+                        <div class="badge-card unlocked">
+                            <div class="badge-icon-wrapper blue-bg">
+                                <svg class="badge-svg" viewBox="0 0 24 24" fill="white">
+                                    <path
+                                        d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.25.59 2.58.59 3.96 0 2.64-2.14 4.88-4.8 4.88z" />
+                                </svg>
+                                <div class="badge-check"><svg viewBox="0 0 24 24" fill="none" stroke="white"
+                                        stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg></div>
+                            </div>
+                            <h3 class="badge-title">Primer Paso</h3>
+                            <p class="badge-desc">Iniciaste tu viaje en el programa ECO</p>
+                            <span class="badge-status">DESBLOQUEADO</span>
+                        </div>
+
+                        <!-- Unlocked Badge 3 -->
+                        <div class="badge-card unlocked">
+                            <div class="badge-icon-wrapper yellow-bg">
+                                <svg class="badge-svg" viewBox="0 0 24 24" fill="white">
+                                    <path
+                                        d="M11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.25.59 2.58.59 3.96 0 2.64-2.14 4.88-4.8 4.88z" />
+                                </svg>
+                                <div class="badge-check"><svg viewBox="0 0 24 24" fill="none" stroke="white"
+                                        stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg></div>
+                            </div>
+                            <h3 class="badge-title">Racha de Fuego</h3>
+                            <p class="badge-desc">Entraste 5 días seguidos a la plataforma</p>
+                            <span class="badge-status">DESBLOQUEADO</span>
+                        </div>
+
+                        <!-- Unlocked Badge 4 -->
+                        <div class="badge-card unlocked">
+                            <div class="badge-icon-wrapper red-bg">
+                                <svg class="badge-svg" viewBox="0 0 24 24" fill="white">
+                                    <path
+                                        d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                                </svg>
+                                <div class="badge-check"><svg viewBox="0 0 24 24" fill="none" stroke="white"
+                                        stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg></div>
+                            </div>
+                            <h3 class="badge-title">Líder Social</h3>
+                            <p class="badge-desc">Tu primera participación en la comunidad</p>
+                            <span class="badge-status">DESBLOQUEADO</span>
+                        </div>
+
+                        <!-- Locked Badge 1 -->
+                        <div class="badge-card locked">
+                            <div class="badge-icon-wrapper grey-bg">
+                                <svg class="badge-svg" viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)">
+                                    <path
+                                        d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72l5 2.73 5-2.73v3.72z" />
+                                </svg>
+                                <div class="badge-lock"><svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" />
+                                    </svg></div>
+                            </div>
+                            <h3 class="badge-title">Maestro <span class="eco-font">ECO</span></h3>
+                            <p class="badge-desc">Completa todos los módulos básicos</p>
+                            <span class="badge-status">BLOQUEADO</span>
+                        </div>
+
+                        <!-- Locked Badge 2 -->
+                        <div class="badge-card locked">
+                            <div class="badge-icon-wrapper grey-bg">
+                                <svg class="badge-svg" viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)">
+                                    <path
+                                        d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-1.3l-.85-.6A6.997 6.997 0 017 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z" />
+                                </svg>
+                                <div class="badge-lock"><svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" />
+                                    </svg></div>
+                            </div>
+                            <h3 class="badge-title">Gran Visionario</h3>
+                            <p class="badge-desc">Crea tu primer proyecto de impacto</p>
+                            <span class="badge-status">BLOQUEADO</span>
+                        </div>
+
+                        <!-- Special Badge -->
+                        <div class="badge-card special-badge">
+                            <div class="special-badge-info">
+                                <div class="special-tags">
+                                    <span class="tag-dark">TROFEO ESPECIAL</span>
+                                    <span class="tag-blue">Escucha Activa</span>
+                                </div>
+                                <h3 class="badge-title">Explorador del <span class="eco-font">ECO</span></h3>
+                                <p class="badge-desc">Desbloqueado al completar todas las sesiones del Módulo 1 con
+                                    reflexiones perfectas.</p>
+                                <button class="share-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" />
+                                    </svg> COMPARTIR LOGRO</button>
+                            </div>
+                            <div class="special-icon-wrapper">
+                                <svg class="trophy-svg" viewBox="0 0 24 24" fill="white">
+                                    <path
+                                        d="M19 3H5c-1.1 0-2 .9-2 2v2c0 1.66 1.34 3 3 3h2.12c.79 3.01 3.52 5.21 6.88 5.21V19H10v2h4v-2h-1.88v-3.79c3.36 0 6.09-2.2 6.88-5.21H21c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 5h-2.11c-.41-1.63-1.17-3.08-2.13-4h3.24c.55 0 1 .45 1 1v3zm-9 0H6c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1h3.24c-.95.92-1.72 2.37-2.13 4z" />
+                                </svg>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Toast Notification -->
+                <div class="toast-notification">
+                    <div class="toast-icon">🥇</div>
+                    <div class="toast-text">
+                        <span class="toast-title">¡NUEVAS INSIGNIAS DISPONIBLES!</span>
+                        <span class="toast-desc">Sigue avanzando para desbloquearlas.</span>
+                    </div>
+                    <button class="toast-close">×</button>
+                </div>
+            </section>
+
+            <!-- View: Módulos -->
+            <section id="view-modulos" class="view-section">
+                <header class="top-bar">
+                    <div class="header-left">
+                        <h1 class="page-title">Explora tus Módulos</h1>
+                        <p class="page-subtitle">Continúa tu camino hacia el liderazgo</p>
+                    </div>
+                    <div class="header-right general-progress">
+                        <div class="progress-info">
+                            <span class="progress-label">TU PROGRESO GENERAL</span>
+                            <div class="progress-bar-container">
+                                <div class="progress-track">
+                                    <div class="progress-fill" style="width: 45%;"></div>
+                                </div>
+                                <span class="progress-percent">45%</span>
+                            </div>
+                        </div>
+                        <button class="icon-btn notif-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                    </div>
+                </header>
+
+                <div class="modulos-content">
+                    <div class="filters-bar">
+                        <div class="filter-tabs">
+                            <button class="filter-btn active">TODOS</button>
+                            <button class="filter-btn">EN CURSO</button>
+                            <button class="filter-btn">COMPLETADOS</button>
+                        </div>
+                        <span class="modules-count">8 Módulos en total</span>
+                    </div>
+
+                    <div class="modules-grid">
+                        <!-- Module: Completed -->
+                        <div class="module-card">
+                            <div class="module-image-container">
+                                <img src="images/teens-worshipping.png" alt="Módulo 1" class="module-img"
+                                    style="filter: grayscale(100%);">
+                                <span class="module-tag tag-red">COMPLETADO</span>
+                                <div class="module-check"><svg viewBox="0 0 24 24" fill="none" stroke="white"
+                                        stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg></div>
+                            </div>
+                            <div class="module-body">
+                                <span class="module-num">MÓDULO 01</span>
+                                <h3 class="module-title">La Base del <span class="eco-font">ECO</span>: Escuchar</h3>
+                                <p class="module-desc">Descubre el poder del silencio y cómo la escucha activa puede
+                                    transformar tú entorno inmediato.</p>
+                                <div class="module-footer">
+                                    <div class="avatars-group">
+                                        <div class="avatar-mini" style="background:#162444">JS</div>
+                                        <div class="avatar-mini" style="background:#D32F2F">LC</div>
+                                        <div class="avatar-mini" style="background:#E8B931; color:#000">+2k</div>
+                                    </div>
+                                    <button class="link-btn">Repasar →</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Module: In Progress -->
+                        <div class="module-card">
+                            <div class="module-image-container">
+                                <img src="images/teens-worshipping.png" alt="Módulo 2" class="module-img"
+                                    style="filter: hue-rotate(180deg);">
+                                <span class="module-tag tag-blue">EN PROGRESO</span>
+                            </div>
+                            <div class="module-body">
+                                <span class="module-num">MÓDULO 02</span>
+                                <h3 class="module-title">Conectar con Empatía</h3>
+                                <p class="module-desc">Aprende a ponerte en los zapatos de los demás para construir
+                                    puentes de diálogo y entendimiento.</p>
+                                <div class="module-progress">
+                                    <div class="progress-details">
+                                        <span class="progress-label-sm">PROGRESO</span>
+                                        <span class="progress-val-sm">65%</span>
+                                    </div>
+                                    <div class="progress-track">
+                                        <div class="progress-fill" style="width: 65%;"></div>
+                                    </div>
+                                </div>
+                                <button class="btn-primary-full">CONTINUAR ▷</button>
+                            </div>
+                        </div>
+
+                        <!-- Module: Locked 1 -->
+                        <div class="module-card locked-module">
+                            <div class="module-image-container">
+                                <div class="module-img img-placeholder" style="background-color: #E5E7EB;"></div>
+                                <div class="lock-overlay">
+                                    <svg viewBox="0 0 24 24" fill="white" class="lock-icon">
+                                        <path
+                                            d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="module-body">
+                                <span class="module-num">MÓDULO 03</span>
+                                <h3 class="module-title">Organizar el Cambio</h3>
+                                <p class="module-desc">Convierte la empatía en acción colectiva organizando proyectos
+                                    que resuelvan problemas reales.</p>
+                                <div class="locked-footer">
+                                    <span class="locked-text">DESBLOQUEA AL TERMINAR MOD 2</span>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                        class="info-icon">
+                                        <circle cx="12" cy="12" r="10" />
+                                        <path d="M12 16v-4M12 8h.01" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Module: Locked 2 -->
+                        <div class="module-card locked-module">
+                            <div class="module-image-container">
+                                <div class="module-img img-placeholder" style="background-color: #E5E7EB;"></div>
+                                <div class="lock-overlay">
+                                    <svg viewBox="0 0 24 24" fill="white" class="lock-icon">
+                                        <path
+                                            d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="module-body">
+                                <span class="module-num">MÓDULO 04</span>
+                                <h3 class="module-title">Liderazgo Resonante</h3>
+                                <p class="module-desc">El paso final: cómo mantener el ECO vibrando a través del tiempo
+                                    en tu comunidad.</p>
+                            </div>
+                        </div>
+
+                        <!-- New Content Placeholder -->
+                        <div class="module-card new-content-card">
+                            <div class="new-content-inner">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    class="sparkle-icon">
+                                    <path
+                                        d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                                </svg>
+                                <h4>NUEVOS RETOS</h4>
+                                <p>Estamos preparando más contenido increíble para tu crecimiento.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Toast Racha -->
+                <div class="toast-notification">
+                    <div class="toast-icon tag-red" style="padding: 8px; border-radius: 50%;">🔥</div>
+                    <div class="toast-text">
+                        <span class="toast-title">TU RACHA ACTUAL</span>
+                        <span class="toast-desc">🔥 4 Días Consecutivos</span>
+                    </div>
+                    <button class="toast-close">×</button>
+                </div>
+            </section>
+
+            <!-- View: Lección Detail -->
+            <section id="view-leccion" class="view-section">
+                <!-- Video Layout Top Bar is integrated differently in this design -->
+                <div class="leccion-top-bar">
+                    <div class="leccion-progress">
+                        <span class="progress-label-sm">PROGRESO MÓDULO 2</span>
+                        <div class="progress-bar-container" style="flex:1; margin: 0 16px;">
+                            <div class="progress-track" style="width: 100%;">
+                                <div class="progress-fill" style="width: 65%; background: var(--primary);"></div>
+                            </div>
+                        </div>
+                        <span class="progress-val-sm" style="color: var(--primary);">65%</span>
+                    </div>
+                    <div class="racha-pill">
+                        🔥 4 Días de Racha
+                    </div>
+                </div>
+
+                <div class="leccion-container">
+                    <!-- Left Column: Video & Content -->
+                    <div class="leccion-main">
+                        <div class="video-player-wrapper">
+                            <!-- Placeholder for actual video iframe or video tag -->
+                            <img src="images/teens-worshipping.png" alt="Video Placeholder" class="video-poster">
+                            <button class="play-btn-large">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M8 5v14l11-7z" />
+                                </svg>
+                            </button>
+                            <div class="video-controls">
+                                <div class="control-left">
+                                    <button class="control-btn"><svg viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <rect x="6" y="4" width="4" height="16" />
+                                            <rect x="14" y="4" width="4" height="16" />
+                                        </svg></button>
+                                    <div class="video-timeline">
+                                        <div class="timeline-fill" style="width: 25%;"></div>
+                                        <div class="timeline-thumb"></div>
+                                    </div>
+                                    <span class="time-display">12:40 / 12:45</span>
+                                </div>
+                                <div class="control-right">
+                                    <button class="control-btn"><svg viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="3" />
+                                            <path
+                                                d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+                                        </svg></button>
+                                    <button class="control-btn"><svg viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <path
+                                                d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3" />
+                                        </svg></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="leccion-tabs-container">
+                            <div class="leccion-tabs-nav">
+                                <button class="tab-btn active"
+                                    onclick="switchLeccionTab('contenido')">Contenido</button>
+                                <button class="tab-btn" onclick="switchLeccionTab('tareas')">Tareas</button>
+                                <button class="tab-btn locked-tab" title="Se desbloquea al finalizar el video">
+                                    Cuestionario
+                                    <svg viewBox="0 0 24 24" fill="currentColor" class="tab-lock-icon">
+                                        <path
+                                            d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- TAB: Contenido -->
+                            <div class="leccion-tab-content active" id="tab-contenido">
+                                <div class="leccion-content-box outline-box">
+                                    <div class="breadcrumbs">
+                                        <span class="module-tag tag-blue">MÓDULO 02</span>
+                                        <span class="breadcrumb-sep">/</span>
+                                        <span class="breadcrumb-current">Lección 4: Escuchar con Empatía</span>
+                                    </div>
+                                    <h1 class="leccion-title">Cómo el "<span class="eco-font">ECO</span>" transforma tus
+                                        relaciones diarias</h1>
+                                    <p class="leccion-text">
+                                        En esta sesión profundizamos en el primer pilar: <strong
+                                            style="color: #D32F2F;">Escuchar.</strong>
+                                        Aprenderemos por qué el silencio es la herramienta más poderosa para un líder
+                                        joven y
+                                        cómo identificar las señales no verbales de nuestro entorno.
+                                    </p>
+                                    <div class="leccion-actions">
+                                        <button class="btn-outline"><svg viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                                <polyline points="14 2 14 8 20 8" />
+                                                <line x1="16" y1="13" x2="8" y2="13" />
+                                                <line x1="16" y1="17" x2="8" y2="17" />
+                                                <polyline points="10 9 9 9 8 9" />
+                                            </svg> GUÍA DE PDF</button>
+                                        <button class="btn-outline"><svg viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path
+                                                    d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                                            </svg> RECURSOS</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TAB: Tareas -->
+                            <div class="leccion-tab-content" id="tab-tareas">
+                                <div class="leccion-content-box outline-box">
+                                    <h2 class="leccion-title" style="font-size:1.5rem;">Entregable: Reflexión Práctica
+                                    </h2>
+                                    <p class="leccion-text">Aplica lo aprendido. Escribe una reflexión de al menos 300
+                                        palabras sobre una situación reciente donde aplicaste (o pudiste haber aplicado)
+                                        el principio de "Conocer" antes de "Obedecer" en una relación personal.</p>
+
+                                    <div class="tarea-upload-box">
+                                        <div class="upload-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="17 8 12 3 7 8"></polyline>
+                                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                                            </svg>
+                                        </div>
+                                        <p>Adjunta tu archivo PDF o DOCX aquí</p>
+                                        <button class="btn-outline"
+                                            style="padding: 8px 16px; font-size: 0.8rem;">SELECCIONAR ARCHIVO</button>
+                                    </div>
+
+                                    <div class="tarea-divider">O redacta tu respuesta directamente:</div>
+
+                                    <textarea class="tarea-textarea"
+                                        placeholder="Escribe tu reflexión aquí..."></textarea>
+                                    <button class="btn-primary-full"
+                                        style="width: auto; align-self: flex-start; padding: 12px 32px;">ENVIAR
+                                        TAREA</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Toast Notification Leccion -->
+                    <div class="toast-notification">
+                        <div class="toast-icon">
+                            <svg viewBox="0 0 24 24" fill="var(--primary)" width="32" height="32">
+                                <path
+                                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                            </svg>
+                        </div>
+                        <div class="toast-text">
+                            <span class="toast-title">NUEVO LOGRO DESBLOQUEADO</span>
+                            <span class="toast-desc">Reflexivo Nivel 2</span>
+                        </div>
+                        <button class="toast-close">×</button>
+                    </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Elearning Logic Scripts -->
+    <script src="elearning.js"></script>
+</body>
+
+</html>
