@@ -366,6 +366,96 @@ async function saveProfile() {
     showToast('Perfil actualizado', 'Tus cambios fueron guardados.');
 }
 
+// ═══════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════════════
+
+function setupNotifications() {
+    const notifBtn = document.getElementById('notificationsWidget');
+    const markReadBtn = document.getElementById('markAllReadBtn');
+    const closeBtn = document.getElementById('closeNotificationsModal');
+
+    if (notifBtn) {
+        notifBtn.addEventListener('mouseenter', markNotificationsAsRead);
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            const drop = document.getElementById('notificationsDropdown');
+            if (drop) drop.style.display = 'none';
+        });
+    }
+
+    if (markReadBtn) {
+        markReadBtn.addEventListener('click', () => {
+            const body = document.getElementById('notificationsModalBody');
+            if (body) body.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-muted);"><p>No tienes notificaciones nuevas.</p></div>';
+            const drop = document.getElementById('notificationsDropdown');
+            if (drop) drop.style.display = 'none';
+            markNotificationsAsRead();
+        });
+    }
+}
+
+async function loadNotifications() {
+    const badge = document.getElementById('notificationBadge');
+    const body = document.getElementById('notificationsModalBody');
+    if (!badge || !body) return;
+
+    try {
+        const { data: assignments } = await sb.from('assignments')
+            .select('*, lessons(title, modules(id, module_number))')
+            .eq('user_id', currentUser.id)
+            .eq('status', 'graded')
+            .order('graded_at', { ascending: false });
+
+        if (!assignments || assignments.length === 0) {
+            body.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-muted);"><p>No tienes notificaciones nuevas.</p></div>';
+            return;
+        }
+
+        const lastReadTime = localStorage.getItem(`notifs_read_${currentUser.id}`) || '1970-01-01T00:00:00Z';
+        const newCount = assignments.filter(a => new Date(a.graded_at || a.updated_at) > new Date(lastReadTime)).length;
+
+        if (newCount > 0) {
+            badge.style.display = 'flex';
+            badge.textContent = newCount > 9 ? '+9' : newCount;
+        } else {
+            badge.style.display = 'none';
+        }
+
+        body.innerHTML = assignments.map(a => `
+            <div style="padding:12px 16px; border-bottom:1px solid var(--border-color); cursor:pointer; transition:background 0.2s ease; ${new Date(a.graded_at || a.updated_at) > new Date(lastReadTime) ? 'background:rgba(232, 185, 49, 0.08);' : ''}" 
+                 onmouseover="this.style.background='rgba(22,36,68,0.03)'" 
+                 onmouseout="this.style.background='${new Date(a.graded_at || a.updated_at) > new Date(lastReadTime) ? 'rgba(232, 185, 49, 0.08)' : ''}'"
+                 onclick="openLessonFromNotification('${a.lesson_id}', '${a.lessons?.modules?.id}')">
+                <p style="margin:0 0 6px 0; font-size:0.75rem; color:var(--text-muted);">${new Date(a.graded_at || a.updated_at).toLocaleString('es', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                <h4 style="margin:0 0 6px 0; font-size:0.95rem; color:var(--text-main);">Tu tarea en Mod ${a.lessons?.modules?.module_number || ''}</h4>
+                <div style="background:#ECFDF5; padding:10px; border-radius:6px; font-size:0.85rem; border:1px solid #D1FAE5;">
+                    <p style="margin:0 0 4px 0; color:#065F46;"><strong>Nota: ${a.grade}/100</strong></p>
+                    <p style="margin:0; color:#065F46;">${a.feedback ? `"${a.feedback}"` : '¡Buen trabajo! Tarea aprobada.'}</p>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        console.error("Error loading notifications: ", e);
+    }
+}
+
+function markNotificationsAsRead() {
+    localStorage.setItem(`notifs_read_${currentUser.id}`, new Date().toISOString());
+    const badge = document.getElementById('notificationBadge');
+    if (badge) badge.style.display = 'none';
+}
+
+function openLessonFromNotification(lessonId, moduleId) {
+    if (moduleId) currentModuleId = moduleId;
+    switchView('modulos');
+    openLesson(lessonId, moduleId);
+    const drop = document.getElementById('notificationsDropdown');
+    if (drop) drop.style.display = 'none';
+}
+
 function switchView(viewId) {
     document.querySelectorAll('.nav-item[data-view]').forEach(item => {
         item.classList.toggle('active', item.dataset.view === viewId);
