@@ -1090,6 +1090,33 @@ ul {
 
 
 /* ═══════════════════════════════════════════════════════
+   SECTION 7.7: INSCRIPCIÓN
+   ═══════════════════════════════════════════════════════ */
+.inscripcion {
+    padding: 100px 0;
+    background: var(--off-white);
+}
+.form-embed-wrapper {
+    max-width: 720px;
+    margin: 0 auto;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    background: white;
+}
+.form-embed-wrapper iframe {
+    display: block;
+    width: 100%;
+    min-height: 800px;
+    border: none;
+}
+@media (max-width: 768px) {
+    .form-embed-wrapper iframe {
+        min-height: 600px;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════
    SECTION 8: FOOTER
    ═══════════════════════════════════════════════════════ */
 .footer {
