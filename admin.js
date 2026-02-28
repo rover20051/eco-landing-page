@@ -16,10 +16,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     currentUser = session.user;
     const { data: profile } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
-
-    if (!profile || profile.role !== 'admin') {
+    if (!profile || (profile.role !== 'admin' && profile.role !== 'mentor')) {
         window.location.href = 'elearning.html';
         return;
+    }
+
+    if (profile.role === 'mentor') {
+        const style = document.createElement('style');
+        style.textContent = `
+            #createStudentBtn, #createModuleBtn { display: none !important; }
+            button[onclick*="openEditStudentModal"] { display: none !important; }
+            button[onclick*="confirmDelete"] { display: none !important; }
+            button[onclick*="editModule"] { display: none !important; }
+            button[onclick*="deleteModule"] { display: none !important; }
+            button[onclick*="editLesson"] { display: none !important; }
+            button[onclick*="deleteLesson"] { display: none !important; }
+            button[onclick*="manageLessonResources"] { display: none !important; }
+            button[onclick*="showCreateLessonModal"] { display: none !important; }
+            button[onclick*="showCreateQuestionModal"] { display: none !important; }
+            button[onclick*="deleteResource"] { display: none !important; }
+            button[onclick*="editQuestion"] { display: none !important; }
+            button.btn-danger, button.btn-warning { display: none !important; }
+        `;
+        document.head.appendChild(style);
     }
 
     setupNavigation();
@@ -835,12 +854,59 @@ async function viewAssignment(assignmentId) {
     }
 
     if (a.file_url) {
-        let downloadLink = a.file_url;
-        if (!a.file_url.startsWith('http')) {
-            const { data } = await sb.storage.from('assignments').createSignedUrl(a.file_url, 3600);
-            if (data && data.signedUrl) downloadLink = data.signedUrl;
+        let path = a.file_url;
+        if (path.includes('/object/public/assignments/')) {
+            path = path.split('/object/public/assignments/')[1];
+        } else if (path.includes('/object/sign/assignments/')) {
+            path = path.split('/object/sign/assignments/')[1].split('?')[0];
         }
-        html += `<p><a href="${downloadLink}" target="_blank" class="btn-secondary">Descargar archivo adjunto</a></p>`;
+
+        html += `<p><button id="btnDownloadAssignmentFile" class="btn-secondary" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 
+            Descargar archivo adjunto
+        </button></p>`;
+
+        // Ejecutamos la inyección del evento despues de renderizar el html
+        setTimeout(() => {
+            const btnDown = document.getElementById('btnDownloadAssignmentFile');
+            if (btnDown) {
+                btnDown.addEventListener('click', async () => {
+                    const originalText = btnDown.innerHTML;
+                    btnDown.innerHTML = 'Descargando...';
+                    btnDown.disabled = true;
+
+                    try {
+                        let targetPath = path;
+                        // Forzar a buscar sin "http" si aún se filtró
+                        if (targetPath.startsWith('http')) {
+                            targetPath = targetPath.substring(targetPath.lastIndexOf('/') + 1);
+                        }
+
+                        // Descarga de blob con el SDK
+                        const { data, error } = await sb.storage.from('assignments').download(targetPath);
+                        if (error) throw error;
+
+                        // Generar link local
+                        const url = URL.createObjectURL(data);
+                        const aLink = document.createElement('a');
+                        aLink.href = url;
+                        // Intentamos adivinar el nombre extraido de la ruta
+                        aLink.download = targetPath.split('/').pop() || 'tarea_adjunta';
+                        document.body.appendChild(aLink);
+                        aLink.click();
+                        document.body.removeChild(aLink);
+                        URL.revokeObjectURL(url);
+
+                    } catch (err) {
+                        showAdminToast('Error de descarga: El archivo pudo haber sido borrado.', 'error');
+                        console.error('Storage Download Error:', err);
+                    } finally {
+                        btnDown.innerHTML = originalText;
+                        btnDown.disabled = false;
+                    }
+                });
+            }
+        }, 100);
     }
 
     if (a.status === 'graded') {

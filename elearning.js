@@ -198,8 +198,8 @@ async function initApp() {
     const { data: profile } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
     currentProfile = profile;
 
-    // Check if admin
-    if (currentProfile && currentProfile.role === 'admin') {
+    // Check if admin or mentor
+    if (currentProfile && (currentProfile.role === 'admin' || currentProfile.role === 'mentor')) {
         window.location.href = 'admin.html';
         return;
     }
