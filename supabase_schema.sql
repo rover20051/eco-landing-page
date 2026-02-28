@@ -503,6 +503,13 @@ CREATE POLICY "Students can view own assignments"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'assignments' AND auth.uid()::text = (storage.foldername(name))[1]);
 
+DROP POLICY IF EXISTS "Admins and Mentors can view all assignments" ON storage.objects;
+CREATE POLICY "Admins and Mentors can view all assignments"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'assignments' AND EXISTS (
+    SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'mentor')
+  ));
+
 DROP POLICY IF EXISTS "Admins can manage lesson resources storage" ON storage.objects;
 CREATE POLICY "Admins can manage lesson resources storage"
   ON storage.objects FOR ALL

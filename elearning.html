@@ -18,6 +18,25 @@
 <body class="elearning-body bg-light">
 
     <!-- ══════════════════════════════════════════════════ -->
+    <!-- NOTIFICATIONS MODAL                                -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="notificationsModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="notificationsModalTitle">Notificaciones</h2>
+                <button class="modal-close" id="closeNotificationsModal">&times;</button>
+            </div>
+            <div class="modal-body" id="notificationsModalBody" style="max-height: 400px; overflow-y: auto;">
+                <!-- Notifications content generated here -->
+            </div>
+            <div class="modal-footer"
+                style="padding:16px; border-top:1px solid var(--border-color, #e5e7eb); text-align:right;">
+                <button class="btn-secondary" id="markAllReadBtn">Marcar todas como leídas</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════ -->
     <!-- LOGIN SCREEN                                       -->
     <!-- ══════════════════════════════════════════════════ -->
     <div id="login-screen" class="login-screen">
@@ -72,21 +91,21 @@
                         <path d="M4 4h6v6H4zm10 0h6v6h-6zM4 14h6v6H4zm10 0h6v6h-6z" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
-                    <span>Dashboard</span>
+                    <span class="nav-text">Dashboard</span>
                 </button>
                 <button class="nav-item" data-view="modulos">
                     <svg viewBox="0 0 24 24" fill="none" class="icon">
                         <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2" />
                         <path d="M3 10h18" stroke="currentColor" stroke-width="2" />
                     </svg>
-                    <span>Módulos</span>
+                    <span class="nav-text">Módulos</span>
                 </button>
                 <button class="nav-item" data-view="logros">
                     <svg viewBox="0 0 24 24" fill="none" class="icon">
                         <path d="M12 2l2.4 7.4h7.6l-6 4.6 2.3 7.5L12 17.2l-6.3 4.3 2.3-7.5-6-4.6h7.6z"
                             stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
                     </svg>
-                    <span>Logros</span>
+                    <span class="nav-text">Logros</span>
                 </button>
             </nav>
 
@@ -123,14 +142,36 @@
                     </div>
                 </div>
 
-                <!-- Theme toggle -->
-                <button class="theme-toggle" id="themeToggle">
-                    <svg viewBox="0 0 24 24" fill="none" class="icon" id="themeIcon">
-                        <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                    <span id="themeLabel">Modo Noche</span>
-                </button>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <!-- Theme toggle -->
+                    <button class="theme-toggle" id="themeToggle"
+                        style="width:100%; border:none; padding:8px; border-radius:8px; display:flex; align-items:center; gap:16px;">
+                        <svg viewBox="0 0 24 24" fill="none" class="icon" id="themeIcon"
+                            style="width:20px; height:20px; flex-shrink:0;">
+                            <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span id="themeLabel" class="nav-text"
+                            style="opacity:0; width:0; overflow:hidden; transition:opacity 0.3s ease, width 0.3s ease;">Modo
+                            Noche</span>
+                    </button>
+
+                    <!-- Notifications -->
+                    <button class="theme-toggle" id="notificationsToggle"
+                        style="width:100%; border:none; padding:8px; border-radius:8px; display:flex; align-items:center; gap:16px; position:relative;">
+                        <div style="position:relative; width:20px; height:20px; flex-shrink:0;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%;">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            <span id="notificationBadge"
+                                style="display:none; position:absolute; top:-4px; right:-4px; background:var(--red); color:white; font-size:10px; font-weight:bold; border-radius:50%; width:14px; height:14px; align-items:center; justify-content:center;">0</span>
+                        </div>
+                        <span class="nav-text"
+                            style="opacity:0; width:0; overflow:hidden; transition:opacity 0.3s ease, width 0.3s ease;">Notificaciones</span>
+                    </button>
+                </div>
             </div>
         </aside>
 

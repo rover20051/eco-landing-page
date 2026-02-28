@@ -909,6 +909,124 @@ function closeModal() {
 }
 
 // ═══════════════════════════════════════════════════════
+// TAREAS UX/UI ADMIN (Editar/Eliminar)
+// ═══════════════════════════════════════════════════════
+
+function openEditStudentModal(userId, fullName, currentRole) {
+    document.getElementById('modalTitle').textContent = 'Editar Estudiante';
+    document.getElementById('modalBody').innerHTML = `
+        <form id="editStudentForm">
+            <div class="form-group">
+                <label>Nombre y Apellido</label>
+                <input type="text" id="editStudentName" required value="${fullName}">
+            </div>
+            <div class="form-group">
+                <label>Correo Electrónico (Requiere Backend para forzar cambio de auth, acá solo UI referencial)</label>
+                <input type="email" id="editStudentEmail" placeholder="Ingresa nuevo correo" title="El cambio de correo requiere que el usuario lo confirme">
+            </div>
+            <div class="form-group">
+                <label>Nueva Contraseña (Opcional)</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="password" id="editStudentPassword" placeholder="Dejar en blanco para no cambiar" style="flex:1;">
+                    <button type="button" class="btn-secondary" onclick="const i=document.getElementById('editStudentPassword'); i.type = i.type==='password'?'text':'password';" style="padding: 0 12px;" title="Mostrar/Ocultar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('editStudentPassword').value); showAdminToast('Contraseña copiada', 'success');" style="padding: 0 12px;" title="Copiar al portapapeles">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Rol</label>
+                <select id="editStudentRole">
+                    <option value="student" ${currentRole === 'student' ? 'selected' : ''}>Estudiante</option>
+                    <option value="mentor" ${currentRole === 'mentor' ? 'selected' : ''}>Mentor</option>
+                    <option value="admin" ${currentRole === 'admin' ? 'selected' : ''}>Admin</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-primary" style="width:100%;">GUARDAR CAMBIOS</button>
+        </form>
+    `;
+
+    document.getElementById('editStudentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const role = document.getElementById('editStudentRole').value;
+        const name = document.getElementById('editStudentName').value;
+        const btn = e.target.querySelector('button');
+        const newEmail = document.getElementById('editStudentEmail').value;
+        const newPass = document.getElementById('editStudentPassword').value;
+
+        btn.disabled = true; btn.textContent = 'Guardando...';
+
+        // 1. Update Profile (Role and Name)
+        const { error: profileError } = await sb.from('profiles').update({ role, full_name: name }).eq('id', userId);
+
+        let authErrors = [];
+
+        // 2. Try to update Auth if Supabase Admin API is available (Usually not in standard client, but let's try gracefully)
+        if (newEmail || newPass) {
+            if (sb.auth.admin) {
+                const updates = {};
+                if (newEmail) updates.email = newEmail;
+                if (newPass) updates.password = newPass;
+
+                const { error: auError } = await sb.auth.admin.updateUserById(userId, updates);
+                if (auError) authErrors.push("Error actualizando credenciales: " + auError.message);
+            } else {
+                authErrors.push("El cambio de correo y contraseña requiere privilegios Admin en backend (Service Role Key). No se aplicaron credenciales.");
+            }
+        }
+
+        if (profileError) {
+            showAdminToast('Error de Perfil: ' + profileError.message, 'error');
+            btn.disabled = false; btn.textContent = 'GUARDAR CAMBIOS';
+        } else {
+            if (authErrors.length > 0) {
+                showAdminToast('Perfil de UI guardado. ' + authErrors[0], 'warning');
+            } else {
+                showAdminToast('Estudiante actualizado exitosamente', 'success');
+            }
+            closeModal();
+            loadStudents();
+            viewStudentDetail(userId);
+        }
+    });
+
+    document.getElementById('modalOverlay').style.display = 'flex';
+}
+
+function confirmDeleteStudent(userId, fullName) {
+    if (confirm(`¿Estás seguro de que quieres inhabilitar a ${fullName}? Esta acción revocará todos sus accesos. (Requiere backend para purgar completamente)`)) {
+        sb.auth.admin ? deleteUserWithAdminApi(userId) : fallbackSoftDelete(userId);
+    }
+}
+
+async function fallbackSoftDelete(userId) {
+    // Soft delete if no admin rights
+    const { error } = await sb.from('profiles').update({
+        role: 'student',
+        full_name: '[Eliminado]',
+        eco_points: 0
+    }).eq('id', userId);
+
+    if (error) {
+        showAdminToast('Error al procesar: ' + error.message, 'error');
+    } else {
+        showAdminToast('Usuario inhabilitado correctamente.', 'success');
+        switchAdminView('usuarios');
+    }
+}
+
+async function deleteUserWithAdminApi(userId) {
+    const { error } = await sb.auth.admin.deleteUser(userId);
+    if (error) showAdminToast('Error: ' + error.message, 'error');
+    else {
+        showAdminToast('Usuario eliminado del sistema', 'success');
+        switchAdminView('usuarios');
+    }
+}
+
+// ═══════════════════════════════════════════════════════
 // UTILITIES
 // ═══════════════════════════════════════════════════════
 

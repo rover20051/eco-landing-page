@@ -213,6 +213,9 @@ async function initApp() {
     // Load dashboard data
     await loadDashboard();
 
+    // Load notifications
+    await loadNotifications();
+
     // Init from hash
     initFromHash();
 }
@@ -236,20 +239,24 @@ async function updateStreak() {
 
     if (lastLogin === today) return;
 
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    let newStreak = lastLogin === yesterday ? (currentProfile.current_streak || 0) + 1 : 1;
+    try {
+        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        let newStreak = lastLogin === yesterday ? (currentProfile.current_streak || 0) + 1 : 1;
 
-    await sb.from('profiles').update({
-        current_streak: newStreak,
-        last_login_date: today,
-        updated_at: new Date().toISOString()
-    }).eq('id', currentUser.id);
+        await sb.from('profiles').update({
+            current_streak: newStreak,
+            last_login_date: today,
+            updated_at: new Date().toISOString()
+        }).eq('id', currentUser.id);
 
-    currentProfile.current_streak = newStreak;
-    currentProfile.last_login_date = today;
+        currentProfile.current_streak = newStreak;
+        currentProfile.last_login_date = today;
 
-    if (newStreak > 1) {
-        showToast(ECO_TEXTS.toastStreakTitle, ECO_TEXTS.toastStreakDesc.replace('{n}', newStreak));
+        if (newStreak > 1) {
+            showToast(ECO_TEXTS.toastStreakTitle, ECO_TEXTS.toastStreakDesc.replace('{n}', newStreak));
+        }
+    } catch (e) {
+        showToast(ECO_TEXTS.toastErrorTitle, ECO_TEXTS.toastErrorDesc);
     }
 }
 
@@ -279,6 +286,9 @@ function setupNavigation() {
 
     // Profile buttons
     setupProfileMenu();
+
+    // Notifications
+    setupNotifications();
 }
 
 function setupProfileMenu() {
@@ -300,9 +310,13 @@ function setupProfileMenu() {
     }
 
     const editBtn = document.getElementById('editProfileBtn');
-    if (editBtn) editBtn.addEventListener('click', openProfileModal);
+    if (editBtn) {
+        editBtn.addEventListener('click', () => {
+            if (profileDropdown) profileDropdown.style.display = 'none';
+            openProfileModal();
+        });
+    }
 
-    // Profile modal
     const closeBtn = document.getElementById('profileModalClose');
     if (closeBtn) closeBtn.addEventListener('click', () => {
         document.getElementById('profileModalOverlay').style.display = 'none';

@@ -2,7 +2,8 @@
    ECO E-LEARNING GLOBAL STYLES (Complete)
    ═══════════════════════════════════════════════════════ */
 :root {
-    --sidebar-width: 280px;
+    --sidebar-width: 250px;
+    --sidebar-collapsed-width: 80px;
     --sidebar-bg: #FFFFFF;
     --app-bg: #F4F6F8;
     --text-main: #1C2333;
@@ -270,7 +271,7 @@ body.elearning-body {
 
 /* ── SIDEBAR ──────────────────────────────────────────── */
 .sidebar {
-    width: var(--sidebar-width);
+    width: var(--sidebar-collapsed-width);
     background-color: var(--sidebar-bg);
     border-right: 1px solid var(--border-color);
     display: flex;
@@ -280,18 +281,31 @@ body.elearning-body {
     bottom: 0;
     left: 0;
     z-index: 100;
-    transition: transform 0.3s ease;
+    transition: width 0.3s ease;
+    overflow-x: hidden;
+    white-space: nowrap;
+}
+
+.sidebar:hover {
+    width: var(--sidebar-width);
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
 }
 
 .sidebar-header {
-    padding: 32px 24px;
+    padding: 32px 0;
+    display: flex;
+    justify-content: center;
     border-bottom: 1px solid var(--border-color);
 }
 
 .logo-dark {
     filter: invert(0) brightness(1);
-    height: 100px;
-    margin-bottom: 8px;
+    height: 40px;
+    transition: height 0.3s ease;
+}
+
+.sidebar:hover .logo-dark {
+    height: 60px;
 }
 
 .sidebar-nav {
@@ -305,8 +319,9 @@ body.elearning-body {
 .nav-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
+    gap: 16px;
+    padding: 12px 0;
+    justify-content: center;
     border-radius: 8px;
     border: none;
     background: transparent;
@@ -317,6 +332,23 @@ body.elearning-body {
     transition: all 0.2s ease;
     text-align: left;
     width: 100%;
+}
+
+.sidebar:hover .nav-item {
+    padding: 12px 16px;
+    justify-content: flex-start;
+}
+
+.nav-item span.nav-text {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    transition: opacity 0.3s ease, width 0.3s ease;
+}
+
+.sidebar:hover .nav-item span.nav-text {
+    opacity: 1;
+    width: auto;
 }
 
 .nav-item:hover {
@@ -398,11 +430,24 @@ body.elearning-body {
 .user-info {
     display: flex;
     flex-direction: column;
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    transition: opacity 0.3s ease, width 0.3s ease;
+}
+
+.sidebar:hover .user-info {
+    opacity: 1;
+    width: auto;
 }
 
 .user-name {
     font-weight: 600;
     font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
 }
 
 .user-level {
@@ -413,9 +458,10 @@ body.elearning-body {
 /* ── MAIN CONTENT ─────────────────────────────────────── */
 .main-content {
     flex: 1;
-    margin-left: var(--sidebar-width);
+    margin-left: var(--sidebar-collapsed-width);
     display: flex;
     flex-direction: column;
+    transition: margin-left 0.3s ease;
 }
 
 .top-bar {
