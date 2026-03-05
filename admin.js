@@ -567,6 +567,26 @@ async function deleteResource(resourceId, lessonId, lessonTitle) {
     manageLessonResources(lessonId, lessonTitle);
 }
 
+function getQuillOptions(placeholder) {
+    return {
+        theme: 'snow',
+        placeholder: placeholder,
+        modules: {
+            toolbar: [
+                [{ 'font': [] }],
+                [{ 'size': ['small', false, 'large', 'huge'] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'script': 'sub' }, { 'script': 'super' }],
+                [{ 'header': 1 }, { 'header': 2 }, 'blockquote', 'code-block'],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
+                [{ 'direction': 'rtl' }, { 'align': [] }],
+                ['link', 'clean']
+            ]
+        }
+    };
+}
+
 function lessonFormHTML(defaults = {}) {
     return `
         <div class="form-group">
@@ -575,7 +595,7 @@ function lessonFormHTML(defaults = {}) {
         </div>
         <div class="form-group">
             <label>Contenido (descripción del tema)</label>
-            <textarea id="lessonContent" placeholder="Texto explicativo de la lección..." style="min-height:80px;">${defaults.content_text || ''}</textarea>
+            <div id="lessonContentEditor" style="min-height:120px; background:white;">${defaults.content_text || ''}</div>
         </div>
         <div class="form-row">
             <div class="form-group">
@@ -594,7 +614,7 @@ function lessonFormHTML(defaults = {}) {
         </div>
         <div class="form-group">
             <label>Descripción de la tarea (entregable)</label>
-            <textarea id="lessonTaskDesc" placeholder="¿Qué deben entregar los alumnos? Ej: Escribe una reflexión de 300 palabras sobre..." style="min-height:80px;">${defaults.task_description || ''}</textarea>
+            <div id="lessonTaskDescEditor" style="min-height:120px; background:white;">${defaults.task_description || ''}</div>
         </div>`;
 }
 
@@ -605,16 +625,25 @@ function showCreateLessonModal(moduleId, nextNumber) {
             <button type="submit" class="btn-primary" style="width:100%;margin-top:8px;">CREAR LECCIÓN</button>
         </form>
     `);
+
+    // Initialize Quill editors
+    const contentQuill = new Quill('#lessonContentEditor', getQuillOptions('Texto explicativo de la lección...'));
+    const taskQuill = new Quill('#lessonTaskDescEditor', getQuillOptions('¿Qué deben entregar los alumnos? Ej: Escribe una reflexión de 300 palabras sobre...'));
+
     document.getElementById('lessonForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        const contentText = contentQuill.root.innerHTML.trim() === '<p><br></p>' ? '' : contentQuill.root.innerHTML.trim();
+        const taskText = taskQuill.root.innerHTML.trim() === '<p><br></p>' ? '' : taskQuill.root.innerHTML.trim();
+
         const { error } = await sb.from('lessons').insert({
             module_id: moduleId,
             title: document.getElementById('lessonTitle').value,
-            content_text: document.getElementById('lessonContent').value,
+            content_text: contentText,
             lesson_number: parseInt(document.getElementById('lessonNumber').value),
             estimated_minutes: parseInt(document.getElementById('lessonMinutes').value),
             youtube_video_id: document.getElementById('lessonYT').value.trim() || null,
-            task_description: document.getElementById('lessonTaskDesc').value || null
+            task_description: taskText || null
         });
         if (error) { showAdminToast('Error: ' + error.message, 'error'); return; }
         showAdminToast('Lección creada', 'success');
@@ -634,14 +663,22 @@ async function editLesson(lessonId) {
         </form>
     `);
 
+    // Initialize Quill editors
+    const contentQuill = new Quill('#lessonContentEditor', getQuillOptions('Texto explicativo de la lección...'));
+    const taskQuill = new Quill('#lessonTaskDescEditor', getQuillOptions('¿Qué deben entregar los alumnos? Ej: Escribe una reflexión de 300 palabras sobre...'));
+
     document.getElementById('lessonForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        const contentText = contentQuill.root.innerHTML.trim() === '<p><br></p>' ? '' : contentQuill.root.innerHTML.trim();
+        const taskText = taskQuill.root.innerHTML.trim() === '<p><br></p>' ? '' : taskQuill.root.innerHTML.trim();
+
         const { error } = await sb.from('lessons').update({
             title: document.getElementById('lessonTitle').value,
-            content_text: document.getElementById('lessonContent').value,
+            content_text: contentText,
             estimated_minutes: parseInt(document.getElementById('lessonMinutes').value),
             youtube_video_id: document.getElementById('lessonYT').value.trim() || null,
-            task_description: document.getElementById('lessonTaskDesc').value || null
+            task_description: taskText || null
         }).eq('id', lessonId);
         if (error) { showAdminToast('Error: ' + error.message, 'error'); return; }
         showAdminToast('Lección actualizada', 'success');

@@ -1,25 +1,33 @@
 /* ═══════════════════════════════════════════════════════
    ECO — Design System & Global Styles
-   Typography: Playfair Display ONLY
-   Colors: Blue #1B2E6B | Red #CC2A12 | Yellow #E8B931
+   Typography: Giaza | Playfair Display | Roboto | Archivo Black
+   Colors: Blue #203680 | Red #721818 | Cream #FFF7E7 | Brown #402816
    ═══════════════════════════════════════════════════════ */
 
 /* ── CSS Variables ─────────────────────────────────────── */
 :root {
-    --blue: #1B2E6B;
-    --blue-dark: #111F4D;
+    /* Brand Palette – ECO Manual Oficial */
+    --blue: #203680;
+    --blue-dark: #172660;
     --blue-light: #2A4494;
-    --red: #CC2A12;
-    --red-dark: #A82210;
-    --red-light: #D93A1A;
-    --yellow: #E8B931;
-    --yellow-light: #F5C542;
+    --red: #721818;
+    --red-dark: #5a1212;
+    --red-light: #8a1e1e;
+    --cream: #FFF7E7;
+    --cream-dark: #f0e8d4;
+    --brown: #402816;
+    --brown-light: #5a3820;
     --white: #FFFFFF;
-    --off-white: #F5F5F3;
+    --off-white: #FFF7E7;
     --gray: #8A8A8A;
-    --dark: #111111;
+    --dark: #402816;
 
-    --font-body: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    /* Typography */
+    --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    --font-body: 'Roboto', Arial, sans-serif;
+    --font-black: 'Archivo Black', Arial Black, sans-serif;
+    --font-body-legacy: 'Playfair Display', Georgia, serif;
+    /* fallback */
 
     --container: 1200px;
     --radius: 16px;
@@ -45,7 +53,7 @@ html {
 body {
     font-family: var(--font-body);
     color: var(--dark);
-    background: var(--white);
+    background: var(--cream);
     line-height: 1.6;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
@@ -77,8 +85,8 @@ ul {
     display: inline-block;
     padding: 14px 36px;
     border-radius: 50px;
-    font-family: var(--font-body);
-    font-weight: 700;
+    font-family: var(--font-black);
+    font-weight: 400;
     font-size: 0.85rem;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -104,35 +112,58 @@ ul {
 
 .btn-red {
     background: var(--red);
-    color: var(--white);
+    color: var(--cream);
 }
 
 .btn-red:hover {
     background: var(--red-dark);
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(204, 42, 18, 0.35);
+    box-shadow: 0 8px 24px rgba(114, 24, 24, 0.4);
 }
 
+.btn-cream {
+    background: var(--cream);
+    color: var(--blue);
+}
+
+.btn-cream:hover {
+    background: var(--cream-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 247, 231, 0.35);
+}
+
+/* Keep btn-yellow as alias for btn-cream */
 .btn-yellow {
-    background: var(--yellow);
-    color: var(--blue-dark);
+    background: var(--cream);
+    color: var(--blue);
 }
 
 .btn-yellow:hover {
-    background: var(--yellow-light);
+    background: var(--cream-dark);
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(232, 185, 49, 0.35);
+    box-shadow: 0 8px 24px rgba(255, 247, 231, 0.35);
 }
 
 .btn-blue {
     background: var(--blue);
-    color: var(--white);
+    color: var(--cream);
 }
 
 .btn-blue:hover {
     background: var(--blue-light);
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(27, 46, 107, 0.35);
+    box-shadow: 0 8px 24px rgba(32, 54, 128, 0.4);
+}
+
+.btn-brown {
+    background: var(--brown);
+    color: var(--cream);
+}
+
+.btn-brown:hover {
+    background: var(--brown-light);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(64, 40, 22, 0.4);
 }
 
 /* ── Section Tags & Titles ─────────────────────────────── */
@@ -355,17 +386,18 @@ ul {
 
 .hero-title {
     background: linear-gradient(90deg,
-            var(--white) 0%,
-            var(--white) 40%,
-            var(--yellow-light) 50%,
-            var(--white) 60%,
-            var(--white) 100%);
+            var(--cream) 0%,
+            var(--cream) 40%,
+            var(--cream-dark) 50%,
+            var(--cream) 60%,
+            var(--cream) 100%);
     background-size: 200% auto;
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     animation: shimmer 4s ease-in-out infinite;
     animation-delay: 1.5s;
+    font-family: var(--font-display);
 }
 
 
@@ -385,10 +417,10 @@ ul {
 }
 
 .header.scrolled {
-    background: rgba(17, 31, 77, 0.95);
+    background: rgba(32, 54, 128, 0.96);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
 }
 
 .nav {
@@ -424,13 +456,14 @@ ul {
 }
 
 .nav-links a {
-    color: var(--white);
+    color: var(--cream);
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 400;
     letter-spacing: 1.5px;
     text-transform: uppercase;
     transition: var(--transition-fast);
     position: relative;
+    font-family: var(--font-body);
 }
 
 .nav-links a::after {
@@ -440,7 +473,7 @@ ul {
     left: 0;
     width: 0;
     height: 2px;
-    background: var(--yellow);
+    background: var(--cream);
     transition: var(--transition);
 }
 
@@ -479,7 +512,7 @@ ul {
 }
 
 .nav-login:hover {
-    color: var(--yellow);
+    color: var(--cream-dark);
 }
 
 .nav-login:hover .login-icon {
@@ -547,9 +580,9 @@ ul {
     position: absolute;
     inset: 0;
     background: linear-gradient(180deg,
-            rgba(17, 31, 77, 0.8) 0%,
-            rgba(27, 46, 107, 0.6) 40%,
-            rgba(17, 31, 77, 0.85) 100%);
+            rgba(32, 54, 128, 0.82) 0%,
+            rgba(32, 54, 128, 0.65) 40%,
+            rgba(23, 38, 96, 0.88) 100%);
 }
 
 .hero-content {
@@ -562,22 +595,24 @@ ul {
 
 .hero-title {
     font-size: clamp(3rem, 8vw, 6rem);
-    font-weight: 900;
+    font-weight: 700;
     line-height: 1.02;
     letter-spacing: -1px;
     margin-bottom: 24px;
     text-shadow: 0 4px 40px rgba(0, 0, 0, 0.3);
+    font-family: var(--font-display);
 }
 
 .hero-subtitle {
     font-size: clamp(1rem, 2vw, 1.2rem);
-    color: rgba(255, 255, 255, 0.85);
-    font-weight: 400;
+    color: rgba(255, 247, 231, 0.88);
+    font-weight: 300;
     line-height: 1.7;
     margin-bottom: 40px;
     max-width: 560px;
     margin-left: auto;
     margin-right: auto;
+    font-family: var(--font-body);
 }
 
 
@@ -586,7 +621,7 @@ ul {
    ═══════════════════════════════════════════════════════ */
 .que-es {
     padding: 120px 0;
-    background: var(--white);
+    background: var(--cream);
 }
 
 .que-es-grid {
@@ -613,20 +648,20 @@ ul {
     overflow: hidden;
     aspect-ratio: 16 / 10;
     cursor: pointer;
-    box-shadow: 0 20px 60px rgba(27, 46, 107, 0.2);
+    box-shadow: 0 20px 60px rgba(32, 54, 128, 0.25);
 }
 
 .video-wrapper::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(17, 31, 77, 0.3);
+    background: rgba(32, 54, 128, 0.3);
     z-index: 1;
     transition: var(--transition);
 }
 
 .video-wrapper:hover::before {
-    background: rgba(17, 31, 77, 0.15);
+    background: rgba(32, 54, 128, 0.12);
 }
 
 .video-thumb {
@@ -668,7 +703,7 @@ ul {
    ═══════════════════════════════════════════════════════ */
 .pilares {
     padding: 120px 0;
-    background: var(--blue-dark);
+    background: var(--blue);
     text-align: center;
 }
 
@@ -682,9 +717,9 @@ ul {
 .pilar-card {
     padding: 48px 32px;
     border-radius: var(--radius);
-    border: 1px solid rgba(232, 185, 49, 0.15);
+    border: 1px solid rgba(255, 247, 231, 0.15);
     transition: var(--transition);
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.04);
     position: relative;
     overflow: hidden;
 }
@@ -696,7 +731,7 @@ ul {
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, transparent, var(--yellow), transparent);
+    background: linear-gradient(90deg, transparent, var(--cream), transparent);
     opacity: 0;
     transition: var(--transition);
 }
@@ -706,10 +741,10 @@ ul {
 }
 
 .pilar-card:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(232, 185, 49, 0.3);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 247, 231, 0.35);
     transform: translateY(-6px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
 }
 
 .pilar-icon {
@@ -726,15 +761,17 @@ ul {
 .pilar-title {
     font-size: 1.3rem;
     font-weight: 700;
-    color: var(--yellow);
+    color: var(--cream);
     margin-bottom: 16px;
+    font-family: var(--font-display);
 }
 
 .pilar-desc {
     font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 247, 231, 0.75);
     line-height: 1.7;
-    font-weight: 400;
+    font-weight: 300;
+    font-family: var(--font-body);
 }
 
 
@@ -743,7 +780,7 @@ ul {
    ═══════════════════════════════════════════════════════ */
 .fases {
     padding: 120px 0;
-    background: var(--off-white);
+    background: var(--cream-dark);
     text-align: center;
 }
 
@@ -770,17 +807,17 @@ ul {
 
 .fase-card-blue {
     background: var(--blue);
-    color: var(--white);
+    color: var(--cream);
 }
 
 .fase-card-red {
     background: var(--red);
-    color: var(--white);
+    color: var(--cream);
 }
 
 .fase-card-light {
-    background: var(--blue-light);
-    color: var(--white);
+    background: var(--brown);
+    color: var(--cream);
 }
 
 .fase-number {
@@ -794,9 +831,10 @@ ul {
 
 .fase-title {
     font-size: 1.6rem;
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: 3px;
     margin-bottom: 12px;
+    font-family: var(--font-black);
 }
 
 .fase-desc {
@@ -833,20 +871,20 @@ ul {
 
 .fase-card-blue .fase-img-wrapper::after {
     background: linear-gradient(180deg,
-            rgba(27, 46, 107, 0.7) 0%,
-            rgba(27, 46, 107, 0.25) 100%);
+            rgba(32, 54, 128, 0.7) 0%,
+            rgba(32, 54, 128, 0.25) 100%);
 }
 
 .fase-card-red .fase-img-wrapper::after {
     background: linear-gradient(180deg,
-            rgba(204, 42, 18, 0.7) 0%,
-            rgba(204, 42, 18, 0.25) 100%);
+            rgba(114, 24, 24, 0.7) 0%,
+            rgba(114, 24, 24, 0.25) 100%);
 }
 
 .fase-card-light .fase-img-wrapper::after {
     background: linear-gradient(180deg,
-            rgba(42, 68, 148, 0.7) 0%,
-            rgba(42, 68, 148, 0.25) 100%);
+            rgba(64, 40, 22, 0.7) 0%,
+            rgba(64, 40, 22, 0.25) 100%);
 }
 
 .fase-card:hover .fase-img-wrapper img {
@@ -863,15 +901,16 @@ ul {
    ═══════════════════════════════════════════════════════ */
 .banner-cta {
     padding: 100px 0;
-    background: var(--white);
+    background: var(--cream);
     text-align: center;
     overflow: hidden;
 }
 
 .banner-title {
     font-size: clamp(2.5rem, 7vw, 5.5rem);
-    font-weight: 900;
+    font-weight: 700;
     line-height: 1.05;
+    font-family: var(--font-display);
 }
 
 .banner-blue {
@@ -887,11 +926,11 @@ ul {
 }
 
 .banner-blue:hover {
-    text-shadow: 0 0 40px rgba(27, 46, 107, 0.3);
+    text-shadow: 0 0 40px rgba(32, 54, 128, 0.35);
 }
 
 .banner-red:hover {
-    text-shadow: 0 0 40px rgba(204, 42, 18, 0.3);
+    text-shadow: 0 0 40px rgba(114, 24, 24, 0.35);
 }
 
 
@@ -902,7 +941,7 @@ ul {
     display: none;
     /* Hidden temporarily per user request */
     padding: 120px 0;
-    background: var(--red);
+    background: var(--brown);
 }
 
 .testimonios-header {
@@ -948,19 +987,25 @@ ul {
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
 }
 
+.testimonio-cream {
+    background: var(--cream);
+    color: var(--blue);
+}
+
+/* alias */
 .testimonio-yellow {
-    background: var(--yellow);
-    color: var(--blue-dark);
+    background: var(--cream);
+    color: var(--blue);
 }
 
 .testimonio-blue {
     background: var(--blue);
-    color: var(--white);
+    color: var(--cream);
 }
 
 .testimonio-white {
-    background: var(--white);
-    color: var(--blue-dark);
+    background: var(--cream);
+    color: var(--blue);
 }
 
 .testimonio-photo {
@@ -1017,7 +1062,7 @@ ul {
    ═══════════════════════════════════════════════════════ */
 .faq {
     padding: 120px 0;
-    background: var(--blue-dark);
+    background: var(--blue);
 }
 
 .faq .container {
@@ -1046,23 +1091,24 @@ ul {
     background: none;
     border: none;
     cursor: pointer;
-    font-family: var(--font-body);
+    font-family: var(--font-display);
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--white);
+    color: var(--cream);
     text-align: left;
     transition: var(--transition-fast);
 }
 
 .faq-question:hover {
-    color: var(--yellow);
+    color: var(--cream-dark);
+    opacity: 0.85;
 }
 
 .faq-chevron {
     width: 24px;
     height: 24px;
     flex-shrink: 0;
-    color: var(--yellow);
+    color: var(--cream);
     transition: var(--transition);
 }
 
@@ -1083,9 +1129,10 @@ ul {
 
 .faq-answer p {
     font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 247, 231, 0.75);
     line-height: 1.75;
-    font-weight: 400;
+    font-weight: 300;
+    font-family: var(--font-body);
 }
 
 
@@ -1094,8 +1141,9 @@ ul {
    ═══════════════════════════════════════════════════════ */
 .inscripcion {
     padding: 100px 0;
-    background: var(--off-white);
+    background: var(--cream);
 }
+
 .form-embed-wrapper {
     max-width: 720px;
     margin: 0 auto;
@@ -1104,12 +1152,14 @@ ul {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
     background: white;
 }
+
 .form-embed-wrapper iframe {
     display: block;
     width: 100%;
     min-height: 800px;
     border: none;
 }
+
 @media (max-width: 768px) {
     .form-embed-wrapper iframe {
         min-height: 600px;
@@ -1121,7 +1171,7 @@ ul {
    ═══════════════════════════════════════════════════════ */
 .footer {
     padding: 80px 0 0;
-    background: var(--off-white);
+    background: var(--blue);
 }
 
 .footer-grid {
@@ -1139,10 +1189,11 @@ ul {
 
 .footer-desc {
     font-size: 0.9rem;
-    color: #666;
+    color: rgba(255, 247, 231, 0.7);
     line-height: 1.7;
     margin-bottom: 24px;
-    font-weight: 400;
+    font-weight: 300;
+    font-family: var(--font-body);
 }
 
 .footer-socials {
@@ -1154,8 +1205,8 @@ ul {
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: var(--blue);
-    color: var(--white);
+    background: rgba(255, 247, 231, 0.15);
+    color: var(--cream);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1170,16 +1221,17 @@ ul {
 .social-link:hover {
     background: var(--red);
     transform: translateY(-3px) rotate(5deg);
-    box-shadow: 0 8px 20px rgba(204, 42, 18, 0.3);
+    box-shadow: 0 8px 20px rgba(114, 24, 24, 0.4);
 }
 
 .footer-heading {
     font-size: 0.75rem;
-    font-weight: 700;
+    font-weight: 400;
     letter-spacing: 3px;
     text-transform: uppercase;
-    color: var(--blue-dark);
+    color: var(--cream);
     margin-bottom: 24px;
+    font-family: var(--font-black);
 }
 
 .footer-links li {
@@ -1188,10 +1240,11 @@ ul {
 
 .footer-links a {
     font-size: 0.9rem;
-    color: #666;
-    font-weight: 400;
+    color: rgba(255, 247, 231, 0.65);
+    font-weight: 300;
     transition: var(--transition-fast);
     position: relative;
+    font-family: var(--font-body);
 }
 
 .footer-links a::after {
@@ -1201,12 +1254,12 @@ ul {
     left: 0;
     width: 0;
     height: 1px;
-    background: var(--red);
+    background: var(--cream);
     transition: var(--transition);
 }
 
 .footer-links a:hover {
-    color: var(--red);
+    color: var(--cream);
 }
 
 .footer-links a:hover::after {
@@ -1214,15 +1267,16 @@ ul {
 }
 
 .footer-bottom {
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    border-top: 1px solid rgba(255, 247, 231, 0.12);
     text-align: center;
     padding: 24px;
 }
 
 .footer-bottom p {
     font-size: 0.8rem;
-    color: #999;
-    font-weight: 400;
+    color: rgba(255, 247, 231, 0.45);
+    font-weight: 300;
+    font-family: var(--font-body);
 }
 
 
@@ -1232,7 +1286,7 @@ ul {
 .instagram-feed {
     padding: 100px 0;
     text-align: center;
-    background: var(--bg-dark);
+    background: var(--cream-dark);
 }
 
 .instagram-header {
@@ -1242,16 +1296,16 @@ ul {
 .insta-handle {
     display: inline-block;
     margin-top: 16px;
-    font-family: var(--font-body);
+    font-family: var(--font-display);
     font-size: 1.2rem;
     font-weight: 600;
     font-style: italic;
-    color: var(--yellow);
+    color: var(--red);
     transition: var(--transition-fast);
 }
 
 .insta-handle:hover {
-    color: var(--white);
+    color: var(--brown);
     transform: translateY(-2px);
 }
 
@@ -1279,6 +1333,95 @@ ul {
     width: 48px;
     height: 48px;
     color: var(--yellow);
+}
+
+/* ── Instagram Slider Container ── */
+.insta-slider-container {
+    position: relative;
+    width: 100%;
+    margin: 0 auto;
+    overflow: hidden;
+    padding: 20px 0;
+}
+
+.insta-grid {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    padding: 10px 20px;
+
+    /* Ocultar scrollbar estándar pero mantener funcionalidad */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.insta-grid::-webkit-scrollbar {
+    display: none;
+}
+
+.insta-post {
+    flex: 0 0 calc(25% - 15px);
+    min-width: 260px;
+    max-width: 320px;
+    aspect-ratio: 1;
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    display: block;
+    background: #111;
+    scroll-snap-align: start;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.insta-post img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.insta-post:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 16px 32px rgba(232, 185, 49, 0.15);
+}
+
+.insta-post:hover img {
+    transform: scale(1.08);
+}
+
+.insta-post::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent 50%);
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+}
+
+.insta-post:hover::after {
+    opacity: 1;
+}
+
+/* ── Icono de Instagram flotante en las tarjetas ── */
+.insta-post-icon {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    color: white;
+    width: 24px;
+    height: 24px;
+    z-index: 2;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+}
+
+.insta-post:hover .insta-post-icon {
+    opacity: 1;
+    color: var(--yellow);
+    transform: scale(1.1);
 }
 
 

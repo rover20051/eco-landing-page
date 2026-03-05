@@ -265,4 +265,116 @@ document.addEventListener('DOMContentLoaded', () => {
         progressBar.style.width = `${progress}%`;
     }, { passive: true });
 
+    // ── Instagram Feed from Google Sheets ────────────────
+    const loadInstaFeed = async () => {
+        const grid = document.getElementById('instaGrid');
+        if (!grid) return;
+
+        const sheetId = '1d0Tyi6sHbJyV3k0kU3M5I73Eikic-vLOsfwFL9DXX1U';
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+
+        try {
+            const res = await fetch(url);
+            const text = await res.text();
+
+            // Extract JSON from Google's response format: /*O_o*/ google.visualization.Query.setResponse({...});
+            const jsonStr = text.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\);?/)[1];
+            const data = JSON.parse(jsonStr);
+
+            const rows = data.table.rows;
+            if (!rows || rows.length === 0) {
+                grid.innerHTML = '<p style="color:white;text-align:center;">Aún no hay publicaciones disponibles.</p>';
+                return;
+            }
+
+            // Limit to 10 posts
+            const posts = rows.slice(0, 10);
+            let html = '';
+
+            posts.forEach(row => {
+                if (!row.c || !row.c[0] || !row.c[1]) return;
+
+                // Usually A is image, B is link
+                const img = row.c[0] ? row.c[0].v : null;
+                const link = row.c[1] ? row.c[1].v : '#';
+
+                // Skip headers if present in data
+                if (img && img.toLowerCase() !== 'image' && link.toLowerCase() !== 'link') {
+                    html += `
+                        <a href="${link}" target="_blank" rel="noopener noreferrer" class="insta-post fade-up">
+                            <img src="${img}" alt="Instagram Post" loading="lazy" draggable="false" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 400 400\\' fill=\\'%23111\\'><rect width=\\'400\\' height=\\'400\\' fill=\\'%23F3F4F6\\'/><path d=\\'M200 120a80 80 0 1 0 0 160 80 80 0 0 0 0-160zm0 134.4a54.4 54.4 0 1 1 0-108.8 54.4 54.4 0 0 1 0 108.8zm83.2-132.8a19.2 19.2 0 1 1-38.4 0 19.2 19.2 0 0 1 38.4 0zM286.4 120H113.6A33.6 33.6 0 0 0 80 153.6v92.8A33.6 33.6 0 0 0 113.6 280h172.8A33.6 33.6 0 0 0 320 246.4v-92.8A33.6 33.6 0 0 0 286.4 120zm14.4 126.4a14.4 14.4 0 0 1-14.4 14.4H113.6a14.4 14.4 0 0 1-14.4-14.4v-92.8A14.4 14.4 0 0 1 113.6 139h172.8a14.4 14.4 0 0 1 14.4 14.4v92.8z\\' fill=\\'%239CA3AF\\'/></svg>'; this.parentElement.classList.add('image-fallback');">
+                            <svg class="insta-post-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="2" width="20" height="20" rx="5" />
+                                <circle cx="12" cy="12" r="5" />
+                                <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none" />
+                            </svg>
+                        </a>
+                    `;
+                }
+            });
+
+            if (html.trim() === '') {
+                grid.innerHTML = '<p style="color:white;text-align:center;">No hay publicaciones válidas.</p>';
+            } else {
+                grid.innerHTML = html;
+                initDragToScroll(grid);
+            }
+
+        } catch (error) {
+            console.error('Error fetching Instagram feed:', error);
+            grid.innerHTML = '<p style="color:white;text-align:center;">No se pudo cargar el feed de Instagram.</p>';
+        }
+    };
+
+    // Funcionalidad para arrastrar el slider con el mouse en Desktop
+    const initDragToScroll = (slider) => {
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        slider.addEventListener('mousedown', (e) => {
+            isDown = true;
+            slider.style.cursor = 'grabbing';
+            // Desactiva scroll-snap temporariamente para un arrastre fluido
+            slider.style.scrollSnapType = 'none';
+            startX = e.pageX - slider.offsetLeft;
+            scrollLeft = slider.scrollLeft;
+        });
+
+        slider.addEventListener('mouseleave', () => {
+            isDown = false;
+            slider.style.cursor = '';
+            slider.style.scrollSnapType = 'x mandatory';
+        });
+
+        slider.addEventListener('mouseup', () => {
+            isDown = false;
+            slider.style.cursor = '';
+            slider.style.scrollSnapType = 'x mandatory';
+        });
+
+        slider.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault(); // Evita selección de texto o arrastre de imagen
+            const x = e.pageX - slider.offsetLeft;
+            const walk = (x - startX) * 2; // Velocidad de arrastre
+            slider.scrollLeft = scrollLeft - walk;
+        });
+
+        // Prevenir click al arrastrar links
+        let isDragging = false;
+        slider.addEventListener('mousedown', () => isDragging = false);
+        slider.addEventListener('mousemove', () => isDragging = true);
+
+        slider.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                if (isDragging) {
+                    e.preventDefault();
+                }
+            });
+        });
+    };
+
+    loadInstaFeed();
+
 });

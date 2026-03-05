@@ -103,6 +103,7 @@ let currentLessonId = null;
 let currentModuleId = null;
 let videoCompleted = false;
 let pointsQueue = Promise.resolve();
+let quillInstance = null;
 
 // ═══════════════════════════════════════════════════════
 // INITIALIZATION
@@ -1230,7 +1231,29 @@ async function loadTaskState(lessonId) {
     } else {
         formEl.style.display = 'block';
         submittedEl.style.display = 'none';
-        document.getElementById('tareaTextarea').value = '';
+
+        // Initialize Quill if it hasn't been initialized yet
+        if (!quillInstance) {
+            quillInstance = new Quill('#tareaQuillEditor', {
+                theme: 'snow',
+                placeholder: 'Escribe tu reflexión aquí...',
+                modules: {
+                    toolbar: [
+                        [{ 'font': [] }],
+                        [{ 'size': ['small', false, 'large', 'huge'] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'script': 'sub' }, { 'script': 'super' }],
+                        [{ 'header': 1 }, { 'header': 2 }, 'blockquote', 'code-block'],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
+                        [{ 'direction': 'rtl' }, { 'align': [] }],
+                        ['link', 'clean']
+                    ]
+                }
+            });
+        }
+
+        quillInstance.root.innerHTML = '';
         document.getElementById('fileName').textContent = '';
     }
 
@@ -1241,15 +1264,20 @@ function setupTaskHandlers(lessonId) {
     const selectFileBtn = document.getElementById('selectFileBtn');
     const fileInput = document.getElementById('tareaFile');
     const submitBtn = document.getElementById('submitTareaBtn');
-    const textarea = document.getElementById('tareaTextarea');
 
     // TASK 13: LocalStorage Backup for text
     const draftKey = `eco_draft_${currentUser.id}_${lessonId}`;
-    if (textarea) {
+    if (quillInstance) {
+        // Remove previous listeners using off to avoid duplicate firing
+        quillInstance.off('text-change');
+
         const saved = localStorage.getItem(draftKey);
-        if (saved) textarea.value = saved;
-        textarea.addEventListener('input', () => {
-            localStorage.setItem(draftKey, textarea.value);
+        if (saved) {
+            quillInstance.root.innerHTML = saved;
+        }
+
+        quillInstance.on('text-change', () => {
+            localStorage.setItem(draftKey, quillInstance.root.innerHTML);
         });
     }
 
@@ -1269,9 +1297,14 @@ function setupTaskHandlers(lessonId) {
 }
 
 async function submitTask(lessonId, draftKey) {
-    const textarea = document.getElementById('tareaTextarea');
     const fileInput = document.getElementById('tareaFile');
-    const text = textarea.value.trim();
+
+    let text = '';
+    if (quillInstance) {
+        text = quillInstance.root.innerHTML.trim();
+        if (text === '<p><br></p>') text = '';
+    }
+
     const file = fileInput ? fileInput.files[0] : null;
 
     if (!text && !file) {
