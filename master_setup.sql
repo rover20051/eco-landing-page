@@ -498,10 +498,29 @@ CREATE POLICY "Admins and Mentors can manage attendance CLERK" ON public.attenda
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.jwt()->>'sub' AND role IN ('admin', 'mentor'))
 );
 
+-- Notifications
+CREATE TABLE IF NOT EXISTS public.notifications (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id TEXT REFERENCES public.profiles(id) ON DELETE CASCADE,
+    type TEXT NOT NULL CHECK (type IN ('class_unlocked', 'assignment_graded', 'attendance')),
+    title TEXT NOT NULL,
+    message TEXT,
+    is_read BOOLEAN DEFAULT false,
+    data JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view their own notifications CLERK" ON public.notifications FOR SELECT USING (auth.jwt()->>'sub' = user_id);
+CREATE POLICY "Users can update their own notifications CLERK" ON public.notifications FOR UPDATE USING (auth.jwt()->>'sub' = user_id);
+CREATE POLICY "Admins can insert notifications CLERK" ON public.notifications FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.jwt()->>'sub' AND role IN ('admin', 'mentor'))
+);
+
 -- Realtime
 DO $$ BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE public.user_progress; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE public.assignments; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE public.lesson_progress; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 
 -- =========================================================================

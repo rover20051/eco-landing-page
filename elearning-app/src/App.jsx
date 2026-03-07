@@ -8,6 +8,9 @@ import ProtectedRoute from './components/ProtectedRoute'
 import DashboardHome from './pages/student/DashboardHome'
 import ModulesGrid from './pages/student/ModulesGrid'
 import LessonView from './pages/student/lesson/LessonView'
+import AchievementsPage from './pages/student/AchievementsPage'
+import NotificationsPage from './pages/student/NotificationsPage'
+import AttendancePage from './pages/student/AttendancePage'
 import StudentApp from './pages/StudentApp'
 
 // Admin Panel Imports
@@ -42,8 +45,9 @@ export default function App() {
           <Route index element={<DashboardHome />} />
           <Route path="modules" element={<ModulesGrid />} />
           <Route path="modules/:lessonId" element={<LessonView />} />
-          <Route path="achievements" element={<div>Página de Logros (En construcción)</div>} />
-          <Route path="notifications" element={<div>Notificaciones (En construcción)</div>} />
+          <Route path="achievements" element={<AchievementsPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="attendance" element={<AttendancePage />} />
         </Route>
       </Route>
 
