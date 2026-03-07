@@ -1,0 +1,189 @@
+/* LessonView.css */
+.lesson-view {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 70px - 64px);
+    /* Full height minus topbar minus padding */
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.lesson-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.back-btn {
+    background: transparent;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    color: #666;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.back-btn:hover {
+    background: rgba(17, 47, 78, 0.05);
+    color: #112F4E;
+}
+
+.lesson-content-layout {
+    display: flex;
+    gap: 32px;
+    flex-grow: 1;
+    min-height: 0;
+}
+
+.lesson-main {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding-right: 16px;
+}
+
+.lesson-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    color: #112F4E;
+    margin: 0 0 24px 0;
+}
+
+.video-container {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: #112F4E;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    flex-shrink: 0;
+}
+
+.video-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.no-video {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: rgba(250, 250, 238, 0.5);
+    font-family: 'DM Sans', sans-serif;
+}
+
+.lesson-description {
+    font-family: 'DM Sans', sans-serif;
+    color: #444;
+    line-height: 1.6;
+    font-size: 1.05rem;
+}
+
+/* Sidebar Tabs */
+.lesson-sidebar {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid rgba(17, 47, 78, 0.05);
+    box-shadow: 0 4px 12px rgba(17, 47, 78, 0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.tabs-header {
+    display: flex;
+    border-bottom: 1px solid rgba(17, 47, 78, 0.1);
+    background: #fdfdfd;
+}
+
+.tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    background: rgba(17, 47, 78, 0.02);
+    color: #112F4E;
+}
+
+.tab-btn.active {
+    color: #BD4339;
+    /* Rojo ECO */
+    border-bottom-color: #BD4339;
+}
+
+.tab-content {
+    padding: 24px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.tab-content h3 {
+    font-family: 'Playfair Display', serif;
+    color: #112F4E;
+    margin: 0 0 16px 0;
+    font-size: 1.4rem;
+}
+
+.resources-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.resources-list li {
+    margin-bottom: 12px;
+}
+
+.resources-list a {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background: #FAFAEE;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #112F4E;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.resources-list a:hover {
+    background: #e0e0d5;
+}
+
+.placeholder-box {
+    padding: 32px;
+    text-align: center;
+    border: 1px dashed #ccc;
+    border-radius: 8px;
+    color: #999;
+}
+
+@media (max-width: 1024px) {
+    .lesson-content-layout {
+        flex-direction: column;
+        overflow-y: auto;
+    }
+
+    .lesson-main,
+    .lesson-sidebar {
+        flex: none;
+        overflow-y: visible;
+    }
+}

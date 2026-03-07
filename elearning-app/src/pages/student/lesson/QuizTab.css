@@ -1,0 +1,133 @@
+/* QuizTab.css */
+.quiz-tab {
+    font-family: 'DM Sans', sans-serif;
+    color: #444;
+}
+
+.quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.quiz-header h3 {
+    margin: 0;
+    font-family: 'Playfair Display', serif;
+    color: #112F4E;
+    font-size: 1.4rem;
+}
+
+.quiz-score-badge {
+    background: #112F4E;
+    color: #FAFAEE;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.quiz-question-card {
+    background: white;
+    border: 1px solid rgba(17, 47, 78, 0.05);
+    box-shadow: 0 4px 12px rgba(17, 47, 78, 0.02);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.quiz-question-card h4 {
+    margin: 0 0 16px 0;
+    color: #112F4E;
+    font-size: 1.1rem;
+}
+
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.quiz-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: #fdfdfd;
+    border: 1px solid #eee;
+    padding: 16px;
+    border-radius: 8px;
+    text-align: left;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    color: #444;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.quiz-option:hover:not(:disabled) {
+    border-color: #BD4339;
+    background: rgba(189, 67, 57, 0.02);
+}
+
+.quiz-option.selected {
+    border-color: #BD4339;
+    background: rgba(189, 67, 57, 0.05);
+    font-weight: 600;
+}
+
+.option-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.radio-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quiz-option.selected .radio-circle,
+.quiz-option.correct-selected .radio-circle,
+.quiz-option.wrong-selected .radio-circle {
+    border-color: #BD4339;
+}
+
+.radio-fill {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #BD4339;
+}
+
+/* Graded States */
+.quiz-option:disabled {
+    cursor: default;
+}
+
+.quiz-option.correct-selected {
+    background: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+    font-weight: 600;
+}
+
+.quiz-option.correct-revealed {
+    border: 2px dashed #4CAF50;
+}
+
+.quiz-option.wrong-selected {
+    background: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+    font-weight: 600;
+}
+
+.result-icon {
+    font-size: 1.2rem;
+}

@@ -46,16 +46,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const navLinks = document.getElementById('navLinks');
 
     navToggle.addEventListener('click', () => {
-        navToggle.classList.toggle('active');
-        navLinks.classList.toggle('active');
-        document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : '';
+        navLinks.classList.toggle('open');
+        document.body.style.overflow = navLinks.classList.contains('open') ? 'hidden' : '';
     });
 
     // Close nav when clicking a link
     navLinks.querySelectorAll('a').forEach(link => {
         link.addEventListener('click', () => {
-            navToggle.classList.remove('active');
-            navLinks.classList.remove('active');
+            navLinks.classList.remove('open');
             document.body.style.overflow = '';
         });
     });
@@ -87,21 +85,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     faqItems.forEach(item => {
         const question = item.querySelector('.faq-question');
+        const answer = item.querySelector('.faq-answer');
 
         question.addEventListener('click', () => {
-            const isActive = item.classList.contains('active');
+            const isActive = question.getAttribute('aria-expanded') === 'true';
 
             // Close all other items
             faqItems.forEach(other => {
                 if (other !== item) {
-                    other.classList.remove('active');
                     other.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+                    const otherAnswer = other.querySelector('.faq-answer');
+                    if (otherAnswer) otherAnswer.classList.remove('open');
                 }
             });
 
             // Toggle current item
-            item.classList.toggle('active', !isActive);
             question.setAttribute('aria-expanded', !isActive);
+            if (answer) answer.classList.toggle('open', !isActive);
         });
     });
 
@@ -251,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
         top: 0;
         left: 0;
         height: 3px;
-        background: linear-gradient(90deg, var(--yellow, #E8B931), var(--red, #CC2A12));
+        background: linear-gradient(90deg, var(--cream, #FFF7E7), var(--wine, #5A2428));
         z-index: 10000;
         transition: width 0.1s ease;
         width: 0%;

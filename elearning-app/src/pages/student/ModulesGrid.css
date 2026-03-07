@@ -1,0 +1,153 @@
+/* ModulesGrid.css */
+.modules-page {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 32px;
+    margin-top: 40px;
+}
+
+.module-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(17, 47, 78, 0.05);
+    border: 1px solid rgba(17, 47, 78, 0.05);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.module-card:hover:not(.locked) {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(17, 47, 78, 0.1);
+}
+
+.module-card.locked {
+    opacity: 0.7;
+}
+
+.module-image-container {
+    height: 180px;
+    position: relative;
+    background-color: #112F4E;
+}
+
+.module-cover {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.module-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'GIAZA', serif;
+    font-size: 3rem;
+    color: #FAFAEE;
+    opacity: 0.5;
+}
+
+.locked-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(17, 47, 78, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+}
+
+.locked-overlay span {
+    background: #FAFAEE;
+    color: #112F4E;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.completed-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: #4CAF50;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.module-content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.module-number {
+    color: #BA9D83;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.module-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: #112F4E;
+    margin: 0 0 12px 0;
+}
+
+.module-desc {
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0 0 24px 0;
+    flex-grow: 1;
+}
+
+.module-progress {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.module-progress span {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #112F4E;
+}
+
+.module-btn {
+    text-align: center;
+    width: 100%;
+}
+
+.eco-secondary-btn {
+    background-color: #f5f5f5;
+    color: #999;
+    border: 1px solid #ddd;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    width: 100%;
+    cursor: not-allowed;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}

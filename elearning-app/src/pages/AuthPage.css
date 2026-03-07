@@ -1,0 +1,86 @@
+.auth-container {
+    display: flex;
+    min-height: 100vh;
+    width: 100vw;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.auth-left {
+    flex: 1;
+    background-image: url('/images/auth-bg.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFF7E7;
+    padding: 40px;
+}
+
+.auth-branding h2 {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 4rem;
+    margin-bottom: 24px;
+    color: #FFF7E7;
+}
+
+.auth-branding p {
+    font-family: 'Roboto', sans-serif;
+    font-size: 1.25rem;
+    max-width: 400px;
+    line-height: 1.6;
+    color: #FFF7E7;
+    opacity: 0.9;
+}
+
+.auth-right {
+    flex: 1;
+    background-color: #FFF7E7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+/* Customizing Clerk Classes */
+.cl-eco-primary-btn {
+    background-color: #BD4339 !important;
+    font-family: 'DM Sans', sans-serif !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 8px !important;
+}
+
+.cl-eco-primary-btn:hover {
+    background-color: #a33930 !important;
+}
+
+.cl-eco-auth-card {
+    box-shadow: 0 10px 40px rgba(17, 47, 78, 0.1) !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(17, 47, 78, 0.05) !important;
+}
+
+.cl-eco-auth-title {
+    font-family: 'Playfair Display', serif !important;
+    color: #112F4E !important;
+    font-size: 1.75rem !important;
+}
+
+.cl-eco-auth-subtitle {
+    font-family: 'DM Sans', sans-serif !important;
+    color: #BA9D83 !important;
+}
+
+@media (max-width: 768px) {
+    .auth-container {
+        flex-direction: column;
+    }
+
+    .auth-left {
+        padding: 60px 20px;
+        text-align: center;
+        flex: none;
+    }
+}

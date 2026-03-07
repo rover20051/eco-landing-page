@@ -1,0 +1,142 @@
+/* AttendanceManager.css */
+.attendance-manager {
+    padding-bottom: 40px;
+}
+
+.attendance-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(17, 47, 78, 0.05);
+    margin-bottom: 30px;
+    border: 1px solid rgba(17, 47, 78, 0.05);
+}
+
+.date-picker-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.date-picker-group label {
+    font-weight: 600;
+    color: #112F4E;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.eco-input {
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-family: 'DM Sans', sans-serif;
+    color: #333;
+    transition: all 0.2s;
+    font-size: 1rem;
+}
+
+.eco-input:focus {
+    border-color: #112F4E;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(17, 47, 78, 0.1);
+}
+
+.attendance-table th {
+    font-family: 'Playfair Display', serif;
+    color: #112F4E;
+    font-size: 1.1rem;
+    padding-bottom: 16px;
+    border-bottom: 2px solid rgba(17, 47, 78, 0.1);
+}
+
+.attendance-table td {
+    padding: 16px 8px;
+    vertical-align: middle;
+}
+
+.notes-input {
+    width: 100%;
+    max-width: 300px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+}
+
+/* Custom Radio Buttons for attendance */
+.custom-radio {
+    display: block;
+    position: relative;
+    padding-left: 25px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    font-size: 22px;
+    user-select: none;
+    height: 20px;
+}
+
+.custom-radio input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 24px;
+    width: 24px;
+    background-color: #eee;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.custom-radio:hover input~.checkmark {
+    background-color: #ccc;
+}
+
+/* Base styles for checked states */
+.custom-radio input:checked~.checkmark {
+    background-color: #112F4E;
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.custom-radio input:checked~.checkmark:after {
+    display: block;
+}
+
+.custom-radio .checkmark:after {
+    top: 7px;
+    left: 7px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: white;
+}
+
+/* Colors for specific attendance states */
+.present-radio input:checked~.checkmark {
+    background-color: #2e7d32;
+    /* Green */
+}
+
+.absent-radio input:checked~.checkmark {
+    background-color: #BD4339;
+    /* ECO Red */
+}
+
+.excused-radio input:checked~.checkmark {
+    background-color: #f57c00;
+    /* Orange */
+}

@@ -1,0 +1,80 @@
+/* AssignmentTab.css */
+.assignments-tab {
+    font-family: 'DM Sans', sans-serif;
+    color: #444;
+}
+
+.task-desc {
+    background: #fdfdfd;
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 4px solid #112F4E;
+    margin-bottom: 24px;
+    color: #333;
+}
+
+.eco-quill {
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 24px;
+}
+
+.eco-quill .ql-editor {
+    min-height: 200px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+}
+
+.assignment-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.status-badge {
+    background: #fff3cd;
+    color: #856404;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.graded-notice {
+    background: white;
+    border: 1px solid rgba(17, 47, 78, 0.1);
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.grade-badge {
+    display: inline-block;
+    font-weight: bold;
+    font-size: 1.1rem;
+    padding: 8px 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    background: #f0f0f0;
+}
+
+.feedback-box {
+    background: rgba(189, 67, 57, 0.05);
+    /* Rojo ECO muy claro */
+    border-left: 4px solid #BD4339;
+    padding: 16px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 24px;
+}
+
+.feedback-box h4 {
+    margin: 0 0 8px 0;
+    color: #112F4E;
+}
+
+.readonly-content {
+    opacity: 0.8;
+    padding: 16px;
+    background: #fdfdfd;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}

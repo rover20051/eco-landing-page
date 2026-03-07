@@ -1,0 +1,131 @@
+/* AdminDashboard.css */
+.admin-dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.admin-page-title {
+    font-family: 'Playfair Display', serif;
+    color: #2c3e50;
+    font-size: 2.2rem;
+    margin: 0 0 32px 0;
+}
+
+/* Stats */
+.admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    margin-bottom: 48px;
+}
+
+.admin-stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e1e4e8;
+}
+
+.admin-stat-card.highlight {
+    border-left: 4px solid #BD4339;
+    background-color: #fffaf9;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.section-header h2 {
+    font-family: 'DM Sans', sans-serif;
+    color: #2c3e50;
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.admin-link-btn {
+    color: #112F4E;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+.admin-link-btn:hover {
+    text-decoration: underline;
+}
+
+/* Base Tables for Admin */
+.admin-table-container {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e1e4e8;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.admin-table th {
+    background: #f8f9fa;
+    padding: 16px 24px;
+    font-weight: 600;
+    color: #6c757d;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e1e4e8;
+}
+
+.admin-table td {
+    padding: 16px 24px;
+    color: #2c3e50;
+    border-bottom: 1px solid #e1e4e8;
+    font-size: 0.95rem;
+}
+
+.admin-table tr:last-child td {
+    border-bottom: none;
+}
+
+.mod-label {
+    background: #e9ecef;
+    color: #495057;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.admin-action-btn {
+    background: #BD4339;
+    color: white;
+    padding: 6px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.admin-action-btn:hover {
+    background: #a33930;
+}
+
+.admin-empty-state {
+    background: white;
+    padding: 48px;
+    text-align: center;
+    border-radius: 12px;
+    border: 1px dashed #ced4da;
+    color: #6c757d;
+}

@@ -1,0 +1,53 @@
+/* AdminApp.css */
+.admin-layout {
+    background-color: #f5f6f8;
+    /* Un fondo un poco más frío para diferenciarlo del área de estudiantes */
+}
+
+.admin-sidebar {
+    background-color: #2c3e50;
+    /* Un tono más oscuro/grisáceo para el panel de admin */
+}
+
+.admin-badge {
+    background-color: #BD4339;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.student-link {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #FAFAEE;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.student-link:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.topbar-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    color: #112F4E;
+    font-weight: 600;
+}
+
+.admin-content {
+    background-color: transparent;
+}

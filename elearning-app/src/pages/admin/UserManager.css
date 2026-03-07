@@ -1,0 +1,47 @@
+/* UserManager additions */
+.admin-users-page .section-header {
+    margin-bottom: 32px;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+}
+
+.admin-search-input {
+    padding: 10px 16px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    width: 250px;
+    font-size: 0.95rem;
+}
+
+.admin-search-input:focus {
+    outline: none;
+    border-color: #112F4E;
+}
+
+.role-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.role-badge.admin {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.role-badge.mentor {
+    background: #d4edda;
+    color: #155724;
+}
+
+.role-badge.student {
+    background: #e2e3e5;
+    color: #383d41;
+}
