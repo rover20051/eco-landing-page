@@ -15,7 +15,8 @@ export default function AuthPage() {
             </div>
             <div className="auth-right">
                 <SignIn
-                    fallbackRedirectUrl="/dashboard"
+                    fallbackRedirectUrl={BASE}
+                    signUpFallbackRedirectUrl={BASE}
                     appearance={{
                         elements: {
                             formButtonPrimary: 'eco-primary-btn',

@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/elearning-app/dist/((?!assets/|images/|vite\\.svg$).*)",
+      "destination": "/elearning-app/dist/index.html"
+    }
+  ]
+}
