@@ -8,51 +8,19 @@ export default function DashboardHome() {
     const supabase = useSupabase();
     const { profile } = useUserProfile();
 
-    const [resumeData, setResumeData] = useState(null);
-    const [stats, setStats] = useState({
-        completedLessons: 0,
-        pendingTasks: 0,
-        attendances: 0
-    });
+    const [resumeLesson, setResumeLesson] = useState(null);
+    const [stats, setStats] = useState({ completedLessons: 0, pendingTasks: 0, attendances: 0 });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!profile) return;
-
         let isMounted = true;
 
         async function loadDashboardData() {
             try {
-                if (!isMounted) return;
                 setLoading(true);
 
-                // 1. Fetch user progress globally to calculate module unlocked states
-                const { data: progressData } = await supabase
-                    .from('user_progress')
-                    .select('module_id, status, progress_percentage, last_accessed')
-                    .eq('user_id', profile.id)
-                    .order('last_accessed', { ascending: false });
-
-                // 2. Fetch last accessed module info to show in "Resume" card
-                if (progressData && progressData.length > 0) {
-                    const lastProgress = progressData[0];
-
-                    const { data: moduleData } = await supabase
-                        .from('modules')
-                        .select('id, title, module_number')
-                        .eq('id', lastProgress.module_id)
-                        .single();
-
-                    if (moduleData && isMounted) {
-                        setResumeData({
-                            module: moduleData,
-                            progress: lastProgress
-                        });
-                    }
-                }
-
-                // 3. Fetch basic stats (in parallel like we did in vanilla JS)
-                const [lessonsRes, tasksRes, attendanceRes] = await Promise.all([
+                const [lessonsRes, tasksRes, attendanceRes, lastLessonRes] = await Promise.all([
                     supabase
                         .from('lesson_progress')
                         .select('id', { count: 'exact', head: true })
@@ -67,15 +35,26 @@ export default function DashboardHome() {
                         .from('attendance')
                         .select('id', { count: 'exact', head: true })
                         .eq('user_id', profile.id)
-                        .eq('attended', true)
+                        .eq('status', 'present'),
+                    // Fetch last accessed lesson (by completed_at desc)
+                    supabase
+                        .from('lesson_progress')
+                        .select('lesson_id, completed_at, lessons(id, title, lesson_number, module_id, modules(id, title, module_number))')
+                        .eq('user_id', profile.id)
+                        .order('completed_at', { ascending: false })
+                        .limit(1)
+                        .maybeSingle(),
                 ]);
 
                 if (isMounted) {
                     setStats({
                         completedLessons: lessonsRes.count || 0,
                         pendingTasks: tasksRes.count || 0,
-                        attendances: attendanceRes.count || 0
+                        attendances: attendanceRes.count || 0,
                     });
+                    if (lastLessonRes.data?.lessons) {
+                        setResumeLesson(lastLessonRes.data);
+                    }
                 }
             } catch (err) {
                 console.error('Error loading dashboard data:', err);
@@ -85,13 +64,13 @@ export default function DashboardHome() {
         }
 
         loadDashboardData();
-
         return () => { isMounted = false; };
     }, [profile, supabase]);
 
-    if (loading) {
-        return <div className="dashboard-loading">Cargando tu progreso...</div>;
-    }
+    if (loading) return <div className="dashboard-loading">Cargando tu progreso...</div>;
+
+    const lesson = resumeLesson?.lessons;
+    const mod = lesson?.modules;
 
     return (
         <div className="dashboard-home">
@@ -107,15 +86,13 @@ export default function DashboardHome() {
                         <p>{stats.completedLessons}</p>
                     </div>
                 </div>
-
                 <div className="stat-card">
                     <div className="stat-icon">📝</div>
                     <div className="stat-content">
-                        <h3>Tareas pdtes.</h3>
+                        <h3>Tareas entregadas</h3>
                         <p>{stats.pendingTasks}</p>
                     </div>
                 </div>
-
                 <div className="stat-card stat-attendance">
                     <div className="stat-icon">✋</div>
                     <div className="stat-content">
@@ -125,32 +102,26 @@ export default function DashboardHome() {
                 </div>
             </div>
 
-            {/* Resume Section */}
+            {/* Resume Section — always points to the last specific lesson */}
             <section className="resume-section">
                 <h2>Continuar aprendiendo</h2>
 
-                {resumeData ? (
+                {lesson && mod ? (
                     <div className="resume-card">
                         <div className="resume-info">
-                            <span className="module-badge">Módulo {resumeData.module.module_number}</span>
-                            <h3>{resumeData.module.title}</h3>
-                            <div className="progress-bar-container">
-                                <div
-                                    className="progress-fill"
-                                    style={{ width: `${resumeData.progress.progress_percentage}%` }}
-                                ></div>
-                            </div>
-                            <span className="progress-text">{resumeData.progress.progress_percentage}% completado</span>
+                            <span className="module-badge">Módulo {mod.module_number} · Clase {lesson.lesson_number}</span>
+                            <h3>{lesson.title}</h3>
+                            <p className="resume-module-name">{mod.title}</p>
                         </div>
                         <div className="resume-action">
-                            <Link to={`/dashboard/modules/${resumeData.module.id}`} className="eco-primary-btn">
-                                Continuar
+                            <Link to={`/dashboard/modules/${lesson.id}`} className="eco-primary-btn">
+                                Continuar clase
                             </Link>
                         </div>
                     </div>
                 ) : (
                     <div className="empty-state">
-                        <p>Todavía no has empezado ningún módulo.</p>
+                        <p>Todavía no empezaste ninguna clase.</p>
                         <Link to="/dashboard/modules" className="eco-primary-btn">Ver Módulos</Link>
                     </div>
                 )}

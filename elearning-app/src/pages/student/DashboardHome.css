@@ -104,9 +104,15 @@
 }
 
 .resume-info h3 {
-    margin: 0 0 16px 0;
+    margin: 0 0 6px 0;
     font-size: 1.4rem;
     color: #112F4E;
+}
+
+.resume-module-name {
+    margin: 0 0 0 0;
+    font-size: 0.88rem;
+    color: #888;
 }
 
 .progress-bar-container {

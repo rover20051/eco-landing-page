@@ -1,23 +1,28 @@
 import React from 'react';
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, NavLink, Link } from 'react-router-dom';
 import { useClerk } from '@clerk/react';
 import { useUserProfile } from '../../hooks/useSupabase';
-import './AdminApp.css'; // Will share some base styles with StudentApp
+import './AdminApp.css';
+
+const BASE = import.meta.env.BASE_URL;
 
 export default function AdminApp() {
     const { signOut } = useClerk();
     const { profile, loading } = useUserProfile();
 
-    if (loading) {
-        return <div className="admin-loading">Cargando perfil administrador...</div>;
-    }
+    if (loading) return <div className="admin-loading">Cargando...</div>;
 
     return (
         <div className="layout admin-layout">
             {/* SIDEBAR */}
             <nav className="sidebar admin-sidebar">
-                <div className="logo-container" style={{ padding: '0 20px', marginBottom: '30px' }}>
-                    <img src="/images/logo eco final.png" alt="ECO Logo" className="logo" style={{ width: '100%', height: 'auto', filter: 'brightness(0) invert(1)' }} />
+                <div className="logo-container">
+                    <img
+                        src={`${BASE}images/logo eco final.png`}
+                        alt="ECO Logo"
+                        className="logo"
+                        style={{ width: '100%', height: 'auto', filter: 'brightness(0) invert(1)' }}
+                    />
                 </div>
 
                 <div className="user-profile">
@@ -26,27 +31,49 @@ export default function AdminApp() {
                 </div>
 
                 <ul className="nav-links">
-                    <li><Link to="/admin">Dashboard</Link></li>
-                    <li><Link to="/admin/users">🔔 Usuarios & Aprobaciones</Link></li>
-                    <li><Link to="/admin/modules">Módulos</Link></li>
-                    <li><Link to="/admin/assignments">Entregas</Link></li>
-                    <li><Link to="/admin/attendance">Asistencias</Link></li>
+                    <li>
+                        <NavLink to="/admin" end className={({ isActive }) => isActive ? 'nav-active' : ''}>
+                            <span className="nav-icon">📊</span> Dashboard
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink to="/admin/users" className={({ isActive }) => isActive ? 'nav-active' : ''}>
+                            <span className="nav-icon">👥</span> Usuarios
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink to="/admin/modules" className={({ isActive }) => isActive ? 'nav-active' : ''}>
+                            <span className="nav-icon">📚</span> Módulos
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink to="/admin/assignments" className={({ isActive }) => isActive ? 'nav-active' : ''}>
+                            <span className="nav-icon">📝</span> Entregas
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink to="/admin/attendance" className={({ isActive }) => isActive ? 'nav-active' : ''}>
+                            <span className="nav-icon">✋</span> Asistencias
+                        </NavLink>
+                    </li>
                 </ul>
 
                 <div className="nav-bottom">
-                    <Link to="/dashboard" className="student-link">Volver al Campus</Link>
-                    <button onClick={() => signOut()} className="logout-btn">
+                    <Link to="/dashboard" className="student-link">← Volver al Campus</Link>
+                    <button onClick={() => signOut({ redirectUrl: BASE })} className="logout-btn">
                         Cerrar sesión
                     </button>
                 </div>
             </nav>
 
-            {/* MAIN CONTENT AREA */}
+            {/* MAIN CONTENT */}
             <main className="main-content">
-                <header className="topbar">
-                    <div className="topbar-title">Administración ECO</div>
+                <header className="topbar admin-topbar">
+                    <div className="admin-topbar-brand">
+                        <span className="admin-topbar-title">Administración</span>
+                        <span className="admin-topbar-sub">ECO Campus</span>
+                    </div>
                 </header>
-
                 <div className="content-container admin-content">
                     <Outlet />
                 </div>

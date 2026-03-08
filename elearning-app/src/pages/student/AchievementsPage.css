@@ -131,3 +131,26 @@
     font-weight: 700;
     flex-shrink: 0;
 }
+
+.summary-pill--total {
+    background-color: rgba(17, 47, 78, 0.06);
+    color: #112F4E;
+}
+
+.achievements-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(17, 47, 78, 0.1);
+}
+
+.cat-progress {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #BD4339;
+    background: rgba(189, 67, 57, 0.08);
+    padding: 4px 12px;
+    border-radius: 20px;
+}
