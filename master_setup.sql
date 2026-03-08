@@ -126,6 +126,13 @@ DO $$ BEGIN
 EXCEPTION WHEN undefined_table THEN NULL; END $$;
 
 DO $$ BEGIN
+    -- Notifications
+    DROP POLICY IF EXISTS "Users can view their own notifications CLERK" ON public.notifications;
+    DROP POLICY IF EXISTS "Users can update their own notifications CLERK" ON public.notifications;
+    DROP POLICY IF EXISTS "Admins can insert notifications CLERK" ON public.notifications;
+EXCEPTION WHEN undefined_table THEN NULL; END $$;
+
+DO $$ BEGIN
     -- Lesson Resources
     DROP POLICY IF EXISTS "Lesson resources are viewable by authenticated users." ON public.lesson_resources;
     DROP POLICY IF EXISTS "Admins can manage lesson resources." ON public.lesson_resources;
@@ -209,8 +216,11 @@ DO $$ BEGIN
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
--- Forzamos id a que sea texto si no lo era
-ALTER TABLE public.profiles ALTER COLUMN id TYPE TEXT USING id::text;
+-- Forzamos id a que sea texto si no lo era (ignoramos si ya es TEXT o hay dependencias)
+DO $$ BEGIN
+  ALTER TABLE public.profiles ALTER COLUMN id TYPE TEXT USING id::text;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 
 -- Modules
 CREATE TABLE IF NOT EXISTS public.modules (
@@ -241,6 +251,10 @@ CREATE TABLE IF NOT EXISTS public.lessons (
     UNIQUE(module_id, lesson_number)
 );
 ALTER TABLE IF EXISTS public.lessons ADD COLUMN IF NOT EXISTS available_from DATE;
+ALTER TABLE IF EXISTS public.lessons ADD COLUMN IF NOT EXISTS youtube_video_id TEXT;
+ALTER TABLE IF EXISTS public.lessons ADD COLUMN IF NOT EXISTS task_description TEXT;
+ALTER TABLE IF EXISTS public.lessons ADD COLUMN IF NOT EXISTS estimated_minutes INTEGER;
+ALTER TABLE IF EXISTS public.lessons ADD COLUMN IF NOT EXISTS pdf_guide_url TEXT;
 
 -- Lesson Resources
 CREATE TABLE IF NOT EXISTS public.lesson_resources (
