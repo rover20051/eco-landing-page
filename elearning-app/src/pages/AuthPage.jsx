@@ -21,7 +21,7 @@ export default function AuthPage() {
                 {isSignUp ? (
                     <SignUp
                         routing="path"
-                        path="/sign-up"
+                        path={`${BASE}sign-up`}
                         signInUrl={`${BASE}sign-in`}
                         forceRedirectUrl={`${BASE}dashboard`}
                         fallbackRedirectUrl={`${BASE}dashboard`}
@@ -37,7 +37,7 @@ export default function AuthPage() {
                 ) : (
                     <SignIn
                         routing="path"
-                        path="/sign-in"
+                        path={`${BASE}sign-in`}
                         signUpUrl={`${BASE}sign-up`}
                         forceRedirectUrl={`${BASE}dashboard`}
                         fallbackRedirectUrl={`${BASE}dashboard`}
