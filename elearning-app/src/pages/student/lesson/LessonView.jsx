@@ -68,33 +68,39 @@ export default function LessonView() {
     if (loading) return <div className="student-loading">Cargando lección...</div>;
     if (!lesson) return <div className="student-loading">Lección no encontrada</div>;
 
-    // Schedule lock logic
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize to local midnight
+    // Schedule lock logic (Buenos Aires timezone)
+    const baDateString = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(new Date()); // "YYYY-MM-DD"
+    const todayBA = new Date(`${baDateString}T00:00:00`);
+
     let isLocked = false;
     let availableDateStr = '';
 
     if (lesson.available_from) {
-        // Assume 'YYYY-MM-DD' from Supabase
-        // Creating like this avoids timezone shifting if we split:
-        const [y, m, d] = lesson.available_from.split('-');
-        const availableDate = new Date(y, m - 1, d);
-        if (today < availableDate) {
+        const lessonDate = new Date(`${lesson.available_from}T00:00:00`);
+        if (todayBA < lessonDate) {
             isLocked = true;
-            availableDateStr = availableDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+            availableDateStr = new Intl.DateTimeFormat('es-ES', {
+                timeZone: 'America/Argentina/Buenos_Aires',
+                day: 'numeric', month: 'long', year: 'numeric'
+            }).format(lessonDate);
         }
     }
 
     if (isLocked) {
         return (
-            <div className="lesson-view locked-screen" style={{ textAlign: 'center', padding: '100px 20px' }}>
-                <button onClick={() => navigate(-1)} className="eco-secondary-btn" style={{ marginBottom: '40px' }}>← Volver</button>
+            <div className="lesson-view locked-screen" style={{ textAlign: 'center', padding: '100px 20px', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 <div style={{ fontSize: '4rem', marginBottom: '20px' }}>🔒</div>
                 <h1 style={{ color: '#112F4E', fontFamily: 'Playfair Display' }}>Lección Bloqueada</h1>
                 <p style={{ color: '#666', fontSize: '1.2rem', marginTop: '10px' }}>
                     Siguiendo el cronograma de ECO, esta lección estará disponible a partir del:<br />
                     <strong style={{ color: '#BD4339', display: 'block', marginTop: '15px', fontSize: '1.5rem' }}>{availableDateStr}</strong>
                 </p>
+                <button onClick={() => navigate(-1)} className="eco-secondary-btn" style={{ marginTop: '40px' }}>← Volver a los Módulos</button>
             </div>
         );
     }

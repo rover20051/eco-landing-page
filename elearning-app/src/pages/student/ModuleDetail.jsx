@@ -31,8 +31,16 @@ export default function ModuleDetail() {
     if (loading) return <div className="student-loading">Cargando módulo...</div>;
     if (!module) return <div className="student-loading">Módulo no encontrado</div>;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Get today's date in Buenos Aires timezone explicitly to avoid server-client UTC mismatches.
+    const baDateString = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(new Date()); // Returns "YYYY-MM-DD" in BA time.
+
+    // Create comparable Date object for BA midnight
+    const todayBA = new Date(`${baDateString}T00:00:00`);
 
     return (
         <div style={{ maxWidth: 700, margin: '0 auto', padding: '24px 16px' }}>
@@ -52,13 +60,16 @@ export default function ModuleDetail() {
                     let isLocked = false;
                     let availableDateStr = '';
                     if (lesson.available_from) {
-                        const [y, m, d] = lesson.available_from.split('-');
-                        const availableDate = new Date(Number(y), Number(m) - 1, Number(d));
-                        if (today < availableDate) {
+                        // available_from is usually YYYY-MM-DD
+                        const lessonDate = new Date(`${lesson.available_from}T00:00:00`);
+
+                        if (todayBA < lessonDate) {
                             isLocked = true;
-                            availableDateStr = availableDate.toLocaleDateString('es-ES', {
+                            // Format using BA timezone to be safe, though YYYY-MM-DD is already absolute
+                            availableDateStr = new Intl.DateTimeFormat('es-ES', {
+                                timeZone: 'America/Argentina/Buenos_Aires',
                                 day: 'numeric', month: 'long', year: 'numeric',
-                            });
+                            }).format(lessonDate);
                         }
                     }
 

@@ -26,7 +26,7 @@ import AssignmentGrader from './pages/admin/AssignmentGrader'
 function HomeRedirect() {
   const { isSignedIn, isLoaded } = useAuth()
   if (!isLoaded) return null
-  return isSignedIn ? <Navigate to="/dashboard" replace /> : <AuthPage />
+  return isSignedIn ? <Navigate to="/dashboard" replace /> : <Navigate to="/sign-in" replace />
 }
 
 export default function App() {
@@ -34,6 +34,8 @@ export default function App() {
     <Routes>
       {/* RUTAS PÚBLICAS */}
       <Route path="/" element={<HomeRedirect />} />
+      <Route path="/sign-in/*" element={<AuthPage />} />
+      <Route path="/sign-up/*" element={<AuthPage />} />
       {/* Shown to users who are logged in but pending approval */}
       <Route path="/pending-approval" element={<PendingApproval />} />
 

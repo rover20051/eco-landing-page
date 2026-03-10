@@ -1,10 +1,14 @@
 import React from 'react';
-import { SignIn } from '@clerk/react';
+import { SignIn, SignUp } from '@clerk/react';
+import { useLocation } from 'react-router-dom';
 import './AuthPage.css';
 
 const BASE = import.meta.env.BASE_URL;
 
 export default function AuthPage() {
+    const location = useLocation();
+    const isSignUp = location.pathname.includes('/sign-up');
+
     return (
         <div className="auth-container">
             <div className="auth-left" style={{ backgroundImage: `url('${BASE}images/auth-bg.png')` }}>
@@ -14,18 +18,37 @@ export default function AuthPage() {
                 </div>
             </div>
             <div className="auth-right">
-                <SignIn
-                    fallbackRedirectUrl={BASE}
-                    signUpFallbackRedirectUrl={BASE}
-                    appearance={{
-                        elements: {
-                            formButtonPrimary: 'eco-primary-btn',
-                            card: 'eco-auth-card',
-                            headerTitle: 'eco-auth-title',
-                            headerSubtitle: 'eco-auth-subtitle'
-                        }
-                    }}
-                />
+                {isSignUp ? (
+                    <SignUp
+                        routing="path"
+                        path="/sign-up"
+                        signInUrl="/sign-in"
+                        fallbackRedirectUrl="/dashboard"
+                        appearance={{
+                            elements: {
+                                formButtonPrimary: 'eco-primary-btn',
+                                card: 'eco-auth-card',
+                                headerTitle: 'eco-auth-title',
+                                headerSubtitle: 'eco-auth-subtitle'
+                            }
+                        }}
+                    />
+                ) : (
+                    <SignIn
+                        routing="path"
+                        path="/sign-in"
+                        signUpUrl="/sign-up"
+                        fallbackRedirectUrl="/dashboard"
+                        appearance={{
+                            elements: {
+                                formButtonPrimary: 'eco-primary-btn',
+                                card: 'eco-auth-card',
+                                headerTitle: 'eco-auth-title',
+                                headerSubtitle: 'eco-auth-subtitle'
+                            }
+                        }}
+                    />
+                )}
             </div>
         </div>
     );
