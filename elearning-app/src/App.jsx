@@ -7,6 +7,7 @@ import PendingApproval from './pages/PendingApproval'
 import ProtectedRoute from './components/ProtectedRoute'
 import DashboardHome from './pages/student/DashboardHome'
 import ModulesGrid from './pages/student/ModulesGrid'
+import ModuleDetail from './pages/student/ModuleDetail'
 import LessonView from './pages/student/lesson/LessonView'
 import AchievementsPage from './pages/student/AchievementsPage'
 import NotificationsPage from './pages/student/NotificationsPage'
@@ -44,7 +45,8 @@ export default function App() {
         <Route element={<StudentApp />}>
           <Route index element={<DashboardHome />} />
           <Route path="modules" element={<ModulesGrid />} />
-          <Route path="modules/:lessonId" element={<LessonView />} />
+          <Route path="modules/:moduleId" element={<ModuleDetail />} />
+          <Route path="lesson/:lessonId" element={<LessonView />} />
           <Route path="achievements" element={<AchievementsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="attendance" element={<AttendancePage />} />

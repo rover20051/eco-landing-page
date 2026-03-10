@@ -24,13 +24,11 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
     // Track lesson ID in state so new lessons can use it across tabs
     const [lessonId, setLessonId] = useState(lesson?.id || null);
 
-    // Info tab — Fix 1: use task_description (existing column) for "Descripción breve"
     const [title, setTitle] = useState(lesson?.title || '');
     const [description, setDescription] = useState(lesson?.task_description || '');
     const [contentText, setContentText] = useState(lesson?.content_text || '');
     const [availableFrom, setAvailableFrom] = useState(lesson?.available_from ? lesson.available_from.slice(0, 10) : '');
 
-    // Content tab — Fix 7: init from video_url or reconstruct from youtube_video_id
     const [videoUrl, setVideoUrl] = useState(
         lesson?.video_url ||
         (lesson?.youtube_video_id ? `https://www.youtube.com/embed/${lesson.youtube_video_id}` : '')
@@ -38,7 +36,6 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
     const [fileUrl, setFileUrl] = useState('');
     const [uploadingFile, setUploadingFile] = useState(false);
 
-    // Quiz tab — Fix 2: no quizId needed, questions are direct children of lesson
     const [quizQuestions, setQuizQuestions] = useState([]);
     const [newQuestion, setNewQuestion] = useState('');
     const [newOptions, setNewOptions] = useState(['', '', '', '']);
@@ -52,7 +49,6 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
 
     const isNew = !lessonId;
 
-    // Fix 2: load quiz_questions directly by lesson_id (no quizzes table)
     useEffect(() => {
         if (!lessonId) return;
         async function fetchDetails() {
@@ -95,8 +91,6 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
         setSaving(true);
         setErrorMsg('');
         try {
-            // Fix 1: use task_description instead of description
-            // Fix 7: also save youtube_video_id extracted from videoUrl
             const ytId = extractYoutubeId(videoUrl);
             const payload = {
                 title,
@@ -128,7 +122,6 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
         }
     };
 
-    // Fix 7: save video_url AND youtube_video_id together
     const handleSaveVideoUrl = async () => {
         if (!lessonId) { showError('Guardá primero la información básica de la lección.'); return; }
         setSaving(true);
@@ -136,7 +129,7 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
             const ytId = extractYoutubeId(videoUrl);
             const { error } = await supabase.from('lessons').update({
                 video_url: videoUrl || null,
-                ...(ytId ? { youtube_video_id: ytId } : {}),
+                youtube_video_id: ytId || null,
             }).eq('id', lessonId).select().single();
             if (error) throw error;
             showSuccess('Enlace de video guardado.');
@@ -148,7 +141,6 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
     };
 
     // ── File upload ──────────────────────────────────────────
-    // Fix 6: use 'lesson-resources' bucket (matches schema)
     const handleFileUpload = async (event) => {
         if (!lessonId) { showError('Guardá primero la información básica.'); return; }
         const file = event.target.files[0];
@@ -179,7 +171,6 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
     };
 
     // ── Quiz ─────────────────────────────────────────────────
-    // Fix 3+4: insert directly into quiz_questions (lesson_id), then options into quiz_options
     const handleAddQuestion = async () => {
         if (!newQuestion.trim()) { showError('Escribí la pregunta.'); return; }
         if (newOptions.some(o => !o.trim())) { showError('Completá todas las opciones.'); return; }
@@ -297,18 +288,18 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
                                 <small style={{ color: '#888', display: 'block', marginTop: '4px' }}>Dejalo vacío para que esté disponible inmediatamente.</small>
                             </div>
                             <div>
-                                <label className="form-label">Descripción breve (opcional)</label>
-                                <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="form-input" style={{ resize: 'vertical' }} />
+                                <label className="form-label">Instrucciones de la tarea <span style={{fontWeight:400,color:'#888'}}>(aparece en el tab "Tareas" del alumno)</span></label>
+                                <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="form-input" style={{ resize: 'vertical' }} placeholder="Ej: Reflexioná sobre la lección y escribí cómo la aplicarías..." />
                             </div>
                             <div>
-                                <label className="form-label">Contenido de la clase / Instrucciones de la tarea</label>
+                                <label className="form-label">Descripción / Contenido de la clase <span style={{fontWeight:400,color:'#888'}}>(aparece en la vista principal de la lección)</span></label>
                                 <textarea
                                     value={contentText}
                                     onChange={e => setContentText(e.target.value)}
                                     rows={6}
                                     className="form-input"
                                     style={{ resize: 'vertical' }}
-                                    placeholder="Explicación, texto de la clase, enunciado de la tarea..."
+                                    placeholder="Explicación o descripción de la clase para que el alumno la vea al abrir la lección..."
                                 />
                             </div>
                             <button className="eco-primary-btn" onClick={handleSaveInfo} disabled={saving} style={{ alignSelf: 'flex-start' }}>
@@ -373,7 +364,7 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
                                 </div>
                             )}
 
-                            {/* Existing questions — Fix 5: render quiz_options with opt.is_correct */}
+                            {/* Preguntas cargadas */}
                             {quizQuestions.length > 0 && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     <h4 style={{ margin: 0, color: '#112F4E', fontFamily: "'Playfair Display', serif" }}>

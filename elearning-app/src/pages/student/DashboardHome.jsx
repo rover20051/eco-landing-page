@@ -114,7 +114,7 @@ export default function DashboardHome() {
                             <p className="resume-module-name">{mod.title}</p>
                         </div>
                         <div className="resume-action">
-                            <Link to={`/dashboard/modules/${lesson.id}`} className="eco-primary-btn">
+                            <Link to={`/dashboard/lesson/${lesson.id}`} className="eco-primary-btn">
                                 Continuar clase
                             </Link>
                         </div>

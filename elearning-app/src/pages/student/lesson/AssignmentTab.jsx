@@ -95,7 +95,7 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
             <h3>Tarea de la Lección</h3>
             <div className="task-desc">
                 {taskDescription ? (
-                    <div dangerouslySetInnerHTML={{ __html: taskDescription }} />
+                    <p style={{ whiteSpace: 'pre-wrap' }}>{taskDescription}</p>
                 ) : (
                     <p>Escribe aquí tu reflexión sobre esta lección.</p>
                 )}
