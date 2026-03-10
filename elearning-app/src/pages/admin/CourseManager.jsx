@@ -73,7 +73,9 @@ export default function CourseManager() {
                 const { error: err } = await supabase
                     .from('modules')
                     .update({ title: modTitle, description: modDesc, is_active: modActive })
-                    .eq('id', editingModule.id);
+                    .eq('id', editingModule.id)
+                    .select()
+                    .single();
                 if (err) throw err;
             } else {
                 const nextNum = modules.length > 0
@@ -98,7 +100,9 @@ export default function CourseManager() {
             const { error: err } = await supabase
                 .from('modules')
                 .update({ is_active: !mod.is_active })
-                .eq('id', mod.id);
+                .eq('id', mod.id)
+                .select()
+                .single();
             if (err) throw err;
             setModules(prev => prev.map(m => m.id === mod.id ? { ...m, is_active: !m.is_active } : m));
         } catch (err) {

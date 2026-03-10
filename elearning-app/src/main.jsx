@@ -24,7 +24,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       signUpUrl={`${BASE}sign-up`}
     >
       <SupabaseProvider>
-        <BrowserRouter basename={import.meta.env.PROD ? "/elearning-app/dist/" : "/"}>
+        <BrowserRouter basename="/">
           <App />
         </BrowserRouter>
       </SupabaseProvider>

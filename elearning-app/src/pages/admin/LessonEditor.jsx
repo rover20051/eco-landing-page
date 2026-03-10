@@ -108,7 +108,7 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
             };
 
             if (lessonId) {
-                const { error } = await supabase.from('lessons').update(payload).eq('id', lessonId);
+                const { error } = await supabase.from('lessons').update(payload).eq('id', lessonId).select().single();
                 if (error) throw error;
                 showSuccess('¡Lección guardada correctamente!');
             } else {
@@ -137,7 +137,7 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
             const { error } = await supabase.from('lessons').update({
                 video_url: videoUrl || null,
                 ...(ytId ? { youtube_video_id: ytId } : {}),
-            }).eq('id', lessonId);
+            }).eq('id', lessonId).select().single();
             if (error) throw error;
             showSuccess('Enlace de video guardado.');
         } catch (err) {
