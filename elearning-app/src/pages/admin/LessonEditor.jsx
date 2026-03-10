@@ -223,7 +223,10 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
         setQuizQuestions(prev => prev.filter(q => q.id !== qId));
     };
 
-    const handleClose = () => {
+    const handleClose = async () => {
+        if (title.trim()) {
+            await handleSaveInfo();
+        }
         onSaved(); // triggers re-fetch in parent
     };
 
