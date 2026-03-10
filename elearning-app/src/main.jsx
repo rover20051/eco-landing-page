@@ -20,7 +20,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       publishableKey={PUBLISHABLE_KEY}
       localization={esMX}
       afterSignOutUrl={BASE}
-      signInUrl={BASE}
+      signInUrl={`${BASE}sign-in`}
       signUpUrl={`${BASE}sign-up`}
     >
       <SupabaseProvider>

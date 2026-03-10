@@ -22,8 +22,9 @@ export default function AuthPage() {
                     <SignUp
                         routing="path"
                         path="/sign-up"
-                        signInUrl="/sign-in"
-                        fallbackRedirectUrl="/dashboard"
+                        signInUrl={`${BASE}sign-in`}
+                        forceRedirectUrl={`${BASE}dashboard`}
+                        fallbackRedirectUrl={`${BASE}dashboard`}
                         appearance={{
                             elements: {
                                 formButtonPrimary: 'eco-primary-btn',
@@ -37,8 +38,9 @@ export default function AuthPage() {
                     <SignIn
                         routing="path"
                         path="/sign-in"
-                        signUpUrl="/sign-up"
-                        fallbackRedirectUrl="/dashboard"
+                        signUpUrl={`${BASE}sign-up`}
+                        forceRedirectUrl={`${BASE}dashboard`}
+                        fallbackRedirectUrl={`${BASE}dashboard`}
                         appearance={{
                             elements: {
                                 formButtonPrimary: 'eco-primary-btn',
