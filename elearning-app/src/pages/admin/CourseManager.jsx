@@ -27,7 +27,7 @@ export default function CourseManager() {
             setError('');
             const { data, error: err } = await supabase
                 .from('modules')
-                .select('*, lessons(id, title, lesson_number)')
+                .select('*, lessons(id, title, lesson_number, task_description, content_text, available_from, youtube_video_id, video_url)')
                 .order('module_number', { ascending: true });
 
             if (err) throw err;
