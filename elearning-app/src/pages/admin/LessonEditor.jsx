@@ -87,7 +87,7 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
 
     // ── Info + Content tab save ──────────────────────────────
     const handleSaveInfo = async () => {
-        if (!title.trim()) { showError('El título es obligatorio'); return; }
+        if (!title.trim()) { showError('El título es obligatorio'); return false; }
         setSaving(true);
         setErrorMsg('');
         try {
@@ -115,15 +115,18 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
                 setLessonId(data.id);
                 showSuccess('¡Lección creada! Podés completar el resto de las pestañas.');
             }
+            return true;
         } catch (err) {
+            console.error("Save info error:", err);
             showError('Error al guardar: ' + err.message);
+            return false;
         } finally {
             setSaving(false);
         }
     };
 
     const handleSaveVideoUrl = async () => {
-        if (!lessonId) { showError('Guardá primero la información básica de la lección.'); return; }
+        if (!lessonId) { showError('Guardá primero la información básica de la lección.'); return false; }
         setSaving(true);
         try {
             const ytId = extractYoutubeId(videoUrl);
@@ -133,8 +136,11 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
             }).eq('id', lessonId).select().single();
             if (error) throw error;
             showSuccess('Enlace de video guardado.');
+            return true;
         } catch (err) {
+            console.error("Save video url error:", err);
             showError('Error: ' + err.message);
+            return false;
         } finally {
             setSaving(false);
         }
@@ -225,7 +231,8 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
 
     const handleClose = async () => {
         if (title.trim()) {
-            await handleSaveInfo();
+            const success = await handleSaveInfo();
+            if (!success) return; // Prevent closing if saving failed
         }
         onSaved(); // triggers re-fetch in parent
     };
@@ -291,11 +298,11 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
                                 <small style={{ color: '#888', display: 'block', marginTop: '4px' }}>Dejalo vacío para que esté disponible inmediatamente.</small>
                             </div>
                             <div>
-                                <label className="form-label">Instrucciones de la tarea <span style={{fontWeight:400,color:'#888'}}>(aparece en el tab "Tareas" del alumno)</span></label>
+                                <label className="form-label">Instrucciones de la tarea <span style={{ fontWeight: 400, color: '#888' }}>(aparece en el tab "Tareas" del alumno)</span></label>
                                 <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="form-input" style={{ resize: 'vertical' }} placeholder="Ej: Reflexioná sobre la lección y escribí cómo la aplicarías..." />
                             </div>
                             <div>
-                                <label className="form-label">Descripción / Contenido de la clase <span style={{fontWeight:400,color:'#888'}}>(aparece en la vista principal de la lección)</span></label>
+                                <label className="form-label">Descripción / Contenido de la clase <span style={{ fontWeight: 400, color: '#888' }}>(aparece en la vista principal de la lección)</span></label>
                                 <textarea
                                     value={contentText}
                                     onChange={e => setContentText(e.target.value)}
