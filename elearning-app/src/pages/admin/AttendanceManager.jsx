@@ -35,11 +35,11 @@ export default function AttendanceManager() {
             setLoading(true);
             setFetchError(null);
             try {
-                // 1. Fetch ALL approved users (students, mentors, admins)
+                // 1. Fetch ALL participants (students, mentors, admins) except rejected
                 const { data: usersData, error: usersError } = await supabase
                     .from('profiles')
-                    .select('id, full_name, email, role')
-                    .eq('status', 'approved')
+                    .select('id, full_name, email, role, status')
+                    .neq('status', 'rejected')
                     .order('role', { ascending: true })
                     .order('full_name', { ascending: true });
 
@@ -284,7 +284,12 @@ export default function AttendanceManager() {
                                 const roleColor = ROLE_COLORS[participant.role] || ROLE_COLORS.student;
                                 return (
                                     <tr key={participant.id} className={currentStatus === 'absent' ? 'row-absent' : currentStatus === 'excused' ? 'row-excused' : ''}>
-                                        <td style={{ fontWeight: 600, color: '#112F4E' }}>{participant.full_name}</td>
+                                        <td style={{ fontWeight: 600, color: '#112F4E' }}>
+                                            {participant.full_name}
+                                            {participant.status === 'pending' && (
+                                                <span style={{ fontSize: '0.7rem', color: '#e65100', backgroundColor: '#fff3e0', padding: '2px 6px', borderRadius: '4px', marginLeft: '6px' }}>Pendiente</span>
+                                            )}
+                                        </td>
                                         <td>
                                             <span className="role-badge" style={{ background: roleColor.background, color: roleColor.color }}>
                                                 {ROLE_LABELS[participant.role] || participant.role}
@@ -355,7 +360,7 @@ export default function AttendanceManager() {
                             {participants.length === 0 && (
                                 <tr>
                                     <td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: '#666' }}>
-                                        No hay participantes registrados o aprobados en el sistema actualmente.
+                                        No hay participantes registrados en el sistema actualmente. (Los usuarios rechazados no aparecen aquí).
                                     </td>
                                 </tr>
                             )}
