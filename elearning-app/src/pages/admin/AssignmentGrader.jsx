@@ -36,7 +36,7 @@ export default function AssignmentGrader() {
                         .from('assignments')
                         .select(`
                             *,
-                            profiles!assignments_user_id_fkey(full_name, email),
+                            profiles!user_id(full_name, email),
                             lessons(title, task_description, modules(module_number))
                         `)
                         .eq('id', assignmentId)
@@ -55,7 +55,7 @@ export default function AssignmentGrader() {
                         .from('assignments')
                         .select(`
                             *,
-                            profiles!assignments_user_id_fkey(full_name, email),
+                            profiles!user_id(full_name, email),
                             lessons(title, modules(module_number))
                         `)
                         .order('status', { ascending: true }) // submitted before graded

@@ -74,7 +74,11 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
                 user_id: profile.id,
                 file_url: finalFileUrl,
                 status: 'submitted',
-                submitted_at: new Date().toISOString()
+                submitted_at: new Date().toISOString(),
+                grade: null,
+                feedback: null,
+                graded_by: null,
+                graded_at: null
             };
 
             const { data, error } = await supabase

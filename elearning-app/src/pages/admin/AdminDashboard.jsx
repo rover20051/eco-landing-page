@@ -41,7 +41,7 @@ export default function AdminDashboard() {
             id, 
             status, 
             submitted_at, 
-            profiles!assignments_user_id_fkey (full_name),
+            profiles!user_id(full_name),
             lessons (title, modules(module_number))
           `)
                     .eq('status', 'submitted')
