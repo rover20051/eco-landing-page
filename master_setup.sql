@@ -390,6 +390,27 @@ ALTER TABLE IF EXISTS public.quiz_attempts ADD CONSTRAINT quiz_attempts_user_id_
 ALTER TABLE IF EXISTS public.attendance DROP CONSTRAINT IF EXISTS attendance_user_id_fkey;
 ALTER TABLE IF EXISTS public.attendance ADD CONSTRAINT attendance_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
+-- IMPORTANTE: Constraints para habilitar la función de UPSERT correcta
+DO $$ BEGIN
+    ALTER TABLE IF EXISTS public.assignments DROP CONSTRAINT IF EXISTS assignments_lesson_id_user_id_key;
+    ALTER TABLE IF EXISTS public.assignments ADD CONSTRAINT assignments_lesson_id_user_id_key UNIQUE (lesson_id, user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN duplicate_table THEN NULL; END $$;
+
+DO $$ BEGIN
+    ALTER TABLE IF EXISTS public.lesson_progress DROP CONSTRAINT IF EXISTS lesson_progress_user_id_lesson_id_key;
+    ALTER TABLE IF EXISTS public.lesson_progress ADD CONSTRAINT lesson_progress_user_id_lesson_id_key UNIQUE (user_id, lesson_id);
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN duplicate_table THEN NULL; END $$;
+
+DO $$ BEGIN
+    ALTER TABLE IF EXISTS public.attendance DROP CONSTRAINT IF EXISTS attendance_user_id_event_date_key;
+    ALTER TABLE IF EXISTS public.attendance ADD CONSTRAINT attendance_user_id_event_date_key UNIQUE (user_id, event_date);
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN duplicate_table THEN NULL; END $$;
+
+DO $$ BEGIN
+    ALTER TABLE IF EXISTS public.user_progress DROP CONSTRAINT IF EXISTS user_progress_user_id_module_id_key;
+    ALTER TABLE IF EXISTS public.user_progress ADD CONSTRAINT user_progress_user_id_module_id_key UNIQUE (user_id, module_id);
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN duplicate_table THEN NULL; END $$;
+
 
 -- =========================================================================
 -- PASO 4: CREACIÓN DE NUEVAS POLÍTICAS RLS Y REALTIME (CLERK)
@@ -411,10 +432,23 @@ AS $$
   );
 $$;
 
+-- Definir mentor clerk localmente para profiles early start
+CREATE OR REPLACE FUNCTION public.is_admin_or_mentor_clerk()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS(
+    SELECT 1 FROM profiles
+    WHERE id = auth.jwt()->>'sub' AND role IN ('admin', 'mentor')
+  );
+$$;
+
 CREATE POLICY "Users can insert own profile via Clerk app" ON profiles FOR INSERT WITH CHECK (auth.jwt()->>'sub' = id);
 CREATE POLICY "Users can view own profile CLERK" ON profiles FOR SELECT USING (auth.jwt()->>'sub' = id);
-CREATE POLICY "Admins can view all profiles CLERK" ON profiles FOR SELECT USING (
-  public.is_admin_clerk()
+CREATE POLICY "Admins y Mentors can view all profiles CLERK" ON profiles FOR SELECT USING (
+  public.is_admin_or_mentor_clerk()
 );
 CREATE POLICY "Users can update own profile CLERK" ON profiles FOR UPDATE USING (auth.jwt()->>'sub' = id);
 
@@ -632,7 +666,8 @@ $$;
 -- 3. Actualizar políticas que usan Admin
 
 DROP POLICY IF EXISTS "Admins can view all profiles CLERK" ON public.profiles;
-CREATE POLICY "Admins can view all profiles CLERK" ON public.profiles FOR SELECT USING ( public.is_admin_clerk() );
+DROP POLICY IF EXISTS "Admins y Mentors can view all profiles CLERK" ON public.profiles;
+CREATE POLICY "Admins y Mentors can view all profiles CLERK" ON public.profiles FOR SELECT USING ( public.is_admin_or_mentor_clerk() );
 
 DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
 
