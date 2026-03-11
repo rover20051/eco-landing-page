@@ -86,6 +86,32 @@ export default function AttendanceManager() {
         }));
     };
 
+    const handleClearAttendance = async (userId) => {
+        if (!window.confirm('¿Seguro que deseas borrar la asistencia de este alumno para la fecha seleccionada?')) return;
+        try {
+            setSaving(true);
+            const { error } = await supabase
+                .from('attendance')
+                .delete()
+                .eq('user_id', userId)
+                .eq('event_date', selectedDate);
+
+            if (error) throw error;
+
+            // Remove from local state
+            setAttendanceRecord(prev => {
+                const newState = { ...prev };
+                delete newState[userId];
+                return newState;
+            });
+        } catch (err) {
+            console.error(err);
+            alert('Error al borrar la asistencia.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const handleSaveAttendance = async () => {
         try {
             setSaving(true);
@@ -159,6 +185,7 @@ export default function AttendanceManager() {
                                 <th style={{ textAlign: 'center' }}>Ausente</th>
                                 <th style={{ textAlign: 'center' }}>Justificado</th>
                                 <th>Notas (Opcional)</th>
+                                <th>Acción</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -213,6 +240,18 @@ export default function AttendanceManager() {
                                                 value={attendanceRecord[student.id]?.notes || ''}
                                                 onChange={(e) => handleNotesChange(student.id, e.target.value)}
                                             />
+                                        </td>
+                                        <td align="center">
+                                            {currentStatus && (
+                                                <button
+                                                    className="eco-secondary-btn"
+                                                    onClick={() => handleClearAttendance(student.id)}
+                                                    style={{ padding: '4px 8px', fontSize: '0.8rem', background: 'transparent', border: '1px solid #ccc', color: '#666' }}
+                                                    title="Borrar registro de asistencia"
+                                                >
+                                                    Borrar
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 );

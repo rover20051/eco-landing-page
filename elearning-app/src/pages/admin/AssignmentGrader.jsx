@@ -171,7 +171,16 @@ export default function AssignmentGrader() {
                         <p className="submission-date">Entregado el: {new Date(assignment.submitted_at).toLocaleString()}</p>
                     </div>
 
-                    <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: assignment.content_text }} />
+                    {assignment.file_url ? (
+                        <div className="file-submission-box">
+                            <h4>Archivo Adjunto:</h4>
+                            <a href={assignment.file_url} target="_blank" rel="noopener noreferrer" className="eco-primary-btn" style={{ display: 'inline-block', marginTop: '10px' }}>
+                                📄 Ver Documento / Descargar
+                            </a>
+                        </div>
+                    ) : (
+                        <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: assignment.content_text || '<p>Sin texto provisto.</p>' }} />
+                    )}
                 </div>
 
                 {/* Right Side: Grading Panel */}
