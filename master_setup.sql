@@ -391,25 +391,46 @@ ALTER TABLE IF EXISTS public.attendance DROP CONSTRAINT IF EXISTS attendance_use
 ALTER TABLE IF EXISTS public.attendance ADD CONSTRAINT attendance_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 -- IMPORTANTE: Constraints para habilitar la función de UPSERT correcta
+-- 1. Eliminar filas duplicadas primero para que postgres no lance UNIQUE_VIOLATION
 DO $$ BEGIN
+    DELETE FROM public.assignments a WHERE a.id NOT IN (
+        SELECT id FROM (
+            SELECT id, ROW_NUMBER() OVER (PARTITION BY lesson_id, user_id ORDER BY submitted_at DESC) as rn FROM public.assignments
+        ) t WHERE t.rn = 1
+    );
     ALTER TABLE IF EXISTS public.assignments DROP CONSTRAINT IF EXISTS assignments_lesson_id_user_id_key;
     ALTER TABLE IF EXISTS public.assignments ADD CONSTRAINT assignments_lesson_id_user_id_key UNIQUE (lesson_id, user_id);
-EXCEPTION WHEN duplicate_object THEN NULL; WHEN duplicate_table THEN NULL; END $$;
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 DO $$ BEGIN
+    DELETE FROM public.lesson_progress a WHERE a.id NOT IN (
+        SELECT id FROM (
+            SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id, lesson_id ORDER BY created_at DESC) as rn FROM public.lesson_progress
+        ) t WHERE t.rn = 1
+    );
     ALTER TABLE IF EXISTS public.lesson_progress DROP CONSTRAINT IF EXISTS lesson_progress_user_id_lesson_id_key;
     ALTER TABLE IF EXISTS public.lesson_progress ADD CONSTRAINT lesson_progress_user_id_lesson_id_key UNIQUE (user_id, lesson_id);
-EXCEPTION WHEN duplicate_object THEN NULL; WHEN duplicate_table THEN NULL; END $$;
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 DO $$ BEGIN
+    DELETE FROM public.attendance a WHERE a.id NOT IN (
+        SELECT id FROM (
+            SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id, event_date ORDER BY created_at DESC) as rn FROM public.attendance
+        ) t WHERE t.rn = 1
+    );
     ALTER TABLE IF EXISTS public.attendance DROP CONSTRAINT IF EXISTS attendance_user_id_event_date_key;
     ALTER TABLE IF EXISTS public.attendance ADD CONSTRAINT attendance_user_id_event_date_key UNIQUE (user_id, event_date);
-EXCEPTION WHEN duplicate_object THEN NULL; WHEN duplicate_table THEN NULL; END $$;
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 DO $$ BEGIN
+    DELETE FROM public.user_progress a WHERE a.id NOT IN (
+        SELECT id FROM (
+            SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id, module_id ORDER BY last_accessed DESC) as rn FROM public.user_progress
+        ) t WHERE t.rn = 1
+    );
     ALTER TABLE IF EXISTS public.user_progress DROP CONSTRAINT IF EXISTS user_progress_user_id_module_id_key;
     ALTER TABLE IF EXISTS public.user_progress ADD CONSTRAINT user_progress_user_id_module_id_key UNIQUE (user_id, module_id);
-EXCEPTION WHEN duplicate_object THEN NULL; WHEN duplicate_table THEN NULL; END $$;
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 
 -- =========================================================================

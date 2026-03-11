@@ -85,7 +85,7 @@ export default function AttendanceManager() {
         }));
     };
 
-    const handleCrearClase = () => {
+    const handleCrearClase = async () => {
         const newRecord = { ...attendanceRecord };
         let modified = false;
         students.forEach(student => {
@@ -94,10 +94,31 @@ export default function AttendanceManager() {
                 modified = true;
             }
         });
+
         if (modified) {
             setAttendanceRecord(newRecord);
+            // Auto guardar en la base de datos
+            try {
+                setSaving(true);
+                const recordsToSave = students.map(student => ({
+                    user_id: student.id,
+                    event_date: selectedDate,
+                    status: newRecord[student.id].status,
+                    notes: newRecord[student.id].notes || null
+                }));
+                const { error } = await supabase
+                    .from('attendance')
+                    .upsert(recordsToSave, { onConflict: 'user_id,event_date' });
+                if (error) throw error;
+                alert('¡Clase iniciada! Todos los alumnos fueron marcados como presentes.');
+            } catch (err) {
+                console.error(err);
+                alert('Error al iniciar la clase: ' + err.message);
+            } finally {
+                setSaving(false);
+            }
         } else if (students.length > 0) {
-            alert('La lista ya está inicializada o todos ya tienen un estado.');
+            alert('La lista ya está inicializada para esta fecha.');
         } else {
             alert('No hay alumnos para iniciar asistencia.');
         }
