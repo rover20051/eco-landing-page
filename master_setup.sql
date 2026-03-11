@@ -766,3 +766,97 @@ BEGIN
   SET title = EXCLUDED.title, available_from = EXCLUDED.available_from;
 
 END $$;
+/*
+👉 FEDE: COPIA ESTE CÓDIGO Y EJECUTALO EN EL "SQL EDITOR" DE SUPABASE
+Esto corrige un error masivo de Recursividad (Infinite Recursion) que estaba bloqueando de raíz 
+al "Administrador" para ver perfiles de alumnos, editar lecciones, ver entregas y registrar notificaciones.
+*/
+
+-- 1. Helper function for Admin (Security definer omite bloqueos paralelos)
+CREATE OR REPLACE FUNCTION public.is_admin_clerk()
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  _is_admin boolean;
+BEGIN
+  SELECT EXISTS(
+    SELECT 1 FROM profiles
+    WHERE id = coalesce(auth.jwt()->>'sub', '') AND role = 'admin'::user_role
+  ) INTO _is_admin;
+  RETURN coalesce(_is_admin, false);
+END;
+$$;
+
+-- 2. Helper function for Admin or Mentor
+CREATE OR REPLACE FUNCTION public.is_admin_or_mentor_clerk()
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  _has_access boolean;
+BEGIN
+  SELECT EXISTS(
+    SELECT 1 FROM profiles
+    WHERE id = coalesce(auth.jwt()->>'sub', '') AND role IN ('admin'::user_role, 'mentor'::user_role)
+  ) INTO _has_access;
+  RETURN coalesce(_has_access, false);
+END;
+$$;
+
+-- 3. Actualizar políticas que usan Admin
+
+DROP POLICY IF EXISTS "Admins can view all profiles CLERK" ON public.profiles;
+CREATE POLICY "Admins can view all profiles CLERK" ON public.profiles FOR SELECT USING ( public.is_admin_clerk() );
+
+DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
+
+DROP POLICY IF EXISTS "Admins can manage lessons CLERK" ON public.lessons;
+CREATE POLICY "Admins can manage lessons CLERK" ON public.lessons FOR ALL USING ( public.is_admin_clerk() );
+
+DROP POLICY IF EXISTS "Admins can manage modules CLERK" ON public.modules;
+CREATE POLICY "Admins can manage modules CLERK" ON public.modules FOR ALL USING ( public.is_admin_clerk() );
+
+DROP POLICY IF EXISTS "Admins can manage quiz questions CLERK" ON public.quiz_questions;
+CREATE POLICY "Admins can manage quiz questions CLERK" ON public.quiz_questions FOR ALL USING ( public.is_admin_clerk() );
+
+DROP POLICY IF EXISTS "Admins can manage quiz options CLERK" ON public.quiz_options;
+CREATE POLICY "Admins can manage quiz options CLERK" ON public.quiz_options FOR ALL USING ( public.is_admin_clerk() );
+
+DROP POLICY IF EXISTS "Admins can manage lesson resources." ON public.lesson_resources;
+CREATE POLICY "Admins can manage lesson resources." ON public.lesson_resources FOR ALL USING ( public.is_admin_clerk() );
+
+-- 4. Actualizar políticas que usan Admin + Mentor
+
+DROP POLICY IF EXISTS "Admins and mentors view all assignments CLERK" ON public.assignments;
+CREATE POLICY "Admins and mentors view all assignments CLERK" ON public.assignments FOR SELECT USING ( public.is_admin_or_mentor_clerk() );
+
+DROP POLICY IF EXISTS "Admins and Mentors update assignments CLERK" ON public.assignments;
+CREATE POLICY "Admins and Mentors update assignments CLERK" ON public.assignments FOR UPDATE USING ( public.is_admin_or_mentor_clerk() );
+
+DROP POLICY IF EXISTS "Admins can view all quiz attempts CLERK" ON public.quiz_attempts;
+CREATE POLICY "Admins can view all quiz attempts CLERK" ON public.quiz_attempts FOR SELECT USING ( public.is_admin_or_mentor_clerk() );
+
+DROP POLICY IF EXISTS "Admins can view all quiz answers CLERK" ON public.quiz_answers;
+CREATE POLICY "Admins can view all quiz answers CLERK" ON public.quiz_answers FOR SELECT USING ( public.is_admin_or_mentor_clerk() );
+
+DROP POLICY IF EXISTS "Admins and Mentors can manage attendance CLERK" ON public.attendance;
+CREATE POLICY "Admins and Mentors can manage attendance CLERK" ON public.attendance FOR ALL USING ( public.is_admin_or_mentor_clerk() );
+
+DROP POLICY IF EXISTS "Admins can insert notifications CLERK" ON public.notifications;
+CREATE POLICY "Admins can insert notifications CLERK" ON public.notifications FOR INSERT WITH CHECK ( public.is_admin_or_mentor_clerk() );
+
+-- Opcional: Actualizar el Storage Bucket
+DROP POLICY IF EXISTS "Admins and Mentors can view all assignments" ON storage.objects;
+CREATE POLICY "Admins and Mentors can view all assignments"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'assignments' AND public.is_admin_or_mentor_clerk());
+
+DROP POLICY IF EXISTS "Admins can manage lesson resources storage" ON storage.objects;
+CREATE POLICY "Admins can manage lesson resources storage"
+  ON storage.objects FOR ALL
+  USING (bucket_id = 'lesson-resources' AND public.is_admin_clerk());

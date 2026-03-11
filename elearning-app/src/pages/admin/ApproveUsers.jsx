@@ -24,6 +24,9 @@ export default function ApproveUsers() {
         if (!error && data) {
             setPendingUsers(data.filter(u => u.status === 'pending'));
             setAllUsers(data);
+        } else if (error) {
+            console.error("Supabase Error fetching users:", error);
+            alert("Error cargando usuarios: " + error.message);
         }
         setLoading(false);
     }
