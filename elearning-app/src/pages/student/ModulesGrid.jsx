@@ -75,7 +75,7 @@ export default function ModulesGrid() {
                         <div className="module-image-container">
                             {mod.cover_image ? (
                                 // Use a fallback image resolution path logic if needed, currently pointing to absolute root
-                                <img src={`/${mod.cover_image}`} alt={mod.title} className="module-cover" />
+                                <img src={mod.cover_image} alt={mod.title} className="module-cover" />
                             ) : (
                                 <div className="module-cover-placeholder">ECO</div>
                             )}

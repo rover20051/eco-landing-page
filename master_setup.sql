@@ -625,6 +625,14 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
+-- Bucket for module cover images (admin uploads, public read)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'module-covers', 'module-covers', true, 5242880,
+  ARRAY['image/jpeg','image/png','image/webp','image/gif']
+)
+ON CONFLICT (id) DO NOTHING;
+
 -- Storage RLS policies
 DROP POLICY IF EXISTS "Students can upload assignments" ON storage.objects;
 CREATE POLICY "Students can upload assignments"
@@ -659,6 +667,18 @@ DROP POLICY IF EXISTS "Authenticated can view lesson resources" ON storage.objec
 CREATE POLICY "Authenticated can view lesson resources"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'lesson-resources' AND auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Admins can manage module covers" ON storage.objects;
+CREATE POLICY "Admins can manage module covers"
+  ON storage.objects FOR ALL
+  USING (bucket_id = 'module-covers' AND EXISTS (
+    SELECT 1 FROM public.profiles WHERE id = auth.jwt()->>'sub' AND role = 'admin'
+  ));
+
+DROP POLICY IF EXISTS "Public can view module covers" ON storage.objects;
+CREATE POLICY "Public can view module covers"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'module-covers');
 
 -- 1. Helper function for Admin (Security definer omite bloqueos paralelos)
 CREATE OR REPLACE FUNCTION public.is_admin_clerk()

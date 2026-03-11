@@ -19,6 +19,9 @@ export default function CourseManager() {
     const [modTitle, setModTitle] = useState('');
     const [modDesc, setModDesc] = useState('');
     const [modActive, setModActive] = useState(false);
+    const [modCoverImage, setModCoverImage] = useState('');
+    const [coverFile, setCoverFile] = useState(null);
+    const [coverPreview, setCoverPreview] = useState('');
     const [saving, setSaving] = useState(false);
 
     const fetchModules = useCallback(async () => {
@@ -51,7 +54,17 @@ export default function CourseManager() {
         setModTitle(mod ? mod.title : '');
         setModDesc(mod ? mod.description || '' : '');
         setModActive(mod ? mod.is_active : false);
+        setModCoverImage(mod ? mod.cover_image || '' : '');
+        setCoverFile(null);
+        setCoverPreview(mod ? mod.cover_image || '' : '');
         setShowModuleForm(true);
+    };
+
+    const handleCoverFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setCoverFile(file);
+        setCoverPreview(URL.createObjectURL(file));
     };
 
     const handleOpenLesson = (lesson = null, mod = null) => {
@@ -69,10 +82,25 @@ export default function CourseManager() {
         setSaving(true);
         setError('');
         try {
+            let coverUrl = modCoverImage;
+
+            if (coverFile) {
+                const ext = coverFile.name.split('.').pop();
+                const fileName = `module-${Date.now()}.${ext}`;
+                const { error: uploadErr } = await supabase.storage
+                    .from('module-covers')
+                    .upload(fileName, coverFile, { upsert: true });
+                if (uploadErr) throw uploadErr;
+                const { data: urlData } = supabase.storage
+                    .from('module-covers')
+                    .getPublicUrl(fileName);
+                coverUrl = urlData.publicUrl;
+            }
+
             if (editingModule?.id) {
                 const { error: err } = await supabase
                     .from('modules')
-                    .update({ title: modTitle, description: modDesc, is_active: modActive })
+                    .update({ title: modTitle, description: modDesc, is_active: modActive, cover_image: coverUrl })
                     .eq('id', editingModule.id)
                     .select()
                     .single();
@@ -83,7 +111,7 @@ export default function CourseManager() {
                     : 1;
                 const { error: err } = await supabase
                     .from('modules')
-                    .insert({ title: modTitle, description: modDesc, module_number: nextNum, is_active: modActive });
+                    .insert({ title: modTitle, description: modDesc, module_number: nextNum, is_active: modActive, cover_image: coverUrl });
                 if (err) throw err;
             }
             setShowModuleForm(false);
@@ -234,6 +262,23 @@ export default function CourseManager() {
                                     rows={3}
                                     className="form-input"
                                     style={{ resize: 'vertical' }}
+                                />
+                            </div>
+                            <div>
+                                <label className="form-label">Imagen de portada</label>
+                                {coverPreview && (
+                                    <img
+                                        src={coverPreview}
+                                        alt="Preview"
+                                        style={{ width: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }}
+                                    />
+                                )}
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleCoverFileChange}
+                                    className="form-input"
+                                    style={{ padding: '6px' }}
                                 />
                             </div>
                             <label className="form-toggle">
