@@ -41,7 +41,7 @@ export default function ModulesGrid() {
                     const modProgress = progressRes.data?.find(p => p.module_id === mod.id);
                     return {
                         ...mod,
-                        status: modProgress?.status || 'locked',
+                        status: modProgress?.status || 'in_progress',
                         progress_percentage: modProgress?.progress_percentage || 0
                     };
                 });
