@@ -47,15 +47,35 @@ export default function ApproveUsers() {
 
     async function deleteUser(userId, userName) {
         const confirmed = window.confirm(
-            `¿Eliminar completamente al usuario "${userName}"?\n\nEsto borrará su perfil, progreso, tareas y todos sus datos. Esta acción no se puede deshacer.`
+            `¿Eliminar completamente al usuario "${userName}"?\n\nEsto borrará su cuenta de Clerk, perfil, progreso, tareas y todos sus datos. Esta acción no se puede deshacer.`
         );
         if (!confirmed) return;
 
-        const { error } = await supabase.from('profiles').delete().eq('id', userId);
-        if (error) {
-            alert('Error al eliminar: ' + error.message);
-        } else {
-            loadUsers();
+        try {
+            // Get the current session token to authenticate the edge function
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            const res = await fetch(`${supabaseUrl}/functions/v1/delete-user`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+                },
+                body: JSON.stringify({ userId }),
+            });
+
+            const result = await res.json();
+            if (!res.ok) {
+                alert('Error al eliminar: ' + (result.error || 'Error desconocido'));
+            } else {
+                alert(`Usuario "${userName}" eliminado correctamente.`);
+                loadUsers();
+            }
+        } catch (err) {
+            alert('Error al eliminar: ' + err.message);
         }
     }
 
