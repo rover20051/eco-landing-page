@@ -4,6 +4,20 @@ import { useUserProfile } from '../../hooks/useSupabase';
 import { useParams, useNavigate } from 'react-router-dom';
 import './AssignmentGrader.css';
 
+// Extract the original filename from a Supabase storage URL
+// Path format: userId/lessonId_originalName.ext
+function getOriginalFilename(url) {
+    if (!url) return 'archivo';
+    try {
+        const segment = decodeURIComponent(new URL(url).pathname.split('/').pop());
+        // Strip the lessonId_ prefix (everything up to and including the first underscore after the UUID pattern)
+        const match = segment.match(/^[^_]+_[^_]+_(.+)$/) || segment.match(/^[^_]+_(.+)$/);
+        return match ? match[match.length - 1] : segment;
+    } catch {
+        return 'archivo';
+    }
+}
+
 export default function AssignmentGrader() {
     const { assignmentId } = useParams();
     const navigate = useNavigate();
@@ -218,10 +232,11 @@ export default function AssignmentGrader() {
                                                 href={a.file_url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
+                                                download={getOriginalFilename(a.file_url)}
                                                 className="file-link"
-                                                title="Ver archivo del alumno"
+                                                title={getOriginalFilename(a.file_url)}
                                             >
-                                                📄 Ver archivo
+                                                📄 {getOriginalFilename(a.file_url)}
                                             </a>
                                         ) : (
                                             <span style={{ color: '#aaa', fontSize: '0.85rem' }}>Sin archivo</span>
@@ -306,10 +321,11 @@ export default function AssignmentGrader() {
                                 href={assignment.file_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                download={getOriginalFilename(assignment.file_url)}
                                 className="eco-primary-btn"
                                 style={{ display: 'inline-block', marginTop: '12px' }}
                             >
-                                📄 Abrir / Descargar Documento
+                                📄 {getOriginalFilename(assignment.file_url)}
                             </a>
                             <p style={{ fontSize: '0.8rem', color: '#999', marginTop: '8px' }}>
                                 El archivo se abre en una nueva pestaña.

@@ -52,10 +52,9 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
             let finalFileUrl = assignment?.file_url;
 
             if (file) {
-                // Determine file extension
-                const ext = file.name.split('.').pop();
-                // Subiendo a storage en carpeta de usuario para respetar RLS
-                const filePath = `${profile.id}/${lessonId}_${Date.now()}.${ext}`;
+                // Sanitize original filename: keep alphanumeric, dots, dashes, underscores
+                const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                const filePath = `${profile.id}/${lessonId}_${safeName}`;
                 const { error: uploadError } = await supabase.storage.from('assignments').upload(filePath, file, {
                     cacheControl: '3600',
                     upsert: true
