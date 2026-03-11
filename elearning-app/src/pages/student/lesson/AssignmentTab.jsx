@@ -21,7 +21,7 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
                 setLoading(true);
                 const { data, error } = await supabase
                     .from('assignments')
-                    .select('*')
+                    .select('*, grader:profiles!assignments_graded_by_fkey(full_name)')
                     .eq('lesson_id', lessonId)
                     .eq('user_id', profile.id)
                     .single();
@@ -131,7 +131,7 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
                         </div>
                         {assignment.feedback && (
                             <div className="feedback-box">
-                                <h4>Feedback del Mentor:</h4>
+                                <h4>Feedback del Mentor{assignment.grader?.full_name ? ` ${assignment.grader.full_name}` : ''}:</h4>
                                 <p>{assignment.feedback}</p>
                             </div>
                         )}
@@ -155,7 +155,7 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
                                 </div>
                                 {assignment.feedback && (
                                     <div className="feedback-box" style={{ marginTop: '10px' }}>
-                                        <h4 style={{ color: '#c62828', marginBottom: '5px' }}>Comentarios del Mentor:</h4>
+                                        <h4 style={{ color: '#c62828', marginBottom: '5px' }}>Comentarios del Mentor{assignment.grader?.full_name ? ` ${assignment.grader.full_name}` : ''}:</h4>
                                         <p style={{ margin: 0 }}>{assignment.feedback}</p>
                                     </div>
                                 )}
