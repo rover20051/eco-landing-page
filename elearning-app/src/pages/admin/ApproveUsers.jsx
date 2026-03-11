@@ -45,6 +45,20 @@ export default function ApproveUsers() {
         }
     }
 
+    async function deleteUser(userId, userName) {
+        const confirmed = window.confirm(
+            `¿Eliminar completamente al usuario "${userName}"?\n\nEsto borrará su perfil, progreso, tareas y todos sus datos. Esta acción no se puede deshacer.`
+        );
+        if (!confirmed) return;
+
+        const { error } = await supabase.from('profiles').delete().eq('id', userId);
+        if (error) {
+            alert('Error al eliminar: ' + error.message);
+        } else {
+            loadUsers();
+        }
+    }
+
     const displayed = (view === 'pending' ? pendingUsers : allUsers).filter(u =>
         !search ||
         u.full_name?.toLowerCase().includes(search.toLowerCase())
@@ -154,6 +168,15 @@ export default function ApproveUsers() {
                                         <option value="mentor">👨‍🏫 Mentor</option>
                                         <option value="admin">🛡 Admin</option>
                                     </select>
+                                )}
+                                {user.role !== 'admin' && (
+                                    <button
+                                        className="reject-btn"
+                                        style={{ background: '#7f1d1d', marginLeft: '4px' }}
+                                        onClick={() => deleteUser(user.id, user.full_name)}
+                                    >
+                                        🗑 Eliminar
+                                    </button>
                                 )}
                             </div>
                         </div>

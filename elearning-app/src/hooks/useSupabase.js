@@ -62,7 +62,8 @@ export function useUserProfile() {
                         id: userId,
                         full_name: user.fullName || user.username || user.primaryEmailAddress?.emailAddress,
                         avatar_url: user.imageUrl,
-                        role: 'student', // Default role for everyone except the static admins
+                        role: 'student',
+                        status: 'pending', // Must be explicitly approved by admin
                         eco_points: 0,
                         current_streak: 0,
                         last_login_date: new Date().toISOString().split('T')[0]

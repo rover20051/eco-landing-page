@@ -35,9 +35,9 @@ export default function ProtectedRoute({ allowedRole }) {
         );
     }
 
-    // If profile exists and is pending, redirect to pending approval page
+    // If profile exists and is pending (or null status), redirect to pending approval page
     // Admins bypass this check so they're never locked out
-    if (profile && profile.status === 'pending' && profile.role !== 'admin') {
+    if (profile && profile.role !== 'admin' && profile.status !== 'approved') {
         return <Navigate to="/pending-approval" replace />;
     }
 

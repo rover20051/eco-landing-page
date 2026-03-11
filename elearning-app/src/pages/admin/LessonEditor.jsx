@@ -33,7 +33,7 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
         lesson?.video_url ||
         (lesson?.youtube_video_id ? `https://www.youtube.com/embed/${lesson.youtube_video_id}` : '')
     );
-    const [fileUrl, setFileUrl] = useState('');
+    const [resources, setResources] = useState([]);
     const [uploadingFile, setUploadingFile] = useState(false);
 
     const [quizQuestions, setQuizQuestions] = useState([]);
@@ -41,6 +41,7 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
     const [newOptions, setNewOptions] = useState(['', '', '', '']);
     const [newCorrect, setNewCorrect] = useState(0);
     const [addingQuestion, setAddingQuestion] = useState(false);
+    const [editingQuestion, setEditingQuestion] = useState(null); // { id, question_text, quiz_options, correctIdx }
 
     // UI feedback
     const [saving, setSaving] = useState(false);
@@ -61,7 +62,7 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
                     .order('question_order', { ascending: true }),
             ]);
 
-            if (resourcesRes.data?.length > 0) setFileUrl(resourcesRes.data[0].file_url);
+            if (resourcesRes.data?.length > 0) setResources(resourcesRes.data);
 
             if (questionsRes.data) {
                 const sorted = questionsRes.data.map(q => ({
@@ -160,19 +161,38 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
             if (uploadError) throw uploadError;
 
             const { data } = supabase.storage.from('lesson-resources').getPublicUrl(filePath);
-            setFileUrl(data.publicUrl);
 
-            await supabase.from('lesson_resources').insert({
+            const { data: newResource, error: insertError } = await supabase.from('lesson_resources').insert({
                 lesson_id: lessonId,
                 title: file.name,
                 resource_type: 'document',
                 file_url: data.publicUrl,
-            });
+            }).select().single();
+            if (insertError) throw insertError;
+
+            setResources(prev => [...prev, newResource]);
             showSuccess('Archivo subido correctamente.');
         } catch (err) {
             showError('Error al subir: ' + err.message);
         } finally {
             setUploadingFile(false);
+        }
+    };
+
+    const handleDeleteResource = async (resource) => {
+        if (!window.confirm(`¿Eliminar el archivo "${resource.title}"?`)) return;
+        try {
+            // Extract storage path from public URL (everything after /lesson-resources/)
+            const urlParts = resource.file_url.split('/lesson-resources/');
+            if (urlParts[1]) {
+                await supabase.storage.from('lesson-resources').remove([urlParts[1]]);
+            }
+            const { error } = await supabase.from('lesson_resources').delete().eq('id', resource.id);
+            if (error) throw error;
+            setResources(prev => prev.filter(r => r.id !== resource.id));
+            showSuccess('Archivo eliminado.');
+        } catch (err) {
+            showError('Error al eliminar: ' + err.message);
         }
     };
 
@@ -227,6 +247,42 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
         const { error } = await supabase.from('quiz_questions').delete().eq('id', qId);
         if (error) { showError('Error: ' + error.message); return; }
         setQuizQuestions(prev => prev.filter(q => q.id !== qId));
+    };
+
+    const handleStartEdit = (q) => {
+        setEditingQuestion({
+            id: q.id,
+            question_text: q.question_text,
+            options: q.quiz_options.map(o => ({ ...o })),
+            correctIdx: q.quiz_options.findIndex(o => o.is_correct),
+        });
+    };
+
+    const handleSaveEditedQuestion = async () => {
+        const { id, question_text, options, correctIdx } = editingQuestion;
+        if (!question_text.trim()) { showError('Escribí la pregunta.'); return; }
+        if (options.some(o => !o.option_text.trim())) { showError('Completá todas las opciones.'); return; }
+        try {
+            const { error: qErr } = await supabase.from('quiz_questions').update({ question_text }).eq('id', id);
+            if (qErr) throw qErr;
+
+            for (let i = 0; i < options.length; i++) {
+                const { error: oErr } = await supabase.from('quiz_options').update({
+                    option_text: options[i].option_text,
+                    is_correct: i === correctIdx,
+                }).eq('id', options[i].id);
+                if (oErr) throw oErr;
+            }
+
+            setQuizQuestions(prev => prev.map(q => q.id === id
+                ? { ...q, question_text, quiz_options: options.map((o, i) => ({ ...o, is_correct: i === correctIdx })) }
+                : q
+            ));
+            setEditingQuestion(null);
+            showSuccess('Pregunta actualizada.');
+        } catch (err) {
+            showError('Error: ' + err.message);
+        }
     };
 
     const handleClose = async () => {
@@ -347,9 +403,22 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
 
                             <div>
                                 <label className="form-label">Material adicional (PDF / DOCX)</label>
-                                {fileUrl && (
-                                    <div style={{ marginBottom: '10px', padding: '10px 14px', background: '#F4F6F9', borderRadius: '8px', fontSize: '0.88rem' }}>
-                                        Archivo actual: <a href={fileUrl} target="_blank" rel="noreferrer" style={{ color: '#BD4339', fontWeight: 600 }}>Ver archivo</a>
+                                {resources.length > 0 && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
+                                        {resources.map(r => (
+                                            <div key={r.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#F4F6F9', borderRadius: '8px', fontSize: '0.88rem' }}>
+                                                <a href={r.file_url} target="_blank" rel="noreferrer" style={{ color: '#112F4E', fontWeight: 600 }}>
+                                                    📄 {r.title}
+                                                </a>
+                                                <button
+                                                    className="icon-btn icon-btn--danger"
+                                                    onClick={() => handleDeleteResource(r)}
+                                                    style={{ fontSize: '0.8rem' }}
+                                                >
+                                                    🗑 Eliminar
+                                                </button>
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                                 <input
@@ -371,6 +440,49 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
                             {isNew && (
                                 <div style={{ background: '#FEF3C7', border: '1px solid #F59E0B', borderRadius: '8px', padding: '12px 16px', fontSize: '0.88rem', color: '#92400E' }}>
                                     Primero guardá la información básica de la lección en la pestaña "Información".
+                                </div>
+                            )}
+
+                            {/* Editar pregunta inline */}
+                            {editingQuestion && (
+                                <div style={{ background: '#EEF4FF', border: '2px solid #112F4E', borderRadius: '10px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    <h4 style={{ margin: 0, color: '#112F4E' }}>Editar Pregunta</h4>
+                                    <input
+                                        type="text"
+                                        value={editingQuestion.question_text}
+                                        onChange={e => setEditingQuestion(prev => ({ ...prev, question_text: e.target.value }))}
+                                        className="form-input"
+                                    />
+                                    <div>
+                                        <label className="form-label">Opciones</label>
+                                        {editingQuestion.options.map((opt, idx) => (
+                                            <div key={opt.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                                                <input
+                                                    type="radio"
+                                                    name="editCorrect"
+                                                    checked={editingQuestion.correctIdx === idx}
+                                                    onChange={() => setEditingQuestion(prev => ({ ...prev, correctIdx: idx }))}
+                                                    style={{ accentColor: '#2E7D32', width: '16px', height: '16px', cursor: 'pointer' }}
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={opt.option_text}
+                                                    onChange={e => {
+                                                        const updated = editingQuestion.options.map((o, i) =>
+                                                            i === idx ? { ...o, option_text: e.target.value } : o
+                                                        );
+                                                        setEditingQuestion(prev => ({ ...prev, options: updated }));
+                                                    }}
+                                                    className="form-input"
+                                                    style={{ borderColor: editingQuestion.correctIdx === idx ? '#2E7D32' : undefined }}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <button className="eco-primary-btn" onClick={handleSaveEditedQuestion}>Guardar cambios</button>
+                                        <button className="eco-secondary-btn" onClick={() => setEditingQuestion(null)}>Cancelar</button>
+                                    </div>
                                 </div>
                             )}
 
@@ -399,7 +511,10 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
                                                         ))}
                                                     </div>
                                                 </div>
-                                                <button className="icon-btn icon-btn--danger" onClick={() => handleDeleteQuestion(q.id)}>🗑</button>
+                                                <div style={{ display: 'flex', gap: '6px' }}>
+                                                    <button className="icon-btn" onClick={() => handleStartEdit(q)}>✎ Editar</button>
+                                                    <button className="icon-btn icon-btn--danger" onClick={() => handleDeleteQuestion(q.id)}>🗑</button>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
