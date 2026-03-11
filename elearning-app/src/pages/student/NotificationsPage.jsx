@@ -60,20 +60,31 @@ export default function NotificationsPage() {
     }, [profile, supabase]);
 
     // Navigate to the relevant lesson when clicking a notification
-    function handleNotifClick(n) {
-        if (n.type === 'assignment_graded' && n.data?.lesson_id) {
-            navigate(`/dashboard/lesson/${n.data.lesson_id}`);
+    async function handleNotifClick(n) {
+        const isAssignment = n.type === 'assignment_graded';
+        const suffix = isAssignment ? '?scroll=assignment' : '';
+
+        // Case 1: lesson_id already in data (new notifications)
+        if (n.data?.lesson_id) {
+            navigate(`/dashboard/lesson/${n.data.lesson_id}${suffix}`);
             return;
         }
-        if (n.type === 'class_unlocked' && n.data?.lesson_id) {
-            navigate(`/dashboard/lesson/${n.data.lesson_id}`);
-            return;
+        // Case 2: only assignment_id (old notifications) → look up lesson_id
+        if (isAssignment && n.data?.assignment_id) {
+            const { data } = await supabase
+                .from('assignments')
+                .select('lesson_id')
+                .eq('id', n.data.assignment_id)
+                .single();
+            if (data?.lesson_id) {
+                navigate(`/dashboard/lesson/${data.lesson_id}${suffix}`);
+            }
         }
     }
 
     function getIsClickable(n) {
-        if (n.type === 'assignment_graded' && n.data?.lesson_id) return true;
-        if (n.type === 'class_unlocked' && n.data?.lesson_id) return true;
+        if (n.type === 'assignment_graded') return !!(n.data?.lesson_id || n.data?.assignment_id);
+        if (n.type === 'class_unlocked') return !!n.data?.lesson_id;
         return false;
     }
 

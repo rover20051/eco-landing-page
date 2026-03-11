@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSupabase } from '../../../contexts/SupabaseContext';
 import { useUserProfile } from '../../../hooks/useSupabase';
 import AssignmentTab from './AssignmentTab';
@@ -13,10 +13,20 @@ export default function LessonView() {
     const supabase = useSupabase();
     const { profile } = useUserProfile();
 
+    const [searchParams] = useSearchParams();
+    const assignmentRef = useRef(null);
+
     const [lesson, setLesson] = useState(null);
     const [resources, setResources] = useState([]);
     const [activeTab, setActiveTab] = useState('resources'); // 'resources', 'quiz', 'assignments'
     const [loading, setLoading] = useState(true);
+
+    // Auto-scroll to assignment section when coming from a notification
+    useEffect(() => {
+        if (!loading && searchParams.get('scroll') === 'assignment' && assignmentRef.current) {
+            setTimeout(() => assignmentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+        }
+    }, [loading, searchParams]);
 
     useEffect(() => {
         if (!profile || !lessonId) return;
@@ -154,7 +164,7 @@ export default function LessonView() {
                     </div>
 
                     {/* Tarea moved directly below video & description */}
-                    <div className="lesson-assignment-section" style={{ marginTop: '40px', paddingTop: '30px', borderTop: '2px solid rgba(17,47,78,0.1)' }}>
+                    <div ref={assignmentRef} className="lesson-assignment-section" style={{ marginTop: '40px', paddingTop: '30px', borderTop: '2px solid rgba(17,47,78,0.1)' }}>
                         <h2 style={{ fontFamily: "'Playfair Display', serif", color: '#112F4E', marginBottom: '15px' }}>Tarea a entregar</h2>
                         <AssignmentTab
                             lessonId={lessonId}
