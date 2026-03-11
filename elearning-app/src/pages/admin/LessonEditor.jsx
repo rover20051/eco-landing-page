@@ -255,23 +255,65 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
             question_text: q.question_text,
             options: q.quiz_options.map(o => ({ ...o })),
             correctIdx: q.quiz_options.findIndex(o => o.is_correct),
+            deletedOptionIds: [],
         });
     };
 
+    const handleRemoveOption = (idx) => {
+        const opt = editingQuestion.options[idx];
+        const newOptions = editingQuestion.options.filter((_, i) => i !== idx);
+        const newCorrectIdx = editingQuestion.correctIdx === idx
+            ? 0
+            : editingQuestion.correctIdx > idx
+                ? editingQuestion.correctIdx - 1
+                : editingQuestion.correctIdx;
+        const newDeleted = opt.id
+            ? [...editingQuestion.deletedOptionIds, opt.id]
+            : editingQuestion.deletedOptionIds;
+        setEditingQuestion(prev => ({ ...prev, options: newOptions, correctIdx: newCorrectIdx, deletedOptionIds: newDeleted }));
+    };
+
+    const handleAddOption = () => {
+        setEditingQuestion(prev => ({
+            ...prev,
+            options: [...prev.options, { id: null, option_text: '', is_correct: false, option_order: prev.options.length + 1 }],
+        }));
+    };
+
     const handleSaveEditedQuestion = async () => {
-        const { id, question_text, options, correctIdx } = editingQuestion;
+        const { id, question_text, options, correctIdx, deletedOptionIds } = editingQuestion;
         if (!question_text.trim()) { showError('Escribí la pregunta.'); return; }
+        if (options.length < 2) { showError('La pregunta debe tener al menos 2 opciones.'); return; }
         if (options.some(o => !o.option_text.trim())) { showError('Completá todas las opciones.'); return; }
         try {
             const { error: qErr } = await supabase.from('quiz_questions').update({ question_text }).eq('id', id);
             if (qErr) throw qErr;
 
+            // Delete removed options
+            if (deletedOptionIds.length > 0) {
+                const { error: dErr } = await supabase.from('quiz_options').delete().in('id', deletedOptionIds);
+                if (dErr) throw dErr;
+            }
+
+            // Update existing options / insert new ones
             for (let i = 0; i < options.length; i++) {
-                const { error: oErr } = await supabase.from('quiz_options').update({
-                    option_text: options[i].option_text,
-                    is_correct: i === correctIdx,
-                }).eq('id', options[i].id);
-                if (oErr) throw oErr;
+                const opt = options[i];
+                if (opt.id) {
+                    const { error: oErr } = await supabase.from('quiz_options').update({
+                        option_text: opt.option_text,
+                        is_correct: i === correctIdx,
+                        option_order: i + 1,
+                    }).eq('id', opt.id);
+                    if (oErr) throw oErr;
+                } else {
+                    const { error: oErr } = await supabase.from('quiz_options').insert({
+                        question_id: id,
+                        option_text: opt.option_text,
+                        is_correct: i === correctIdx,
+                        option_order: i + 1,
+                    });
+                    if (oErr) throw oErr;
+                }
             }
 
             setQuizQuestions(prev => prev.map(q => q.id === id
@@ -454,15 +496,15 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
                                         className="form-input"
                                     />
                                     <div>
-                                        <label className="form-label">Opciones</label>
+                                        <label className="form-label">Opciones <small style={{ color: '#888', fontWeight: 400 }}>(radio = correcta)</small></label>
                                         {editingQuestion.options.map((opt, idx) => (
-                                            <div key={opt.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                                            <div key={opt.id ?? `new-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                                                 <input
                                                     type="radio"
                                                     name="editCorrect"
                                                     checked={editingQuestion.correctIdx === idx}
                                                     onChange={() => setEditingQuestion(prev => ({ ...prev, correctIdx: idx }))}
-                                                    style={{ accentColor: '#2E7D32', width: '16px', height: '16px', cursor: 'pointer' }}
+                                                    style={{ accentColor: '#2E7D32', width: '16px', height: '16px', cursor: 'pointer', flexShrink: 0 }}
                                                 />
                                                 <input
                                                     type="text"
@@ -476,8 +518,23 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
                                                     className="form-input"
                                                     style={{ borderColor: editingQuestion.correctIdx === idx ? '#2E7D32' : undefined }}
                                                 />
+                                                {editingQuestion.options.length > 2 && (
+                                                    <button
+                                                        onClick={() => handleRemoveOption(idx)}
+                                                        style={{ flexShrink: 0, background: 'none', border: '1px solid #BD4339', color: '#BD4339', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '0.8rem' }}
+                                                        title="Eliminar opción"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                )}
                                             </div>
                                         ))}
+                                        <button
+                                            onClick={handleAddOption}
+                                            style={{ marginTop: '4px', background: 'none', border: '1px dashed #112F4E', color: '#112F4E', borderRadius: '6px', padding: '6px 14px', cursor: 'pointer', fontSize: '0.85rem', width: '100%' }}
+                                        >
+                                            + Agregar opción
+                                        </button>
                                     </div>
                                     <div style={{ display: 'flex', gap: '10px' }}>
                                         <button className="eco-primary-btn" onClick={handleSaveEditedQuestion}>Guardar cambios</button>
