@@ -25,8 +25,7 @@ export default function AttendanceManager() {
                 // 1. Fetch all active students
                 const { data: usersData, error: usersError } = await supabase
                     .from('profiles')
-                    .select('id, full_name, email')
-                    .eq('role', 'student')
+                    .select('id, full_name, email, role')
                     .eq('status', 'approved')
                     .order('full_name', { ascending: true });
 

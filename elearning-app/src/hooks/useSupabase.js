@@ -28,7 +28,7 @@ export function useUserProfile() {
 
         // If we already have the profile for THIS active user, don't trigger a hard reload
         // unless they literally log into a different account.
-        if (profile && profile.id === user.id) {
+        if (profile && user && profile.id === user.id) {
             if (loading) setLoading(false);
             return;
         }
@@ -92,7 +92,8 @@ export function useUserProfile() {
         return () => {
             isMounted = false;
         };
-    }, [clAuthLoaded, clUserLoaded, isSignedIn, user, supabase]);
+        // Use user?.id instead of user object to avoid refetching when Clerk mutates user reference on window focus
+    }, [clAuthLoaded, clUserLoaded, isSignedIn, user?.id, supabase]);
 
     return { profile, loading, error };
 }

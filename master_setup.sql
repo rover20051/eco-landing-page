@@ -683,7 +683,6 @@ porque para saber si un usuario es "Admin", el sistema buscaba en la tabla perfi
 Esto lo soluciona para siempre liberando la lectura de todos los perfiles de ese enredo 
 y agregando tu permiso para Editar (Aprobar) usuarios.
 */
-
 -- 1. Eliminamos todas las políticas que causaban el bucle de "el huevo y la gallina"
 DROP POLICY IF EXISTS "Admins can view all profiles CLERK" ON public.profiles;
 DROP POLICY IF EXISTS "Users can view own profile CLERK" ON public.profiles;

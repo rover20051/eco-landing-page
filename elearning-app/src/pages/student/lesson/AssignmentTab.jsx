@@ -30,7 +30,6 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
 
                 if (data && isMounted) {
                     setAssignment(data);
-                    setContent(data.content_text || '');
                 }
             } catch (err) {
                 console.error('Error loading assignment:', err);
