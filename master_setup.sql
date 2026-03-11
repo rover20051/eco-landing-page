@@ -817,3 +817,8 @@ DROP POLICY IF EXISTS "Students can update assignments" ON storage.objects;
 CREATE POLICY "Students can update assignments"
   ON storage.objects FOR UPDATE
   USING (bucket_id = 'assignments' AND auth.role() = 'authenticated');
+
+-- Admins can delete user profiles (CASCADE borra todo lo relacionado)
+DROP POLICY IF EXISTS "Admins can delete profiles" ON public.profiles;
+CREATE POLICY "Admins can delete profiles" ON public.profiles
+FOR DELETE USING (public.is_admin_clerk());

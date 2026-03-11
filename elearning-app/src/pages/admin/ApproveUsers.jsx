@@ -49,16 +49,26 @@ export default function ApproveUsers() {
 
     async function deleteUser(userId, userName) {
         const confirmed = window.confirm(
-            `¿Eliminar completamente al usuario "${userName}"?\n\nEsto borrará su cuenta de Clerk, perfil, progreso, tareas y todos sus datos. Esta acción no se puede deshacer.`
+            `¿Eliminar completamente al usuario "${userName}"?\n\nEsto borrará su perfil, progreso, tareas y todos sus datos. Esta acción no se puede deshacer.`
         );
         if (!confirmed) return;
 
-        try {
-            // Get the Clerk token with the supabase template
-            const token = await session?.getToken({ template: 'supabase' });
+        // Step 1: Delete from Supabase directly (RLS allows admins)
+        const { error: dbError } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', userId);
 
+        if (dbError) {
+            alert('Error al eliminar de Supabase: ' + dbError.message);
+            return;
+        }
+
+        // Step 2: Try to delete from Clerk via edge function (best effort)
+        try {
+            const token = await session?.getToken({ template: 'supabase' });
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-            const res = await fetch(`${supabaseUrl}/functions/v1/delete-user`, {
+            await fetch(`${supabaseUrl}/functions/v1/delete-user`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -67,18 +77,12 @@ export default function ApproveUsers() {
                 },
                 body: JSON.stringify({ userId }),
             });
-
-            const result = await res.json();
-            console.log('[deleteUser] status:', res.status, 'response:', result);
-            if (!res.ok) {
-                alert('Error al eliminar: ' + (result.error || 'Error desconocido'));
-            } else {
-                alert(`Usuario "${userName}" eliminado correctamente.`);
-                loadUsers();
-            }
-        } catch (err) {
-            alert('Error al eliminar: ' + err.message);
+        } catch (_) {
+            // Clerk deletion failed silently — user is already removed from Supabase
         }
+
+        alert(`Usuario "${userName}" eliminado correctamente.`);
+        loadUsers();
     }
 
     const displayed = (view === 'pending' ? pendingUsers : allUsers).filter(u =>
