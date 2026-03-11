@@ -31,38 +31,54 @@ export default function AssignmentGrader() {
                 setFetchError(null);
 
                 if (assignmentId) {
-                    // Fetch single assignment details for grading
-                    const { data, error } = await supabase
+                    // --- SINGLE ASSIGNMENT: two separate queries to avoid FK ambiguity (PGRST201) ---
+                    const { data: asgn, error: asgnError } = await supabase
                         .from('assignments')
-                        .select(`
-                            *,
-                            profiles!user_id(full_name, email),
-                            lessons(title, task_description, modules(module_number))
-                        `)
+                        .select('*, lessons(title, task_description, modules(module_number))')
                         .eq('id', assignmentId)
                         .single();
 
-                    if (error) throw error;
+                    if (asgnError) throw asgnError;
+
+                    // Fetch the submitter profile separately
+                    const { data: profileData } = await supabase
+                        .from('profiles')
+                        .select('id, full_name, email')
+                        .eq('id', asgn.user_id)
+                        .single();
 
                     if (isMounted) {
-                        setAssignment(data);
-                        setGrade(data.grade !== null ? String(data.grade) : '');
-                        setFeedback(data.feedback || '');
+                        setAssignment({ ...asgn, profiles: profileData || null });
+                        setGrade(asgn.grade !== null ? String(asgn.grade) : '');
+                        setFeedback(asgn.feedback || '');
                     }
                 } else {
-                    // List all assignments (most recent first, pending first)
-                    const { data, error } = await supabase
+                    // --- LIST VIEW: two separate queries to avoid FK ambiguity (PGRST201) ---
+                    const { data: asgns, error: asgnsError } = await supabase
                         .from('assignments')
-                        .select(`
-                            *,
-                            profiles!user_id(full_name, email),
-                            lessons(title, modules(module_number))
-                        `)
-                        .order('status', { ascending: true }) // submitted before graded
+                        .select('*, lessons(title, modules(module_number))')
+                        .order('status', { ascending: true })   // submitted before graded
                         .order('submitted_at', { ascending: false });
 
-                    if (error) throw error;
-                    if (isMounted) setAssignment(data);
+                    if (asgnsError) throw asgnsError;
+
+                    // Fetch profiles for all unique submitters in one query
+                    const userIds = [...new Set((asgns || []).map(a => a.user_id).filter(Boolean))];
+                    let profilesMap = {};
+                    if (userIds.length > 0) {
+                        const { data: profilesData } = await supabase
+                            .from('profiles')
+                            .select('id, full_name, email')
+                            .in('id', userIds);
+                        (profilesData || []).forEach(p => { profilesMap[p.id] = p; });
+                    }
+
+                    const enriched = (asgns || []).map(a => ({
+                        ...a,
+                        profiles: profilesMap[a.user_id] || null
+                    }));
+
+                    if (isMounted) setAssignment(enriched);
                 }
             } catch (err) {
                 console.error('Error fetching assignment(s):', err);
