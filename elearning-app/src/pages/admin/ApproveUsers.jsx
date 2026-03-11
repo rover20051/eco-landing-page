@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { useSession } from '@clerk/react';
 import { useSupabase } from '../../contexts/SupabaseContext';
 import './ApproveUsers.css';
 
 export default function ApproveUsers() {
     const supabase = useSupabase();
+    const { session } = useSession();
     const [pendingUsers, setPendingUsers] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -52,9 +54,8 @@ export default function ApproveUsers() {
         if (!confirmed) return;
 
         try {
-            // Get the current session token to authenticate the edge function
-            const { data: { session } } = await supabase.auth.getSession();
-            const token = session?.access_token;
+            // Get the Clerk token with the supabase template
+            const token = await session?.getToken({ template: 'supabase' });
 
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
             const res = await fetch(`${supabaseUrl}/functions/v1/delete-user`, {
