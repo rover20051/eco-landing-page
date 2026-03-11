@@ -120,10 +120,10 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
             </div>
 
             <div className="assignment-editor-container">
-                {assignment?.status === 'graded' ? (
+                {assignment?.status === 'graded' && assignment.grade === 100 ? (
                     <div className="graded-notice">
-                        <div className="grade-badge">
-                            {assignment.grade === 100 ? '✅ RECIBIDA' : assignment.grade === 0 ? '❌ NO ENTREGADA' : `NOTA: ${assignment.grade}/100`}
+                        <div className="grade-badge approved" style={{ backgroundColor: '#e8f5e9', color: '#2e7d32' }}>
+                            ✅ REVISADA Y APROBADA
                         </div>
                         {assignment.feedback && (
                             <div className="feedback-box">
@@ -132,7 +132,7 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
                             </div>
                         )}
                         <div className="readonly-content">
-                            <h4>Tu entrega:</h4>
+                            <h4>Tu entrega final:</h4>
                             {assignment.file_url ? (
                                 <a href={assignment.file_url} target="_blank" rel="noopener noreferrer" className="eco-secondary-btn" style={{ display: 'inline-block', marginTop: '10px' }}>
                                     📄 Ver archivo entregado
@@ -144,6 +144,19 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
                     </div>
                 ) : (
                     <>
+                        {assignment?.status === 'graded' && assignment.grade === 0 && (
+                            <div className="graded-notice rejected" style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#ffebee', borderRadius: '8px', border: '1px solid #ef5350' }}>
+                                <div className="grade-badge rejected" style={{ backgroundColor: '#c62828', color: '#ffffff', padding: '5px 10px', borderRadius: '4px', display: 'inline-block', marginBottom: '10px', fontWeight: 'bold' }}>
+                                    ❌ NO APROBADA - Por favor envía un nuevo trabajo
+                                </div>
+                                {assignment.feedback && (
+                                    <div className="feedback-box" style={{ marginTop: '10px' }}>
+                                        <h4 style={{ color: '#c62828', marginBottom: '5px' }}>Comentarios del Mentor:</h4>
+                                        <p style={{ margin: 0 }}>{assignment.feedback}</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                         <div style={{ marginBottom: '20px' }}>
                             <label className="eco-file-label" style={{ display: 'block', marginBottom: '10px', fontWeight: 600 }}>Selecciona tu documento (PDF o DOCX)</label>
                             <input
@@ -168,7 +181,7 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
                             >
                                 {submitting ? 'Subiendo archivo...' : (assignment ? 'Actualizar Entrega' : 'Enviar Tarea')}
                             </button>
-                            {assignment && <span className="status-badge">Entregada (Pendiente de revisión)</span>}
+                            {assignment?.status === 'submitted' && <span className="status-badge" style={{ marginLeft: '15px', color: '#666' }}>Entregada (Pendiente de revisión)</span>}
                         </div>
                     </>
                 )}

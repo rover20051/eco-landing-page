@@ -321,8 +321,8 @@ export default function AssignmentGrader() {
                             className="grade-select"
                         >
                             <option value="">Seleccionar...</option>
-                            <option value="100">✅ Recibida (Aprobada)</option>
-                            <option value="0">❌ Demasiado incompleta (No aprobada)</option>
+                            <option value="100">✅ Aprobada / Entrega Finalizada</option>
+                            <option value="0">❌ No Aprobada (Solicitar Reentrega)</option>
                         </select>
                     </div>
 

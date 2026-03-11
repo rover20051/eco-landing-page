@@ -208,11 +208,16 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Add status column if this is an existing DB (idempotent)
 DO $$ BEGIN
   ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected'));
   -- Existing users (already in the system) should be approved
   UPDATE public.profiles SET status = 'approved' WHERE status IS NULL OR status = 'pending';
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+-- Aseguramos que la columna email exista, porque el frontend la requiere
+DO $$ BEGIN
+  ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS email TEXT;
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
