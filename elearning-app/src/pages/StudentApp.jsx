@@ -114,8 +114,10 @@ export default function StudentApp() {
                     </li>
                 </ul>
                 <div className="nav-bottom">
-                    {profile?.role === 'admin' && (
-                        <Link to="/admin" className="admin-link">Panel Admin</Link>
+                    {['admin', 'mentor'].includes(profile?.role) && (
+                        <Link to="/admin" className="admin-link">
+                            {profile?.role === 'admin' ? 'Panel Admin' : 'Panel Mentor'}
+                        </Link>
                     )}
                     <button onClick={() => signOut({ redirectUrl: BASE })} className="logout-btn">
                         Cerrar sesión

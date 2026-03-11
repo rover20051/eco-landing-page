@@ -55,10 +55,10 @@ export default function App() {
         </Route>
       </Route>
 
-      {/* RUTAS PRIVADAS (Admin) */}
+      {/* RUTAS PRIVADAS (Admin & Mentor) */}
       <Route
         path="/admin"
-        element={<ProtectedRoute allowedRole="admin" />}
+        element={<ProtectedRoute allowedRole="mentor" />}
       >
         <Route element={<AdminApp />}>
           <Route index element={<AdminDashboard />} />

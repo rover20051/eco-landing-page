@@ -26,8 +26,10 @@ export default function AdminApp() {
                 </div>
 
                 <div className="user-profile">
-                    <p className="user-name">{profile?.full_name || 'Administrador'}</p>
-                    <span className="admin-badge">Panel de Control</span>
+                    <p className="user-name">{profile?.full_name || 'ECO Staff'}</p>
+                    <span className="admin-badge">
+                        {profile?.role === 'admin' ? 'Panel de Admin' : 'Panel de Mentor'}
+                    </span>
                 </div>
 
                 <ul className="nav-links">
@@ -36,16 +38,20 @@ export default function AdminApp() {
                             <span className="nav-icon">📊</span> Dashboard
                         </NavLink>
                     </li>
-                    <li>
-                        <NavLink to="/admin/users" className={({ isActive }) => isActive ? 'nav-active' : ''}>
-                            <span className="nav-icon">👥</span> Usuarios
-                        </NavLink>
-                    </li>
-                    <li>
-                        <NavLink to="/admin/modules" className={({ isActive }) => isActive ? 'nav-active' : ''}>
-                            <span className="nav-icon">📚</span> Módulos
-                        </NavLink>
-                    </li>
+                    {profile?.role === 'admin' && (
+                        <>
+                            <li>
+                                <NavLink to="/admin/users" className={({ isActive }) => isActive ? 'nav-active' : ''}>
+                                    <span className="nav-icon">👥</span> Usuarios
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink to="/admin/modules" className={({ isActive }) => isActive ? 'nav-active' : ''}>
+                                    <span className="nav-icon">📚</span> Módulos
+                                </NavLink>
+                            </li>
+                        </>
+                    )}
                     <li>
                         <NavLink to="/admin/assignments" className={({ isActive }) => isActive ? 'nav-active' : ''}>
                             <span className="nav-icon">📝</span> Entregas
@@ -70,7 +76,9 @@ export default function AdminApp() {
             <main className="main-content">
                 <header className="topbar admin-topbar">
                     <div className="admin-topbar-brand">
-                        <span className="admin-topbar-title">Administración</span>
+                        <span className="admin-topbar-title">
+                            {profile?.role === 'admin' ? 'Administración' : 'Tutorías'}
+                        </span>
                         <span className="admin-topbar-sub">ECO Campus</span>
                     </div>
                 </header>
