@@ -667,7 +667,7 @@ DECLARE
 BEGIN
   SELECT EXISTS(
     SELECT 1 FROM profiles
-    WHERE id = coalesce(auth.jwt()->>'sub', '') AND role = 'admin'::user_role
+    WHERE id = coalesce(auth.jwt()->>'sub', '') AND role::text = 'admin'
   ) INTO _is_admin;
   RETURN coalesce(_is_admin, false);
 END;
@@ -685,7 +685,7 @@ DECLARE
 BEGIN
   SELECT EXISTS(
     SELECT 1 FROM profiles
-    WHERE id = coalesce(auth.jwt()->>'sub', '') AND role IN ('admin'::user_role, 'mentor'::user_role)
+    WHERE id = coalesce(auth.jwt()->>'sub', '') AND role::text IN ('admin', 'mentor')
   ) INTO _has_access;
   RETURN coalesce(_has_access, false);
 END;
@@ -746,31 +746,31 @@ CREATE POLICY "Admins can manage lesson resources storage"
   USING (bucket_id = 'lesson-resources' AND public.is_admin_clerk());
 /*
 👉 FEDE: EJECUTA ESTO EN EL SQL EDITOR.
-¡Descubrí el error! Tu base de datos estaba cayendo en una "recursión infinita" 
+¡Descubrí el error final! Tu base de datos estaba cayendo en una "recursión infinita" 
 porque para saber si un usuario es "Admin", el sistema buscaba en la tabla perfiles... 
-¡Pero la tabla de perfiles bloqueaba su lectura exigiendo saber primero si eras Admin!
+¡Pero la política "Admins y Mentors can view all profiles CLERK" bloqueaba su lectura exigiendo saber primero si eras Admin/Mentor!
 
-Esto lo soluciona para siempre liberando la lectura de todos los perfiles de ese enredo 
-y agregando tu permiso para Editar (Aprobar) usuarios.
+Esto lo soluciona DE RAÍZ exterminando absolutamente TODAS las políticas SELECT restrictivas en profiles.
 */
--- 1. Eliminamos todas las políticas que causaban el bucle de "el huevo y la gallina"
+-- 1. Eliminamos TODAS las políticas posibles que causaban el bucle de "el huevo y la gallina"
 DROP POLICY IF EXISTS "Admins can view all profiles CLERK" ON public.profiles;
+DROP POLICY IF EXISTS "Admins y Mentors can view all profiles CLERK" ON public.profiles;
 DROP POLICY IF EXISTS "Users can view own profile CLERK" ON public.profiles;
-
--- 2. Hacemos que cualquier usuario autenticado (con token Clerk) pueda "leer" los perfiles 
--- (Necesario a futuro para los Ranking de Puntos, y vital para romper el bucle infinito)
 DROP POLICY IF EXISTS "Anyone can read profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Users can view all profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
+
+-- 2. Hacemos que CUALQUIER usuario autenticado (con token Clerk) pueda "leer" los perfiles libremente 
+-- (Necesario a futuro para los Ranking de Puntos, lista de asistencias y EVITAR BUCLES)
 CREATE POLICY "Anyone can read profiles" ON public.profiles FOR SELECT USING (
   auth.jwt() IS NOT NULL
 );
 
--- 3. IMPORTANTE: Agregamos la política que faltaba para que los Admins puedan ACTUALIZAR el Rol y Estado de los estudiantes (sin esto el botón verde de "Aprobar" falla silenciosamente)
+-- 3. IMPORTANTE: Agregamos la política para que los Admins puedan ACTUALIZAR el Rol y Estado de los estudiantes.
+-- Usamos explicitamente la función `is_admin_or_mentor_clerk()` que es SECURITY DEFINER para que NO cause recursión al guardar.
 DROP POLICY IF EXISTS "Admins can update profiles" ON public.profiles;
 CREATE POLICY "Admins can update profiles" ON public.profiles FOR UPDATE USING (
-  EXISTS(
-    SELECT 1 FROM profiles
-    WHERE id = coalesce(auth.jwt()->>'sub', '') AND role::text IN ('admin', 'mentor')
-  )
+  public.is_admin_or_mentor_clerk()
 );
 /*
 👉 FEDE: EJECUTA ESTO EN EL SQL EDITOR.

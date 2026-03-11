@@ -26,12 +26,14 @@ export default function AttendanceManager() {
     // { "user_id": { status: "present"|"absent"|"excused", notes: "" } }
     const [attendanceRecord, setAttendanceRecord] = useState({});
     const [saving, setSaving] = useState(false);
+    const [fetchError, setFetchError] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
 
         async function loadAttendanceData() {
             setLoading(true);
+            setFetchError(null);
             try {
                 // 1. Fetch ALL approved users (students, mentors, admins)
                 const { data: usersData, error: usersError } = await supabase
@@ -66,6 +68,7 @@ export default function AttendanceManager() {
 
             } catch (err) {
                 console.error('Error fetching attendance:', err);
+                if (isMounted) setFetchError(err.message || 'Error desconocido al cargar alumnos.');
             } finally {
                 if (isMounted) setLoading(false);
             }
@@ -206,6 +209,14 @@ export default function AttendanceManager() {
             <p className="admin-page-subtitle">
                 Creá la lista de clase para marcar quiénes estuvieron presentes. Todos los participantes arrancan como presentes y podés seleccionar los ausentes.
             </p>
+
+            {fetchError && (
+                <div style={{ padding: '15px', backgroundColor: '#ffebee', color: '#c62828', borderRadius: '8px', marginBottom: '20px', border: '1px solid #ef5350' }}>
+                    <strong>⚠️ Error al leer usuarios (Supabase):</strong><br />
+                    {fetchError}<br />
+                    <small>Si ves un error de recursión o "infinite loop", debes volver a ejecutar el master_setup.sql en Supabase.</small>
+                </div>
+            )}
 
             <div className="attendance-controls">
                 <div className="date-picker-group">

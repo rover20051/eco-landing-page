@@ -13,6 +13,7 @@ export default function AssignmentGrader() {
     const [assignment, setAssignment] = useState(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [fetchError, setFetchError] = useState(null);
 
     // Filter state for list view
     const [filterStatus, setFilterStatus] = useState('all');
@@ -27,6 +28,7 @@ export default function AssignmentGrader() {
         async function fetchAssignment() {
             try {
                 setLoading(true);
+                setFetchError(null);
 
                 if (assignmentId) {
                     // Fetch single assignment details for grading
@@ -64,6 +66,7 @@ export default function AssignmentGrader() {
                 }
             } catch (err) {
                 console.error('Error fetching assignment(s):', err);
+                if (isMounted) setFetchError(err.message || 'Error desconocido al cargar entregas.');
             } finally {
                 if (isMounted) setLoading(false);
             }
@@ -133,6 +136,14 @@ export default function AssignmentGrader() {
         return (
             <div className="assignment-grader">
                 <h1 className="admin-page-title">Entregas de Tareas</h1>
+
+                {fetchError && (
+                    <div style={{ padding: '15px', backgroundColor: '#ffebee', color: '#c62828', borderRadius: '8px', marginBottom: '20px', border: '1px solid #ef5350' }}>
+                        <strong>⚠️ Error de base de datos Supabase:</strong><br />
+                        {fetchError}<br />
+                        <small>Si ves un error de recursión o "infinite loop", debes volver a ejecutar el master_setup.sql en Supabase.</small>
+                    </div>
+                )}
 
                 <div className="grader-filter-bar">
                     <div className="grader-stats">
