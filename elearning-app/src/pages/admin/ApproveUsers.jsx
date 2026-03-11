@@ -69,6 +69,7 @@ export default function ApproveUsers() {
             });
 
             const result = await res.json();
+            console.log('[deleteUser] status:', res.status, 'response:', result);
             if (!res.ok) {
                 alert('Error al eliminar: ' + (result.error || 'Error desconocido'));
             } else {
