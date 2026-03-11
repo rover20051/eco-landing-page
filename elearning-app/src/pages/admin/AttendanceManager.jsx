@@ -2,17 +2,28 @@ import React, { useEffect, useState } from 'react';
 import { useSupabase } from '../../contexts/SupabaseContext';
 import './AttendanceManager.css';
 
+const ROLE_LABELS = {
+    student: 'Alumno',
+    mentor: 'Mentor',
+    admin: 'Admin',
+};
+
+const ROLE_COLORS = {
+    student: { background: '#e8f4fd', color: '#1565c0' },
+    mentor: { background: '#e8f5e9', color: '#2e7d32' },
+    admin: { background: '#fce4ec', color: '#c62828' },
+};
+
 export default function AttendanceManager() {
     const supabase = useSupabase();
 
-    const [students, setStudents] = useState([]);
+    const [participants, setParticipants] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // We will track attendance by date for the MVP
     const todayStr = new Date().toISOString().split('T')[0];
     const [selectedDate, setSelectedDate] = useState(todayStr);
 
-    // Mapping structure: { "user_id": { status: "present", notes: "" } }
+    // { "user_id": { status: "present"|"absent"|"excused", notes: "" } }
     const [attendanceRecord, setAttendanceRecord] = useState({});
     const [saving, setSaving] = useState(false);
 
@@ -22,11 +33,12 @@ export default function AttendanceManager() {
         async function loadAttendanceData() {
             setLoading(true);
             try {
-                // 1. Fetch all active students
+                // 1. Fetch ALL approved users (students, mentors, admins)
                 const { data: usersData, error: usersError } = await supabase
                     .from('profiles')
                     .select('id, full_name, email, role')
                     .eq('status', 'approved')
+                    .order('role', { ascending: true })
                     .order('full_name', { ascending: true });
 
                 if (usersError) throw usersError;
@@ -39,9 +51,8 @@ export default function AttendanceManager() {
 
                 if (attError) throw attError;
 
-                // 3. Build state maps
                 if (isMounted) {
-                    setStudents(usersData || []);
+                    setParticipants(usersData || []);
 
                     const recordMap = {};
                     (attData || []).forEach(record => {
@@ -54,7 +65,7 @@ export default function AttendanceManager() {
                 }
 
             } catch (err) {
-                console.error("Error fetching attendance:", err);
+                console.error('Error fetching attendance:', err);
             } finally {
                 if (isMounted) setLoading(false);
             }
@@ -70,7 +81,7 @@ export default function AttendanceManager() {
             ...prev,
             [userId]: {
                 ...prev[userId],
-                status: status
+                status,
             }
         }));
     };
@@ -85,47 +96,47 @@ export default function AttendanceManager() {
         }));
     };
 
+    // Marks EVERYONE as present (overwrites any existing status) and auto-saves
     const handleCrearClase = async () => {
-        const newRecord = { ...attendanceRecord };
-        let modified = false;
-        students.forEach(student => {
-            if (!newRecord[student.id]?.status) {
-                newRecord[student.id] = { status: 'present', notes: '' };
-                modified = true;
-            }
+        if (participants.length === 0) {
+            alert('No hay participantes registrados en el sistema.');
+            return;
+        }
+
+        // Build new record with everyone as present
+        const newRecord = {};
+        participants.forEach(p => {
+            newRecord[p.id] = { status: 'present', notes: attendanceRecord[p.id]?.notes || '' };
         });
 
-        if (modified) {
-            setAttendanceRecord(newRecord);
-            // Auto guardar en la base de datos
-            try {
-                setSaving(true);
-                const recordsToSave = students.map(student => ({
-                    user_id: student.id,
-                    event_date: selectedDate,
-                    status: newRecord[student.id].status,
-                    notes: newRecord[student.id].notes || null
-                }));
-                const { error } = await supabase
-                    .from('attendance')
-                    .upsert(recordsToSave, { onConflict: 'user_id,event_date' });
-                if (error) throw error;
-                alert('¡Clase iniciada! Todos los alumnos fueron marcados como presentes.');
-            } catch (err) {
-                console.error(err);
-                alert('Error al iniciar la clase: ' + err.message);
-            } finally {
-                setSaving(false);
-            }
-        } else if (students.length > 0) {
-            alert('La lista ya está inicializada para esta fecha.');
-        } else {
-            alert('No hay alumnos para iniciar asistencia.');
+        setAttendanceRecord(newRecord);
+
+        try {
+            setSaving(true);
+            const recordsToSave = participants.map(p => ({
+                user_id: p.id,
+                event_date: selectedDate,
+                status: 'present',
+                notes: attendanceRecord[p.id]?.notes || null
+            }));
+
+            const { error } = await supabase
+                .from('attendance')
+                .upsert(recordsToSave, { onConflict: 'user_id,event_date' });
+
+            if (error) throw error;
+
+            alert(`¡Clase iniciada! ${participants.length} participantes marcados como presentes. Ahora podés marcar quiénes estuvieron ausentes.`);
+        } catch (err) {
+            console.error(err);
+            alert('Error al iniciar la clase: ' + err.message);
+        } finally {
+            setSaving(false);
         }
     };
 
     const handleClearAttendance = async (userId) => {
-        if (!window.confirm('¿Seguro que deseas borrar la asistencia de este alumno para la fecha seleccionada?')) return;
+        if (!window.confirm('¿Seguro que deseas borrar el registro de este participante para la fecha seleccionada?')) return;
         try {
             setSaving(true);
             const { error } = await supabase
@@ -136,7 +147,6 @@ export default function AttendanceManager() {
 
             if (error) throw error;
 
-            // Remove from local state
             setAttendanceRecord(prev => {
                 const newState = { ...prev };
                 delete newState[userId];
@@ -154,18 +164,17 @@ export default function AttendanceManager() {
         try {
             setSaving(true);
 
-            // Convert our map into an array of rows for upserting
-            const recordsToSave = students
-                .filter(student => attendanceRecord[student.id]?.status) // only save if they have a status selected
-                .map(student => ({
-                    user_id: student.id,
+            const recordsToSave = participants
+                .filter(p => attendanceRecord[p.id]?.status)
+                .map(p => ({
+                    user_id: p.id,
                     event_date: selectedDate,
-                    status: attendanceRecord[student.id].status,
-                    notes: attendanceRecord[student.id].notes || null
+                    status: attendanceRecord[p.id].status,
+                    notes: attendanceRecord[p.id].notes || null
                 }));
 
             if (recordsToSave.length === 0) {
-                alert('No hay asistencias marcadas para guardar.');
+                alert('No hay asistencias marcadas para guardar. Primero iniciá la clase.');
                 return;
             }
 
@@ -175,7 +184,7 @@ export default function AttendanceManager() {
 
             if (error) throw error;
 
-            alert('¡Asistencia guardada con éxito!');
+            alert('¡Planilla guardada con éxito!');
 
         } catch (err) {
             console.error(err);
@@ -185,10 +194,18 @@ export default function AttendanceManager() {
         }
     };
 
+    // Summary counts
+    const presentCount = Object.values(attendanceRecord).filter(r => r.status === 'present').length;
+    const absentCount = Object.values(attendanceRecord).filter(r => r.status === 'absent').length;
+    const excusedCount = Object.values(attendanceRecord).filter(r => r.status === 'excused').length;
+    const classStarted = Object.keys(attendanceRecord).length > 0;
+
     return (
         <div className="attendance-manager">
             <h1 className="admin-page-title">Gestión de Asistencias</h1>
-            <p className="admin-page-subtitle">Toma lista de los alumnos según el cronograma y sumales puntos de presencialidad.</p>
+            <p className="admin-page-subtitle">
+                Creá la lista de clase para marcar quiénes estuvieron presentes. Todos los participantes arrancan como presentes y podés seleccionar los ausentes.
+            </p>
 
             <div className="attendance-controls">
                 <div className="date-picker-group">
@@ -201,14 +218,21 @@ export default function AttendanceManager() {
                     />
                 </div>
 
-                <div style={{ display: 'flex', gap: '15px' }}>
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    {classStarted && (
+                        <div className="attendance-summary">
+                            <span className="summary-chip present-chip">✅ {presentCount} presentes</span>
+                            <span className="summary-chip absent-chip">❌ {absentCount} ausentes</span>
+                            {excusedCount > 0 && <span className="summary-chip excused-chip">⚠️ {excusedCount} justificados</span>}
+                        </div>
+                    )}
                     <button
                         className="eco-secondary-btn"
                         onClick={handleCrearClase}
-                        disabled={loading || students.length === 0}
+                        disabled={loading || saving || participants.length === 0}
                         style={{ background: '#fff', border: '2px solid #112F4E', color: '#112F4E' }}
                     >
-                        📝 Iniciar Clase (Todos Presentes)
+                        📝 Crear Lista (Todos Presentes)
                     </button>
                     <button
                         className="eco-primary-btn"
@@ -220,14 +244,21 @@ export default function AttendanceManager() {
                 </div>
             </div>
 
+            {!classStarted && !loading && (
+                <div className="attendance-hint-box">
+                    <p>📌 Hacé clic en <strong>"Crear Lista"</strong> para iniciar la clase con todos los participantes marcados como presentes. Luego podés marcar quiénes estuvieron ausentes o justificados.</p>
+                </div>
+            )}
+
             {loading ? (
-                <div className="admin-loading">Cargando alumnos...</div>
+                <div className="admin-loading">Cargando participantes...</div>
             ) : (
                 <div className="admin-table-container">
                     <table className="admin-table attendance-table">
                         <thead>
                             <tr>
-                                <th>Alumno</th>
+                                <th>Participante</th>
+                                <th>Rol</th>
                                 <th>Email</th>
                                 <th style={{ textAlign: 'center' }}>Presente</th>
                                 <th style={{ textAlign: 'center' }}>Ausente</th>
@@ -237,20 +268,26 @@ export default function AttendanceManager() {
                             </tr>
                         </thead>
                         <tbody>
-                            {students.map(student => {
-                                const currentStatus = attendanceRecord[student.id]?.status || '';
+                            {participants.map(participant => {
+                                const currentStatus = attendanceRecord[participant.id]?.status || '';
+                                const roleColor = ROLE_COLORS[participant.role] || ROLE_COLORS.student;
                                 return (
-                                    <tr key={student.id}>
-                                        <td style={{ fontWeight: 600, color: '#112F4E' }}>{student.full_name}</td>
-                                        <td style={{ fontSize: '0.85rem', color: '#666' }}>{student.email || 'N/A'}</td>
+                                    <tr key={participant.id} className={currentStatus === 'absent' ? 'row-absent' : currentStatus === 'excused' ? 'row-excused' : ''}>
+                                        <td style={{ fontWeight: 600, color: '#112F4E' }}>{participant.full_name}</td>
+                                        <td>
+                                            <span className="role-badge" style={{ background: roleColor.background, color: roleColor.color }}>
+                                                {ROLE_LABELS[participant.role] || participant.role}
+                                            </span>
+                                        </td>
+                                        <td style={{ fontSize: '0.85rem', color: '#666' }}>{participant.email || 'N/A'}</td>
 
                                         <td align="center">
                                             <label className="custom-radio present-radio">
                                                 <input
                                                     type="radio"
-                                                    name={`status_${student.id}`}
+                                                    name={`status_${participant.id}`}
                                                     checked={currentStatus === 'present'}
-                                                    onChange={() => handleStatusChange(student.id, 'present')}
+                                                    onChange={() => handleStatusChange(participant.id, 'present')}
                                                 />
                                                 <span className="checkmark"></span>
                                             </label>
@@ -260,9 +297,9 @@ export default function AttendanceManager() {
                                             <label className="custom-radio absent-radio">
                                                 <input
                                                     type="radio"
-                                                    name={`status_${student.id}`}
+                                                    name={`status_${participant.id}`}
                                                     checked={currentStatus === 'absent'}
-                                                    onChange={() => handleStatusChange(student.id, 'absent')}
+                                                    onChange={() => handleStatusChange(participant.id, 'absent')}
                                                 />
                                                 <span className="checkmark"></span>
                                             </label>
@@ -272,9 +309,9 @@ export default function AttendanceManager() {
                                             <label className="custom-radio excused-radio">
                                                 <input
                                                     type="radio"
-                                                    name={`status_${student.id}`}
+                                                    name={`status_${participant.id}`}
                                                     checked={currentStatus === 'excused'}
-                                                    onChange={() => handleStatusChange(student.id, 'excused')}
+                                                    onChange={() => handleStatusChange(participant.id, 'excused')}
                                                 />
                                                 <span className="checkmark"></span>
                                             </label>
@@ -285,15 +322,15 @@ export default function AttendanceManager() {
                                                 type="text"
                                                 className="eco-input notes-input"
                                                 placeholder="Ej. Llegó tarde, viajó..."
-                                                value={attendanceRecord[student.id]?.notes || ''}
-                                                onChange={(e) => handleNotesChange(student.id, e.target.value)}
+                                                value={attendanceRecord[participant.id]?.notes || ''}
+                                                onChange={(e) => handleNotesChange(participant.id, e.target.value)}
                                             />
                                         </td>
                                         <td align="center">
                                             {currentStatus && (
                                                 <button
                                                     className="eco-secondary-btn"
-                                                    onClick={() => handleClearAttendance(student.id)}
+                                                    onClick={() => handleClearAttendance(participant.id)}
                                                     style={{ padding: '4px 8px', fontSize: '0.8rem', background: 'transparent', border: '1px solid #ccc', color: '#666' }}
                                                     title="Borrar registro de asistencia"
                                                 >
@@ -304,10 +341,10 @@ export default function AttendanceManager() {
                                     </tr>
                                 );
                             })}
-                            {students.length === 0 && (
+                            {participants.length === 0 && (
                                 <tr>
-                                    <td colSpan="6" style={{ textAlign: 'center', padding: '30px', color: '#666' }}>
-                                        No hay alumnos registrados o aprobados en el sistema actualmente.
+                                    <td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: '#666' }}>
+                                        No hay participantes registrados o aprobados en el sistema actualmente.
                                     </td>
                                 </tr>
                             )}

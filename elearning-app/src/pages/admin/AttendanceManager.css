@@ -140,3 +140,68 @@
     background-color: #f57c00;
     /* Orange */
 }
+
+/* Role badge */
+.role-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Row highlight for absent/excused */
+.row-absent td {
+    background-color: rgba(189, 67, 57, 0.04);
+}
+
+.row-excused td {
+    background-color: rgba(245, 124, 0, 0.04);
+}
+
+/* Summary chips */
+.attendance-summary {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.summary-chip {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.present-chip {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.absent-chip {
+    background: #fdecea;
+    color: #BD4339;
+}
+
+.excused-chip {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+/* Hint box when class not started */
+.attendance-hint-box {
+    background: #f0f7ff;
+    border: 1px solid #b3d4f5;
+    border-radius: 10px;
+    padding: 16px 24px;
+    margin-bottom: 24px;
+    color: #1565c0;
+    font-size: 0.95rem;
+}
+
+.attendance-hint-box p {
+    margin: 0;
+}

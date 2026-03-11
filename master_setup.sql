@@ -466,11 +466,18 @@ AS $$
   );
 $$;
 
+DROP POLICY IF EXISTS "Users can insert own profile via Clerk app" ON profiles;
 CREATE POLICY "Users can insert own profile via Clerk app" ON profiles FOR INSERT WITH CHECK (auth.jwt()->>'sub' = id);
+
+DROP POLICY IF EXISTS "Users can view own profile CLERK" ON profiles;
 CREATE POLICY "Users can view own profile CLERK" ON profiles FOR SELECT USING (auth.jwt()->>'sub' = id);
+
+DROP POLICY IF EXISTS "Admins y Mentors can view all profiles CLERK" ON profiles;
 CREATE POLICY "Admins y Mentors can view all profiles CLERK" ON profiles FOR SELECT USING (
   public.is_admin_or_mentor_clerk()
 );
+
+DROP POLICY IF EXISTS "Users can update own profile CLERK" ON profiles;
 CREATE POLICY "Users can update own profile CLERK" ON profiles FOR UPDATE USING (auth.jwt()->>'sub' = id);
 
 -- Modules

@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSupabase } from '../../contexts/SupabaseContext';
+import { useUserProfile } from '../../hooks/useSupabase';
 import { useParams, useNavigate } from 'react-router-dom';
 import './AssignmentGrader.css';
 
@@ -7,10 +8,14 @@ export default function AssignmentGrader() {
     const { assignmentId } = useParams();
     const navigate = useNavigate();
     const supabase = useSupabase();
+    const { profile: currentUserProfile } = useUserProfile();
 
     const [assignment, setAssignment] = useState(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+
+    // Filter state for list view
+    const [filterStatus, setFilterStatus] = useState('all');
 
     // Grading form state
     const [grade, setGrade] = useState('');
@@ -24,14 +29,14 @@ export default function AssignmentGrader() {
                 setLoading(true);
 
                 if (assignmentId) {
-                    // Fetch specific assignment details
+                    // Fetch single assignment details for grading
                     const { data, error } = await supabase
                         .from('assignments')
                         .select(`
-              *,
-              profiles(full_name, email),
-              lessons(title, modules(module_number))
-            `)
+                            *,
+                            profiles(full_name, email),
+                            lessons(title, task_description, modules(module_number))
+                        `)
                         .eq('id', assignmentId)
                         .single();
 
@@ -39,22 +44,23 @@ export default function AssignmentGrader() {
 
                     if (isMounted) {
                         setAssignment(data);
-                        setGrade(data.grade !== null ? data.grade : '');
+                        setGrade(data.grade !== null ? String(data.grade) : '');
                         setFeedback(data.feedback || '');
                     }
                 } else {
-                    // General view: fetch all assignments waiting for grade
+                    // List all assignments (most recent first, pending first)
                     const { data, error } = await supabase
                         .from('assignments')
                         .select(`
-              *,
-              profiles(full_name),
-              lessons(title, modules(module_number))
-            `)
+                            *,
+                            profiles(full_name, email),
+                            lessons(title, modules(module_number))
+                        `)
+                        .order('status', { ascending: true }) // submitted before graded
                         .order('submitted_at', { ascending: false });
 
                     if (error) throw error;
-                    if (isMounted) setAssignment(data); // In this mode, assignment is an array
+                    if (isMounted) setAssignment(data);
                 }
             } catch (err) {
                 console.error('Error fetching assignment(s):', err);
@@ -69,13 +75,14 @@ export default function AssignmentGrader() {
 
     const handleGradeSubmit = async () => {
         if (grade === '') {
-            alert('Debes ingresar una nota.');
+            alert('Debes seleccionar una evaluación.');
             return;
         }
 
         try {
             setSubmitting(true);
             const numericGrade = Number(grade);
+            const now = new Date().toISOString();
 
             const { error } = await supabase
                 .from('assignments')
@@ -83,18 +90,33 @@ export default function AssignmentGrader() {
                     grade: numericGrade,
                     feedback: feedback,
                     status: 'graded',
-                    graded_by: (await supabase.auth.getUser()).data.user?.id || null // If using clerk we might need to rely on backend trigger or pass it
+                    graded_at: now,
+                    graded_by: currentUserProfile?.id || null,
                 })
                 .eq('id', assignmentId);
 
             if (error) throw error;
 
-            alert('¡Tarea calificada con éxito!');
-            navigate('/admin/assignments'); // Go back to list
+            // Send notification to the student
+            if (assignment?.user_id) {
+                const isApproved = numericGrade === 100;
+                await supabase.from('notifications').insert({
+                    user_id: assignment.user_id,
+                    type: 'assignment_graded',
+                    title: isApproved ? '✅ Tarea recibida y aprobada' : '📋 Tarea revisada',
+                    message: isApproved
+                        ? `Tu tarea "${assignment.lessons?.title}" fue recibida y aprobada.${feedback ? ' Feedback: ' + feedback : ''}`
+                        : `Tu tarea "${assignment.lessons?.title}" fue revisada. ${feedback ? 'Feedback: ' + feedback : 'Por favor revisá los comentarios.'}`,
+                    data: { assignment_id: assignmentId, grade: numericGrade }
+                });
+            }
+
+            alert('¡Tarea calificada con éxito! El alumno fue notificado.');
+            navigate('/admin/assignments');
 
         } catch (err) {
             console.error('Error updating grade:', err);
-            alert('Error al guardar la calificación.');
+            alert('Error al guardar la calificación: ' + err.message);
         } finally {
             setSubmitting(false);
         }
@@ -102,13 +124,43 @@ export default function AssignmentGrader() {
 
     if (loading) return <div className="admin-loading">Cargando entregas...</div>;
 
-    // VIEW MODE: List all assignments
+    // LIST VIEW
     if (!assignmentId) {
         const list = Array.isArray(assignment) ? assignment : [];
+        const filtered = filterStatus === 'all' ? list : list.filter(a => a.status === filterStatus);
+        const pendingCount = list.filter(a => a.status === 'submitted').length;
 
         return (
             <div className="assignment-grader">
                 <h1 className="admin-page-title">Entregas de Tareas</h1>
+
+                <div className="grader-filter-bar">
+                    <div className="grader-stats">
+                        {pendingCount > 0 && (
+                            <span className="pending-badge-count">{pendingCount} pendiente{pendingCount !== 1 ? 's' : ''} de corrección</span>
+                        )}
+                    </div>
+                    <div className="filter-tabs">
+                        <button
+                            className={`filter-tab ${filterStatus === 'all' ? 'active' : ''}`}
+                            onClick={() => setFilterStatus('all')}
+                        >
+                            Todas ({list.length})
+                        </button>
+                        <button
+                            className={`filter-tab ${filterStatus === 'submitted' ? 'active' : ''}`}
+                            onClick={() => setFilterStatus('submitted')}
+                        >
+                            Pendientes ({list.filter(a => a.status === 'submitted').length})
+                        </button>
+                        <button
+                            className={`filter-tab ${filterStatus === 'graded' ? 'active' : ''}`}
+                            onClick={() => setFilterStatus('graded')}
+                        >
+                            Corregidas ({list.filter(a => a.status === 'graded').length})
+                        </button>
+                    </div>
+                </div>
 
                 <div className="admin-table-container">
                     <table className="admin-table">
@@ -117,42 +169,78 @@ export default function AssignmentGrader() {
                                 <th>Estado</th>
                                 <th>Alumno</th>
                                 <th>Lección</th>
+                                <th>Archivo</th>
                                 <th>Fecha Entrega</th>
+                                <th>Evaluación</th>
                                 <th>Acción</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {list.map(a => (
-                                <tr key={a.id}>
+                            {filtered.map(a => (
+                                <tr key={a.id} className={a.status === 'submitted' ? 'row-pending' : ''}>
                                     <td>
                                         <span className={`status-pill ${a.status}`}>
-                                            {a.status === 'submitted' ? 'Pendiente' : 'Corregido'}
+                                            {a.status === 'submitted' ? 'Pendiente' : 'Corregida'}
                                         </span>
                                     </td>
-                                    <td>{a.profiles?.full_name}</td>
-                                    <td>M{a.lessons?.modules?.module_number} - {a.lessons?.title}</td>
-                                    <td>{new Date(a.submitted_at).toLocaleDateString()}</td>
+                                    <td style={{ fontWeight: 600 }}>{a.profiles?.full_name}</td>
+                                    <td>M{a.lessons?.modules?.module_number} – {a.lessons?.title}</td>
+                                    <td>
+                                        {a.file_url ? (
+                                            <a
+                                                href={a.file_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="file-link"
+                                                title="Ver archivo del alumno"
+                                            >
+                                                📄 Ver archivo
+                                            </a>
+                                        ) : (
+                                            <span style={{ color: '#aaa', fontSize: '0.85rem' }}>Sin archivo</span>
+                                        )}
+                                    </td>
+                                    <td style={{ whiteSpace: 'nowrap' }}>
+                                        {a.submitted_at ? new Date(a.submitted_at).toLocaleDateString('es-AR') : '—'}
+                                    </td>
+                                    <td>
+                                        {a.status === 'graded' ? (
+                                            <span className={`grade-pill ${a.grade === 100 ? 'approved' : 'rejected'}`}>
+                                                {a.grade === 100 ? '✅ Recibida' : '❌ Incompleta'}
+                                            </span>
+                                        ) : (
+                                            <span style={{ color: '#999', fontSize: '0.85rem' }}>Sin calificar</span>
+                                        )}
+                                    </td>
                                     <td>
                                         <button
                                             className="eco-secondary-btn"
                                             onClick={() => navigate(`/admin/assignments/${a.id}`)}
-                                            style={{ padding: '6px 12px', fontSize: '0.85rem' }}
+                                            style={{ padding: '6px 14px', fontSize: '0.85rem' }}
                                         >
-                                            Ver Entrega
+                                            {a.status === 'submitted' ? 'Corregir' : 'Ver / Editar'}
                                         </button>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                    {list.length === 0 && <div className="admin-empty-state">No hay entregas registradas.</div>}
+                    {filtered.length === 0 && (
+                        <div className="admin-empty-state">
+                            {filterStatus === 'submitted'
+                                ? '¡Todo al día! No hay entregas pendientes de corrección.'
+                                : 'No hay entregas registradas.'}
+                        </div>
+                    )}
                 </div>
             </div>
         );
     }
 
-    // GRADING MODE: Single Assignment
+    // GRADING VIEW: single assignment
     if (!assignment || Array.isArray(assignment)) return <div>No se encontró la tarea.</div>;
+
+    const isAlreadyGraded = assignment.status === 'graded';
 
     return (
         <div className="assignment-grader single-view">
@@ -160,6 +248,9 @@ export default function AssignmentGrader() {
                 <button className="back-link" onClick={() => navigate('/admin/assignments')}>
                     ← Volver a Entregas
                 </button>
+                {isAlreadyGraded && (
+                    <span className="graded-indicator">✅ Calificada el {new Date(assignment.graded_at).toLocaleDateString('es-AR')}</span>
+                )}
             </div>
 
             <div className="grader-layout">
@@ -167,25 +258,49 @@ export default function AssignmentGrader() {
                 <div className="submission-content">
                     <div className="submission-header">
                         <h2>{assignment.lessons?.title}</h2>
-                        <p className="student-name">Por: {assignment.profiles?.full_name}</p>
-                        <p className="submission-date">Entregado el: {new Date(assignment.submitted_at).toLocaleString()}</p>
+                        <p className="student-name">Por: <strong>{assignment.profiles?.full_name}</strong></p>
+                        <p className="submission-date">
+                            Módulo {assignment.lessons?.modules?.module_number} · Entregado el{' '}
+                            {assignment.submitted_at ? new Date(assignment.submitted_at).toLocaleString('es-AR') : '—'}
+                        </p>
                     </div>
+
+                    {assignment.lessons?.task_description && (
+                        <div className="task-description-box">
+                            <h4>Consigna de la tarea:</h4>
+                            <p style={{ whiteSpace: 'pre-wrap' }}>{assignment.lessons.task_description}</p>
+                        </div>
+                    )}
 
                     {assignment.file_url ? (
                         <div className="file-submission-box">
-                            <h4>Archivo Adjunto:</h4>
-                            <a href={assignment.file_url} target="_blank" rel="noopener noreferrer" className="eco-primary-btn" style={{ display: 'inline-block', marginTop: '10px' }}>
-                                📄 Ver Documento / Descargar
+                            <h4>📎 Archivo entregado por el alumno:</h4>
+                            <a
+                                href={assignment.file_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="eco-primary-btn"
+                                style={{ display: 'inline-block', marginTop: '12px' }}
+                            >
+                                📄 Abrir / Descargar Documento
                             </a>
+                            <p style={{ fontSize: '0.8rem', color: '#999', marginTop: '8px' }}>
+                                El archivo se abre en una nueva pestaña.
+                            </p>
                         </div>
                     ) : (
-                        <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: assignment.content_text || '<p>Sin texto provisto.</p>' }} />
+                        <div className="no-file-box">
+                            <p>⚠️ El alumno no adjuntó ningún archivo. Solo envió texto o la entrega está vacía.</p>
+                            {assignment.content_text && (
+                                <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: assignment.content_text }} />
+                            )}
+                        </div>
                     )}
                 </div>
 
                 {/* Right Side: Grading Panel */}
                 <div className="grading-panel">
-                    <h3>Calificación</h3>
+                    <h3>{isAlreadyGraded ? 'Calificación guardada' : 'Calificar Entrega'}</h3>
 
                     <div className="form-group">
                         <label>Evaluación:</label>
@@ -195,18 +310,17 @@ export default function AssignmentGrader() {
                             className="grade-select"
                         >
                             <option value="">Seleccionar...</option>
-                            {/* Simplified binary grading approach based on user request ("Recibida o No entregada") */}
-                            <option value="100">Recibida (Aprobado)</option>
-                            <option value="0">Demasiado incompleta (Rechazada)</option>
+                            <option value="100">✅ Recibida (Aprobada)</option>
+                            <option value="0">❌ Demasiado incompleta (No aprobada)</option>
                         </select>
                     </div>
 
                     <div className="form-group">
-                        <label>Feedback al alumno (Opcional):</label>
+                        <label>Devolución al alumno (Opcional):</label>
                         <textarea
                             value={feedback}
                             onChange={(e) => setFeedback(e.target.value)}
-                            placeholder="Buen trabajo en esta lección..."
+                            placeholder="Ej: Muy buen trabajo, la reflexión estuvo completa y bien desarrollada..."
                             rows={6}
                         />
                     </div>
@@ -214,10 +328,19 @@ export default function AssignmentGrader() {
                     <button
                         className="eco-primary-btn grade-btn"
                         onClick={handleGradeSubmit}
-                        disabled={submitting}
+                        disabled={submitting || grade === ''}
                     >
-                        {submitting ? 'Guardando...' : 'Guardar Calificación'}
+                        {submitting ? 'Guardando...' : (isAlreadyGraded ? '💾 Actualizar Calificación' : '✅ Guardar Calificación')}
                     </button>
+
+                    {isAlreadyGraded && (
+                        <div className="already-graded-info">
+                            <p>Calificación actual: <strong>{assignment.grade === 100 ? 'Recibida ✅' : 'No aprobada ❌'}</strong></p>
+                            {assignment.feedback && (
+                                <p>Feedback anterior: <em>{assignment.feedback}</em></p>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
