@@ -126,7 +126,7 @@ export default function AssignmentGrader() {
                     message: isApproved
                         ? `Tu tarea "${assignment.lessons?.title}" fue recibida y aprobada.${feedback ? ' Feedback: ' + feedback : ''}`
                         : `Tu tarea "${assignment.lessons?.title}" fue revisada. ${feedback ? 'Feedback: ' + feedback : 'Por favor revisá los comentarios.'}`,
-                    data: { assignment_id: assignmentId, grade: numericGrade }
+                    data: { assignment_id: assignmentId, lesson_id: assignment.lesson_id, grade: numericGrade }
                 });
             }
 

@@ -1,12 +1,13 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSupabase } from '../../contexts/SupabaseContext';
 import { useUserProfile } from '../../hooks/useSupabase';
 import './NotificationsPage.css';
 
 const TYPE_META = {
-    class_unlocked: { icon: '🔓', label: 'Clase desbloqueada', color: '#112F4E' },
-    assignment_graded: { icon: '📝', label: 'Tarea devuelta', color: '#BD4339' },
-    attendance: { icon: '✋', label: 'Asistencia', color: '#2E7D32' },
+    class_unlocked:   { icon: '🔓', label: 'Clase desbloqueada', color: '#112F4E' },
+    assignment_graded: { icon: '📝', label: 'Tarea devuelta',     color: '#BD4339' },
+    attendance:        { icon: '✋', label: 'Asistencia',          color: '#2E7D32' },
 };
 
 function timeAgo(dateStr) {
@@ -22,41 +23,59 @@ function timeAgo(dateStr) {
 export default function NotificationsPage() {
     const supabase = useSupabase();
     const { profile } = useUserProfile();
+    const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchNotifications = useCallback(async () => {
+    // Fetch and immediately mark all as read when entering the page
+    useEffect(() => {
         if (!profile) return;
-        const { data } = await supabase
-            .from('notifications')
-            .select('*')
-            .eq('user_id', profile.id)
-            .order('created_at', { ascending: false })
-            .limit(50);
-        setNotifications(data || []);
-        setLoading(false);
+        let isMounted = true;
+
+        async function fetchAndMarkRead() {
+            const { data } = await supabase
+                .from('notifications')
+                .select('*')
+                .eq('user_id', profile.id)
+                .order('created_at', { ascending: false })
+                .limit(50);
+
+            if (!isMounted) return;
+            setNotifications((data || []).map(n => ({ ...n, is_read: true })));
+            setLoading(false);
+
+            // Mark all unread ones as read in the DB
+            const hasUnread = (data || []).some(n => !n.is_read);
+            if (hasUnread) {
+                await supabase
+                    .from('notifications')
+                    .update({ is_read: true })
+                    .eq('user_id', profile.id)
+                    .eq('is_read', false);
+            }
+        }
+
+        fetchAndMarkRead();
+        return () => { isMounted = false; };
     }, [profile, supabase]);
 
-    useEffect(() => {
-        fetchNotifications();
-    }, [fetchNotifications]);
-
-    async function markAllRead() {
-        if (!profile) return;
-        await supabase
-            .from('notifications')
-            .update({ is_read: true })
-            .eq('user_id', profile.id)
-            .eq('is_read', false);
-        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    // Navigate to the relevant lesson when clicking a notification
+    function handleNotifClick(n) {
+        if (n.type === 'assignment_graded' && n.data?.lesson_id) {
+            navigate(`/dashboard/lesson/${n.data.lesson_id}`);
+            return;
+        }
+        if (n.type === 'class_unlocked' && n.data?.lesson_id) {
+            navigate(`/dashboard/lesson/${n.data.lesson_id}`);
+            return;
+        }
     }
 
-    async function markRead(id) {
-        await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-        setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    function getIsClickable(n) {
+        if (n.type === 'assignment_graded' && n.data?.lesson_id) return true;
+        if (n.type === 'class_unlocked' && n.data?.lesson_id) return true;
+        return false;
     }
-
-    const unread = notifications.filter(n => !n.is_read);
 
     if (loading) return <div className="dashboard-loading">Cargando notificaciones...</div>;
 
@@ -65,17 +84,8 @@ export default function NotificationsPage() {
             <div className="notif-header">
                 <div>
                     <h1 className="page-title">Notificaciones</h1>
-                    <p className="page-subtitle">
-                        {unread.length > 0
-                            ? `Tenés ${unread.length} sin leer`
-                            : 'Todo al día'}
-                    </p>
+                    <p className="page-subtitle">Todo al día</p>
                 </div>
-                {unread.length > 0 && (
-                    <button className="mark-all-btn" onClick={markAllRead}>
-                        Marcar todo como leído
-                    </button>
-                )}
             </div>
 
             {notifications.length === 0 ? (
@@ -88,11 +98,13 @@ export default function NotificationsPage() {
                 <div className="notif-list">
                     {notifications.map(n => {
                         const meta = TYPE_META[n.type] || { icon: '📌', label: n.type, color: '#112F4E' };
+                        const clickable = getIsClickable(n);
                         return (
                             <div
                                 key={n.id}
-                                className={`notif-item ${!n.is_read ? 'notif-item--unread' : ''}`}
-                                onClick={() => !n.is_read && markRead(n.id)}
+                                className={`notif-item ${clickable ? 'notif-item--clickable' : ''}`}
+                                onClick={clickable ? () => handleNotifClick(n) : undefined}
+                                title={clickable ? 'Ir a la clase' : undefined}
                             >
                                 <div className="notif-icon-wrap" style={{ backgroundColor: `${meta.color}18` }}>
                                     <span className="notif-type-icon">{meta.icon}</span>
@@ -103,7 +115,9 @@ export default function NotificationsPage() {
                                     {n.message && <p className="notif-message">{n.message}</p>}
                                     <span className="notif-time">{timeAgo(n.created_at)}</span>
                                 </div>
-                                {!n.is_read && <div className="notif-dot" />}
+                                {clickable && (
+                                    <div className="notif-arrow">›</div>
+                                )}
                             </div>
                         );
                     })}

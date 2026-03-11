@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Outlet, Link, NavLink, useNavigate } from 'react-router-dom';
 import { useClerk } from '@clerk/react';
 import { useUserProfile } from '../hooks/useSupabase';
@@ -42,6 +42,21 @@ export default function StudentApp() {
     }, [profile, supabase]);
 
     useEffect(() => { fetchNotifs(); }, [fetchNotifs]);
+
+    // Realtime: refresh badge when any notification for this user is updated (e.g. marked as read)
+    useEffect(() => {
+        if (!profile) return;
+        const channel = supabase
+            .channel(`notifs-badge-${profile.id}`)
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'notifications',
+                filter: `user_id=eq.${profile.id}`,
+            }, () => { fetchNotifs(); })
+            .subscribe();
+        return () => { supabase.removeChannel(channel); };
+    }, [profile, supabase, fetchNotifs]);
 
     useEffect(() => {
         function handler(e) {
