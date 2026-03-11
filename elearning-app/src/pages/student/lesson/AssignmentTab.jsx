@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 import { useSupabase } from '../../../contexts/SupabaseContext';
 import { useUserProfile } from '../../../hooks/useSupabase';
 import './AssignmentTab.css';
@@ -10,7 +8,7 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
     const { profile } = useUserProfile();
 
     const [assignment, setAssignment] = useState(null);
-    const [content, setContent] = useState('');
+    const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
 
@@ -45,18 +43,31 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
     }, [lessonId, profile, supabase]);
 
     const handleSubmit = async () => {
-        if (!content.trim() || content === '<p><br></p>') {
-            alert('Por favor escribe algo antes de enviar.');
+        if (!file && !assignment?.file_url) {
+            alert('Por favor selecciona un archivo (.pdf o .docx) antes de enviar.');
             return;
         }
 
         try {
             setSubmitting(true);
+            let finalFileUrl = assignment?.file_url;
+
+            if (file) {
+                // Determine file extension
+                const ext = file.name.split('.').pop();
+                // Subiendo a storage en carpeta de usuario para respetar RLS
+                const filePath = `${profile.id}/${lessonId}_${Date.now()}.${ext}`;
+                const { error: uploadError } = await supabase.storage.from('assignments').upload(filePath, file);
+                if (uploadError) throw uploadError;
+
+                const { data } = supabase.storage.from('assignments').getPublicUrl(filePath);
+                finalFileUrl = data.publicUrl;
+            }
 
             const assignmentData = {
                 lesson_id: lessonId,
                 user_id: profile.id,
-                content_text: content,
+                file_url: finalFileUrl,
                 status: 'submitted',
                 submitted_at: new Date().toISOString()
             };
@@ -115,25 +126,40 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
                         )}
                         <div className="readonly-content">
                             <h4>Tu entrega:</h4>
-                            <div dangerouslySetInnerHTML={{ __html: assignment.content_text }} />
+                            {assignment.file_url ? (
+                                <a href={assignment.file_url} target="_blank" rel="noopener noreferrer" className="eco-secondary-btn" style={{ display: 'inline-block', marginTop: '10px' }}>
+                                    📄 Ver archivo entregado
+                                </a>
+                            ) : (
+                                <p>No hay archivo adjunto.</p>
+                            )}
                         </div>
                     </div>
                 ) : (
                     <>
-                        <ReactQuill
-                            theme="snow"
-                            value={content}
-                            onChange={setContent}
-                            className="eco-quill"
-                            placeholder="Escribe tu respuesta aquí..."
-                        />
+                        <div style={{ marginBottom: '20px' }}>
+                            <label className="eco-file-label" style={{ display: 'block', marginBottom: '10px', fontWeight: 600 }}>Selecciona tu documento (PDF o DOCX)</label>
+                            <input
+                                type="file"
+                                accept=".pdf,.doc,.docx"
+                                onChange={(e) => setFile(e.target.files[0])}
+                                className="eco-file-input"
+                                disabled={submitting}
+                                style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '8px' }}
+                            />
+                            {assignment?.file_url && !file && (
+                                <p style={{ fontSize: '0.85rem', color: '#666', marginTop: '8px' }}>
+                                    Ya tenías una entrega: <a href={assignment.file_url} target="_blank" rel="noopener noreferrer" style={{ color: '#BD4339', fontWeight: 600 }}>Ver archivo</a>
+                                </p>
+                            )}
+                        </div>
                         <div className="assignment-actions">
                             <button
                                 className="eco-primary-btn"
                                 onClick={handleSubmit}
-                                disabled={submitting}
+                                disabled={submitting || (!file && !assignment?.file_url)}
                             >
-                                {submitting ? 'Enviando...' : (assignment ? 'Actualizar Entrega' : 'Enviar Tarea')}
+                                {submitting ? 'Subiendo archivo...' : (assignment ? 'Actualizar Entrega' : 'Enviar Tarea')}
                             </button>
                             {assignment && <span className="status-badge">Entregada (Pendiente de revisión)</span>}
                         </div>

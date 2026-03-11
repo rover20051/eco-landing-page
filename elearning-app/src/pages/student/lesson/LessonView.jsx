@@ -4,6 +4,7 @@ import { useSupabase } from '../../../contexts/SupabaseContext';
 import { useUserProfile } from '../../../hooks/useSupabase';
 import AssignmentTab from './AssignmentTab';
 import QuizTab from './QuizTab';
+import YouTube from 'react-youtube';
 import './LessonView.css';
 
 export default function LessonView() {
@@ -40,14 +41,13 @@ export default function LessonView() {
                     .select('*')
                     .eq('lesson_id', lessonId);
 
-                // 3. Mark video as completed/accessed (simplified tracking for now)
+                // Initially mark as accessed, but NOT video_completed yet
                 await supabase
                     .from('lesson_progress')
                     .upsert({
                         user_id: profile.id,
                         lesson_id: lessonId,
-                        video_completed: true, // We mark as completed just by opening for now to keep parity with previous HTML
-                        completed_at: new Date().toISOString()
+                        // only set completed_at if it's not set
                     }, { onConflict: 'user_id,lesson_id' });
 
                 if (isMounted) {
@@ -120,12 +120,30 @@ export default function LessonView() {
 
                     <div className="video-container">
                         {lesson.youtube_video_id ? (
-                            <iframe
-                                src={`https://www.youtube.com/embed/${lesson.youtube_video_id}?rel=0&modestbranding=1`}
-                                title="Lesson Video"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                            ></iframe>
+                            <YouTube
+                                videoId={lesson.youtube_video_id}
+                                opts={{
+                                    width: '100%',
+                                    height: '100%',
+                                    playerVars: {
+                                        rel: 0,
+                                        modestbranding: 1
+                                    }
+                                }}
+                                onEnd={async () => {
+                                    // Marcar video como visto
+                                    await supabase
+                                        .from('lesson_progress')
+                                        .update({
+                                            video_completed: true,
+                                            completed_at: new Date().toISOString()
+                                        })
+                                        .eq('user_id', profile.id)
+                                        .eq('lesson_id', lessonId);
+                                }}
+                                className="react-yt-container"
+                                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                            />
                         ) : (
                             <div className="no-video">No hay video configurado para esta lección</div>
                         )}
@@ -133,6 +151,15 @@ export default function LessonView() {
 
                     <div className="lesson-description">
                         <p>{lesson.content_text}</p>
+                    </div>
+
+                    {/* Tarea moved directly below video & description */}
+                    <div className="lesson-assignment-section" style={{ marginTop: '40px', paddingTop: '30px', borderTop: '2px solid rgba(17,47,78,0.1)' }}>
+                        <h2 style={{ fontFamily: "'Playfair Display', serif", color: '#112F4E', marginBottom: '15px' }}>Tarea a entregar</h2>
+                        <AssignmentTab
+                            lessonId={lessonId}
+                            taskDescription={lesson.task_description}
+                        />
                     </div>
                 </div>
 
@@ -144,12 +171,6 @@ export default function LessonView() {
                             onClick={() => setActiveTab('resources')}
                         >
                             Recursos
-                        </button>
-                        <button
-                            className={`tab-btn ${activeTab === 'assignments' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('assignments')}
-                        >
-                            Tareas
                         </button>
                         <button
                             className={`tab-btn ${activeTab === 'quiz' ? 'active' : ''}`}
@@ -177,13 +198,6 @@ export default function LessonView() {
                                     </ul>
                                 )}
                             </div>
-                        )}
-
-                        {activeTab === 'assignments' && (
-                            <AssignmentTab
-                                lessonId={lessonId}
-                                taskDescription={lesson.task_description}
-                            />
                         )}
 
                         {activeTab === 'quiz' && (

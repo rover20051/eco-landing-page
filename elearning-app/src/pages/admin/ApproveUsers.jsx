@@ -18,7 +18,7 @@ export default function ApproveUsers() {
         setLoading(true);
         const { data, error } = await supabase
             .from('profiles')
-            .select('id, full_name, email, role, status, created_at')
+            .select('id, full_name, role, status, created_at')
             .order('created_at', { ascending: false });
 
         if (!error && data) {
@@ -47,8 +47,7 @@ export default function ApproveUsers() {
 
     const displayed = (view === 'pending' ? pendingUsers : allUsers).filter(u =>
         !search ||
-        u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-        u.email?.toLowerCase().includes(search.toLowerCase())
+        u.full_name?.toLowerCase().includes(search.toLowerCase())
     );
 
     const statusBadge = (status) => {
@@ -105,10 +104,9 @@ export default function ApproveUsers() {
                     {displayed.map(user => (
                         <div key={user.id} className={`user-card ${user.status}`}>
                             <div className="user-info">
-                                <div className="user-avatar">{(user.full_name || user.email || '?')[0].toUpperCase()}</div>
+                                <div className="user-avatar">{((user.full_name && user.full_name[0]) || '?').toUpperCase()}</div>
                                 <div className="user-details">
                                     <strong>{user.full_name || 'Sin nombre'}</strong>
-                                    <span className="user-email">{user.email}</span>
                                     <div className="user-badges">
                                         <span className="badge status-badge">{statusBadge(user.status)}</span>
                                         <span className="badge role-badge">{roleBadge(user.role)}</span>
