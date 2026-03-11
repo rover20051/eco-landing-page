@@ -85,6 +85,24 @@ export default function AttendanceManager() {
         }));
     };
 
+    const handleCrearClase = () => {
+        const newRecord = { ...attendanceRecord };
+        let modified = false;
+        students.forEach(student => {
+            if (!newRecord[student.id]?.status) {
+                newRecord[student.id] = { status: 'present', notes: '' };
+                modified = true;
+            }
+        });
+        if (modified) {
+            setAttendanceRecord(newRecord);
+        } else if (students.length > 0) {
+            alert('La lista ya está inicializada o todos ya tienen un estado.');
+        } else {
+            alert('No hay alumnos para iniciar asistencia.');
+        }
+    };
+
     const handleClearAttendance = async (userId) => {
         if (!window.confirm('¿Seguro que deseas borrar la asistencia de este alumno para la fecha seleccionada?')) return;
         try {
@@ -162,13 +180,23 @@ export default function AttendanceManager() {
                     />
                 </div>
 
-                <button
-                    className="eco-primary-btn"
-                    onClick={handleSaveAttendance}
-                    disabled={saving || loading}
-                >
-                    {saving ? 'Guardando...' : '💾 Guardar Planilla de Hoy'}
-                </button>
+                <div style={{ display: 'flex', gap: '15px' }}>
+                    <button
+                        className="eco-secondary-btn"
+                        onClick={handleCrearClase}
+                        disabled={loading || students.length === 0}
+                        style={{ background: '#fff', border: '2px solid #112F4E', color: '#112F4E' }}
+                    >
+                        📝 Iniciar Clase (Todos Presentes)
+                    </button>
+                    <button
+                        className="eco-primary-btn"
+                        onClick={handleSaveAttendance}
+                        disabled={saving || loading}
+                    >
+                        {saving ? 'Guardando...' : '💾 Guardar Planilla'}
+                    </button>
+                </div>
             </div>
 
             {loading ? (

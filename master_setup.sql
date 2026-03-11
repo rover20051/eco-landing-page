@@ -464,7 +464,7 @@ CREATE POLICY "Admins and mentors view all assignments CLERK" ON assignments FOR
 );
 CREATE POLICY "Users can view own assignments CLERK" ON assignments FOR SELECT USING (auth.jwt()->>'sub' = user_id);
 CREATE POLICY "Users can insert own assignments CLERK" ON assignments FOR INSERT WITH CHECK (auth.jwt()->>'sub' = user_id);
-CREATE POLICY "Users can update own assignments CLERK" ON assignments FOR UPDATE USING (auth.jwt()->>'sub' = user_id);
+CREATE POLICY "Users can update own assignments CLERK" ON assignments FOR UPDATE USING (auth.jwt()->>'sub' = user_id) WITH CHECK (auth.jwt()->>'sub' = user_id);
 CREATE POLICY "Admins and Mentors update assignments CLERK" ON assignments FOR UPDATE USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.jwt()->>'sub' AND role IN ('admin', 'mentor'))
 );
@@ -509,6 +509,8 @@ CREATE POLICY "Admins can view all quiz answers CLERK" ON public.quiz_answers FO
 ALTER TABLE public.attendance ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own attendance CLERK" ON public.attendance FOR SELECT USING (auth.jwt()->>'sub' = user_id);
 CREATE POLICY "Admins and Mentors can manage attendance CLERK" ON public.attendance FOR ALL USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.jwt()->>'sub' AND role IN ('admin', 'mentor'))
+) WITH CHECK (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.jwt()->>'sub' AND role IN ('admin', 'mentor'))
 );
 
@@ -565,6 +567,11 @@ CREATE POLICY "Students can upload assignments"
 DROP POLICY IF EXISTS "Students can view own assignments" ON storage.objects;
 CREATE POLICY "Students can view own assignments"
   ON storage.objects FOR SELECT
+  USING (bucket_id = 'assignments' AND auth.jwt()->>'sub' = (storage.foldername(name))[1]);
+
+DROP POLICY IF EXISTS "Students can update own assignments files" ON storage.objects;
+CREATE POLICY "Students can update own assignments files"
+  ON storage.objects FOR UPDATE
   USING (bucket_id = 'assignments' AND auth.jwt()->>'sub' = (storage.foldername(name))[1]);
 
 DROP POLICY IF EXISTS "Admins and Mentors can view all assignments" ON storage.objects;
@@ -659,7 +666,7 @@ DROP POLICY IF EXISTS "Admins can view all quiz answers CLERK" ON public.quiz_an
 CREATE POLICY "Admins can view all quiz answers CLERK" ON public.quiz_answers FOR SELECT USING ( public.is_admin_or_mentor_clerk() );
 
 DROP POLICY IF EXISTS "Admins and Mentors can manage attendance CLERK" ON public.attendance;
-CREATE POLICY "Admins and Mentors can manage attendance CLERK" ON public.attendance FOR ALL USING ( public.is_admin_or_mentor_clerk() );
+CREATE POLICY "Admins and Mentors can manage attendance CLERK" ON public.attendance FOR ALL USING ( public.is_admin_or_mentor_clerk() ) WITH CHECK ( public.is_admin_or_mentor_clerk() );
 
 DROP POLICY IF EXISTS "Admins can insert notifications CLERK" ON public.notifications;
 CREATE POLICY "Admins can insert notifications CLERK" ON public.notifications FOR INSERT WITH CHECK ( public.is_admin_or_mentor_clerk() );
