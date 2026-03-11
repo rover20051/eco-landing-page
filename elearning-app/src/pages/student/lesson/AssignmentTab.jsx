@@ -57,8 +57,14 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
                 const ext = file.name.split('.').pop();
                 // Subiendo a storage en carpeta de usuario para respetar RLS
                 const filePath = `${profile.id}/${lessonId}_${Date.now()}.${ext}`;
-                const { error: uploadError } = await supabase.storage.from('assignments').upload(filePath, file);
-                if (uploadError) throw uploadError;
+                const { error: uploadError } = await supabase.storage.from('assignments').upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: true
+                });
+
+                if (uploadError) {
+                    throw new Error('Storage: No se pudo subir el archivo. ' + uploadError.message);
+                }
 
                 const { data } = supabase.storage.from('assignments').getPublicUrl(filePath);
                 finalFileUrl = data.publicUrl;
@@ -78,7 +84,9 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
                 .select()
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                throw new Error('Base de datos: No se pudo registrar la entrega de la tarea. ' + error.message);
+            }
 
             // Update global lesson progress logic here
             await supabase
@@ -93,7 +101,7 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
             alert('¡Tarea enviada exitosamente!');
         } catch (err) {
             console.error('Error submitting assignment:', err);
-            alert('Hubo un error al enviar la tarea. Intenta de nuevo.');
+            alert(err.message || 'Hubo un error al enviar la tarea. Intenta de nuevo.');
         } finally {
             setSubmitting(false);
         }

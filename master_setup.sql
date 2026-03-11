@@ -639,52 +639,44 @@ INSERT INTO public.quiz_questions (id, lesson_id, question_text, question_order)
   ('b2222222-0001-0001-0001-000000000002', 'a2222222-0001-0001-0001-000000000001', '¿Qué significa empatía cristiana?', 2)
 ON CONFLICT (id) DO NOTHING;
 
--- Limpiar opciones de examenes anteriores para evitar duplicados en seed recurrente
-DELETE FROM public.quiz_options WHERE question_id IN (
-  'b1111111-0001-0001-0001-000000000001',
-  'b1111111-0001-0001-0001-000000000002',
-  'b1111111-0001-0001-0001-000000000003',
-  'b1111111-0002-0001-0001-000000000001',
-  'b1111111-0002-0001-0001-000000000002',
-  'b2222222-0001-0001-0001-000000000001',
-  'b2222222-0001-0001-0001-000000000002'
-);
 
-INSERT INTO public.quiz_options (question_id, option_text, is_correct, option_order) VALUES
-  ('b1111111-0001-0001-0001-000000000001', 'Obedecer', false, 1),
-  ('b1111111-0001-0001-0001-000000000001', 'Escuchar', true, 2),
-  ('b1111111-0001-0001-0001-000000000001', 'Conocer', false, 3),
-  ('b1111111-0001-0001-0001-000000000001', 'Liderar', false, 4),
+-- Insertar opciones de Quiz explícitamente usando UUIDs para que ON CONFLICT DO NOTHING las saltee si ya existen sin romper Foreign Keys con respuestas de alumnos.
+INSERT INTO public.quiz_options (id, question_id, option_text, is_correct, option_order) VALUES
+  ('c1111111-0001-0001-0001-000000000001', 'b1111111-0001-0001-0001-000000000001', 'Obedecer', false, 1),
+  ('c1111111-0001-0001-0001-000000000002', 'b1111111-0001-0001-0001-000000000001', 'Escuchar', true, 2),
+  ('c1111111-0001-0001-0001-000000000003', 'b1111111-0001-0001-0001-000000000001', 'Conocer', false, 3),
+  ('c1111111-0001-0001-0001-000000000004', 'b1111111-0001-0001-0001-000000000001', 'Liderar', false, 4),
 
-  ('b1111111-0001-0001-0001-000000000002', 'No hay diferencia, son lo mismo', false, 1),
-  ('b1111111-0001-0001-0001-000000000002', 'Escuchar activamente implica conectar con el corazón de la persona', true, 2),
-  ('b1111111-0001-0001-0001-000000000002', 'Oír es más importante que escuchar', false, 3),
-  ('b1111111-0001-0001-0001-000000000002', 'Escuchar es solo para líderes experimentados', false, 4),
+  ('c1111111-0001-0001-0002-000000000001', 'b1111111-0001-0001-0001-000000000002', 'No hay diferencia, son lo mismo', false, 1),
+  ('c1111111-0001-0001-0002-000000000002', 'b1111111-0001-0001-0001-000000000002', 'Escuchar activamente implica conectar con el corazón de la persona', true, 2),
+  ('c1111111-0001-0001-0002-000000000003', 'b1111111-0001-0001-0001-000000000002', 'Oír es más importante que escuchar', false, 3),
+  ('c1111111-0001-0001-0002-000000000004', 'b1111111-0001-0001-0001-000000000002', 'Escuchar es solo para líderes experimentados', false, 4),
 
-  ('b1111111-0001-0001-0001-000000000003', 'Porque los líderes necesitan dar órdenes', false, 1),
-  ('b1111111-0001-0001-0001-000000000003', 'Porque permite entender las necesidades reales de la comunidad', true, 2),
-  ('b1111111-0001-0001-0001-000000000003', 'No es fundamental, es opcional', false, 3),
-  ('b1111111-0001-0001-0001-000000000003', 'Solo es importante para líderes religiosos', false, 4),
+  ('c1111111-0001-0001-0003-000000000001', 'b1111111-0001-0001-0001-000000000003', 'Porque los líderes necesitan dar órdenes', false, 1),
+  ('c1111111-0001-0001-0003-000000000002', 'b1111111-0001-0001-0001-000000000003', 'Porque permite entender las necesidades reales de la comunidad', true, 2),
+  ('c1111111-0001-0001-0003-000000000003', 'b1111111-0001-0001-0001-000000000003', 'No es fundamental, es opcional', false, 3),
+  ('c1111111-0001-0001-0003-000000000004', 'b1111111-0001-0001-0001-000000000003', 'Solo es importante para líderes religiosos', false, 4),
 
-  ('b1111111-0002-0001-0001-000000000001', 'Oración contemplativa y meditación bíblica', true, 1),
-  ('b1111111-0002-0001-0001-000000000001', 'Escuchar música a alto volumen', false, 2),
-  ('b1111111-0002-0001-0001-000000000001', 'Ignorar el silencio', false, 3),
-  ('b1111111-0002-0001-0001-000000000001', 'Solo leer sin reflexionar', false, 4),
+  ('c1111111-0002-0001-0001-000000000001', 'b1111111-0002-0001-0001-000000000001', 'Oración contemplativa y meditación bíblica', true, 1),
+  ('c1111111-0002-0001-0001-000000000002', 'b1111111-0002-0001-0001-000000000001', 'Escuchar música a alto volumen', false, 2),
+  ('c1111111-0002-0001-0001-000000000003', 'b1111111-0002-0001-0001-000000000001', 'Ignorar el silencio', false, 3),
+  ('c1111111-0002-0001-0001-000000000004', 'b1111111-0002-0001-0001-000000000001', 'Solo leer sin reflexionar', false, 4),
 
-  ('b1111111-0002-0001-0001-000000000002', 'Leer la Biblia rápidamente', false, 1),
-  ('b1111111-0002-0001-0001-000000000002', 'Reflexionar profundamente sobre un pasaje para escuchar a Dios', true, 2),
-  ('b1111111-0002-0001-0001-000000000002', 'Memorizar versículos sin entenderlos', false, 3),
-  ('b1111111-0002-0001-0001-000000000002', 'Solo escuchar sermones', false, 4),
+  ('c1111111-0002-0001-0002-000000000001', 'b1111111-0002-0001-0001-000000000002', 'Leer la Biblia rápidamente', false, 1),
+  ('c1111111-0002-0001-0002-000000000002', 'b1111111-0002-0001-0001-000000000002', 'Reflexionar profundamente sobre un pasaje para escuchar a Dios', true, 2),
+  ('c1111111-0002-0001-0002-000000000003', 'b1111111-0002-0001-0001-000000000002', 'Memorizar versículos sin entenderlos', false, 3),
+  ('c1111111-0002-0001-0002-000000000004', 'b1111111-0002-0001-0001-000000000002', 'Solo escuchar sermones', false, 4),
 
-  ('b2222222-0001-0001-0001-000000000001', 'Los apóstoles', false, 1),
-  ('b2222222-0001-0001-0001-000000000001', 'Jesús', true, 2),
-  ('b2222222-0001-0001-0001-000000000001', 'Moisés', false, 3),
-  ('b2222222-0001-0001-0001-000000000001', 'David', false, 4),
+  ('c2222222-0001-0001-0001-000000000001', 'b2222222-0001-0001-0001-000000000001', 'Los apóstoles', false, 1),
+  ('c2222222-0001-0001-0001-000000000002', 'b2222222-0001-0001-0001-000000000001', 'Jesús', true, 2),
+  ('c2222222-0001-0001-0001-000000000003', 'b2222222-0001-0001-0001-000000000001', 'Moisés', false, 3),
+  ('c2222222-0001-0001-0001-000000000004', 'b2222222-0001-0001-0001-000000000001', 'David', false, 4),
 
-  ('b2222222-0001-0001-0001-000000000002', 'Sentir lástima por otros', false, 1),
-  ('b2222222-0001-0001-0001-000000000002', 'Conectar genuinamente con otros siguiendo el modelo de Jesús', true, 2),
-  ('b2222222-0001-0001-0001-000000000002', 'Estar de acuerdo con todo', false, 3),
-  ('b2222222-0001-0001-0001-000000000002', 'Evitar conflictos', false, 4);
+  ('c2222222-0001-0001-0002-000000000001', 'b2222222-0001-0001-0001-000000000002', 'Sentir lástima por otros', false, 1),
+  ('c2222222-0001-0001-0002-000000000002', 'b2222222-0001-0001-0001-000000000002', 'Conectar genuinamente con otros siguiendo el modelo de Jesús', true, 2),
+  ('c2222222-0001-0001-0002-000000000003', 'b2222222-0001-0001-0001-000000000002', 'Estar de acuerdo con todo', false, 3),
+  ('c2222222-0001-0001-0002-000000000004', 'b2222222-0001-0001-0001-000000000002', 'Evitar conflictos', false, 4)
+ON CONFLICT (id) DO NOTHING;
 
 -- =========================================================================
 -- PASO 6: INICIALIZAR EL CRONOGRAMA DE ECO (Clases y Fechas de Apertura)
@@ -876,6 +868,7 @@ DROP POLICY IF EXISTS "Users can view own profile CLERK" ON public.profiles;
 
 -- 2. Hacemos que cualquier usuario autenticado (con token Clerk) pueda "leer" los perfiles 
 -- (Necesario a futuro para los Ranking de Puntos, y vital para romper el bucle infinito)
+DROP POLICY IF EXISTS "Anyone can read profiles" ON public.profiles;
 CREATE POLICY "Anyone can read profiles" ON public.profiles FOR SELECT USING (
   auth.jwt() IS NOT NULL
 );
@@ -888,3 +881,23 @@ CREATE POLICY "Admins can update profiles" ON public.profiles FOR UPDATE USING (
     WHERE id = coalesce(auth.jwt()->>'sub', '') AND role::text IN ('admin', 'mentor')
   )
 );
+/*
+👉 FEDE: EJECUTA ESTO EN EL SQL EDITOR.
+Esto quita los bloqueos ultra-estrictos de subida de archivos para que las carpetas 
+de los alumnos puedan crearse y guardar las tareas y luego los mentores puedan descargar el archivo sin error 403.
+*/
+
+-- 1. Hacemos el bucket "público" a nivel lecturas para que el link generado permita descargar
+UPDATE storage.buckets SET public = true WHERE id = 'assignments';
+
+-- 2. Quitamos el bloqueo estricto de carpetas para Subidas
+DROP POLICY IF EXISTS "Students can upload assignments" ON storage.objects;
+CREATE POLICY "Students can upload assignments"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'assignments' AND auth.role() = 'authenticated');
+  
+-- 3. Quitamos el bloqueo estricto de Actualizaciones de Archivo
+DROP POLICY IF EXISTS "Students can update assignments" ON storage.objects;
+CREATE POLICY "Students can update assignments"
+  ON storage.objects FOR UPDATE
+  USING (bucket_id = 'assignments' AND auth.role() = 'authenticated');
