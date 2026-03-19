@@ -439,149 +439,74 @@ EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 
 -- =========================================================================
--- PASO 4: CREACIÓN DE NUEVAS POLÍTICAS RLS Y REALTIME (CLERK)
+-- PASO 4: FUNCIONES HELPER (SECURITY DEFINER)
+-- Definidas antes de las políticas para evitar errores de referencia.
+-- Usan SECURITY DEFINER para omitir RLS al consultar profiles internamente.
 -- =========================================================================
 
--- Profiles
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-
--- Helper function to avoid infinite recursion on profiles table
+-- ¿Es el usuario actual un admin?
 CREATE OR REPLACE FUNCTION public.is_admin_clerk()
 RETURNS boolean
-LANGUAGE sql
+LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE _result boolean;
+BEGIN
   SELECT EXISTS(
     SELECT 1 FROM profiles
-    WHERE id = auth.jwt()->>'sub' AND role = 'admin'
-  );
+    WHERE id = coalesce(auth.jwt()->>'sub', '') AND role::text = 'admin'
+  ) INTO _result;
+  RETURN coalesce(_result, false);
+END;
 $$;
 
--- Definir mentor clerk localmente para profiles early start
+-- ¿Es el usuario actual admin o mentor?
 CREATE OR REPLACE FUNCTION public.is_admin_or_mentor_clerk()
 RETURNS boolean
-LANGUAGE sql
+LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE _result boolean;
+BEGIN
   SELECT EXISTS(
     SELECT 1 FROM profiles
-    WHERE id = auth.jwt()->>'sub' AND role IN ('admin', 'mentor')
-  );
+    WHERE id = coalesce(auth.jwt()->>'sub', '') AND role::text IN ('admin', 'mentor')
+  ) INTO _result;
+  RETURN coalesce(_result, false);
+END;
 $$;
 
-DROP POLICY IF EXISTS "Users can insert own profile via Clerk app" ON profiles;
-CREATE POLICY "Users can insert own profile via Clerk app" ON profiles FOR INSERT WITH CHECK (auth.jwt()->>'sub' = id);
+-- ¿Tiene el usuario actual status = 'approved'?
+-- Bloquea a usuarios pending/rejected de acceder a datos del curso.
+CREATE OR REPLACE FUNCTION public.is_approved_user()
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE _result boolean;
+BEGIN
+  SELECT EXISTS(
+    SELECT 1 FROM profiles
+    WHERE id = coalesce(auth.jwt()->>'sub', '') AND status = 'approved'
+  ) INTO _result;
+  RETURN coalesce(_result, false);
+END;
+$$;
 
-DROP POLICY IF EXISTS "Users can view own profile CLERK" ON profiles;
-CREATE POLICY "Users can view own profile CLERK" ON profiles FOR SELECT USING (auth.jwt()->>'sub' = id);
 
-DROP POLICY IF EXISTS "Admins y Mentors can view all profiles CLERK" ON profiles;
-CREATE POLICY "Admins y Mentors can view all profiles CLERK" ON profiles FOR SELECT USING (
-  public.is_admin_or_mentor_clerk()
-);
+-- =========================================================================
+-- PASO 5: POLÍTICAS RLS — HARDENED
+-- Corrige:
+--   (a) Lectura anónima: solo auth.role()='authenticated' accede a datos
+--   (b) Operaciones anónimas: políticas explícitas para INSERT/UPDATE/DELETE
+--   (c) Usuarios pending: check de is_approved_user() en tablas de contenido
+--   (d) Escalada de privilegios: ver trigger en PASO 7
+-- =========================================================================
 
-DROP POLICY IF EXISTS "Users can update own profile CLERK" ON profiles;
-CREATE POLICY "Users can update own profile CLERK" ON profiles FOR UPDATE USING (auth.jwt()->>'sub' = id);
-
--- Modules
-ALTER TABLE public.modules ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Anyone can view active modules" ON modules;
-DROP POLICY IF EXISTS "Admins can manage modules" ON modules;
-DROP POLICY IF EXISTS "Anyone can view active modules CLERK" ON modules;
-DROP POLICY IF EXISTS "Admins can manage modules CLERK" ON modules;
-CREATE POLICY "Anyone can view active modules CLERK" ON modules FOR SELECT USING (is_active = true);
-CREATE POLICY "Admins can manage modules CLERK" ON modules FOR ALL USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.jwt()->>'sub' AND role = 'admin')
-);
-
--- Lessons
-ALTER TABLE public.lessons ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Anyone can view lessons of active modules" ON lessons;
-DROP POLICY IF EXISTS "Admins can manage lessons" ON lessons;
-DROP POLICY IF EXISTS "Anyone can view active lessons CLERK" ON lessons;
-DROP POLICY IF EXISTS "Admins can manage lessons CLERK" ON lessons;
-CREATE POLICY "Anyone can view active lessons CLERK" ON lessons FOR SELECT USING (
-  EXISTS (SELECT 1 FROM modules WHERE modules.id = lessons.module_id AND modules.is_active = true)
-);
-CREATE POLICY "Admins can manage lessons CLERK" ON lessons FOR ALL USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.jwt()->>'sub' AND role = 'admin')
-);
-
--- Lesson Resources
-ALTER TABLE public.lesson_resources ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Lesson resources are viewable by authenticated users." ON public.lesson_resources FOR SELECT USING ( auth.role() = 'authenticated' );
-CREATE POLICY "Admins can manage lesson resources." ON public.lesson_resources FOR ALL USING ( EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.jwt()->>'sub' AND role = 'admin') );
-
--- User Progress
-ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can view own progress CLERK" ON user_progress FOR SELECT USING (auth.jwt()->>'sub' = user_id);
-CREATE POLICY "Users can update own progress CLERK" ON user_progress FOR ALL USING (auth.jwt()->>'sub' = user_id);
-
--- Lesson Progress
-ALTER TABLE public.lesson_progress ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can view own lesson progress CLERK" ON lesson_progress FOR SELECT USING (auth.jwt()->>'sub' = user_id);
-CREATE POLICY "Users can update own lesson progress CLERK" ON lesson_progress FOR ALL USING (auth.jwt()->>'sub' = user_id);
-
--- Assignments
-ALTER TABLE public.assignments ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Admins and mentors view all assignments CLERK" ON assignments FOR SELECT USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.jwt()->>'sub' AND role IN ('admin', 'mentor'))
-);
-CREATE POLICY "Users can view own assignments CLERK" ON assignments FOR SELECT USING (auth.jwt()->>'sub' = user_id);
-CREATE POLICY "Users can insert own assignments CLERK" ON assignments FOR INSERT WITH CHECK (auth.jwt()->>'sub' = user_id);
-CREATE POLICY "Users can update own assignments CLERK" ON assignments FOR UPDATE USING (auth.jwt()->>'sub' = user_id) WITH CHECK (auth.jwt()->>'sub' = user_id);
-CREATE POLICY "Admins and Mentors update assignments CLERK" ON assignments FOR UPDATE USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.jwt()->>'sub' AND role IN ('admin', 'mentor'))
-);
-
--- Quiz Questions
-ALTER TABLE public.quiz_questions ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Quiz questions are viewable by authenticated users." ON public.quiz_questions;
-DROP POLICY IF EXISTS "Admins can manage quiz questions." ON public.quiz_questions;
-DROP POLICY IF EXISTS "Quiz questions are viewable by authenticated users CLERK" ON public.quiz_questions;
-DROP POLICY IF EXISTS "Admins can manage quiz questions CLERK" ON public.quiz_questions;
-CREATE POLICY "Quiz questions are viewable by authenticated users CLERK" ON public.quiz_questions FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Admins can manage quiz questions CLERK" ON public.quiz_questions FOR ALL USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.jwt()->>'sub' AND role = 'admin')
-);
-
--- Quiz Options
-ALTER TABLE public.quiz_options ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Quiz options are viewable by authenticated users." ON public.quiz_options;
-DROP POLICY IF EXISTS "Admins can manage quiz options." ON public.quiz_options;
-DROP POLICY IF EXISTS "Quiz options are viewable by authenticated users CLERK" ON public.quiz_options;
-DROP POLICY IF EXISTS "Admins can manage quiz options CLERK" ON public.quiz_options;
-CREATE POLICY "Quiz options are viewable by authenticated users CLERK" ON public.quiz_options FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Admins can manage quiz options CLERK" ON public.quiz_options FOR ALL USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.jwt()->>'sub' AND role = 'admin')
-);
-
--- Quiz Attempts
-ALTER TABLE public.quiz_attempts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can view own quiz attempts CLERK" ON quiz_attempts FOR SELECT USING (auth.jwt()->>'sub' = user_id);
-CREATE POLICY "Users can insert own quiz attempts CLERK" ON quiz_attempts FOR INSERT WITH CHECK (auth.jwt()->>'sub' = user_id);
-CREATE POLICY "Admins can view all quiz attempts CLERK" ON quiz_attempts FOR SELECT USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.jwt()->>'sub' AND role IN ('mentor', 'admin'))
-);
-
--- Quiz Answers
-ALTER TABLE public.quiz_answers ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can view own quiz answers CLERK" ON public.quiz_answers FOR SELECT USING ( EXISTS (SELECT 1 FROM public.quiz_attempts WHERE id = attempt_id AND user_id = auth.jwt()->>'sub') );
-CREATE POLICY "Users can insert own quiz answers CLERK" ON public.quiz_answers FOR INSERT WITH CHECK ( EXISTS (SELECT 1 FROM public.quiz_attempts WHERE id = attempt_id AND user_id = auth.jwt()->>'sub') );
-CREATE POLICY "Admins can view all quiz answers CLERK" ON public.quiz_answers FOR SELECT USING ( EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.jwt()->>'sub' AND role IN ('mentor', 'admin')) );
-
--- Attendance
-ALTER TABLE public.attendance ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can view their own attendance CLERK" ON public.attendance FOR SELECT USING (auth.jwt()->>'sub' = user_id);
-CREATE POLICY "Admins and Mentors can manage attendance CLERK" ON public.attendance FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.jwt()->>'sub' AND role IN ('admin', 'mentor'))
-) WITH CHECK (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.jwt()->>'sub' AND role IN ('admin', 'mentor'))
-);
-
--- Notifications
+-- Notifications table (creada aquí si no existe, antes de sus políticas)
 CREATE TABLE IF NOT EXISTS public.notifications (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id TEXT REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -592,12 +517,325 @@ CREATE TABLE IF NOT EXISTS public.notifications (
     data JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- -------------------------------------------------------------------------
+-- PROFILES
+-- -------------------------------------------------------------------------
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone." ON profiles;
+DROP POLICY IF EXISTS "Users can insert their own profile." ON profiles;
+DROP POLICY IF EXISTS "Users can update own profile." ON profiles;
+DROP POLICY IF EXISTS "Admins can update any profile." ON profiles;
+DROP POLICY IF EXISTS "Users can view all profiles" ON profiles;
+DROP POLICY IF EXISTS "Admins can view all profiles" ON profiles;
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can insert own profile via Clerk hook" ON profiles;
+DROP POLICY IF EXISTS "Users can view own profile CLERK" ON profiles;
+DROP POLICY IF EXISTS "Admins can view all profiles CLERK" ON profiles;
+DROP POLICY IF EXISTS "Users can update own profile CLERK" ON profiles;
+DROP POLICY IF EXISTS "Users can insert own profile via Clerk app" ON profiles;
+DROP POLICY IF EXISTS "Admins y Mentors can view all profiles CLERK" ON profiles;
+DROP POLICY IF EXISTS "Anyone can read profiles" ON profiles;
+DROP POLICY IF EXISTS "Approved users can read all profiles" ON profiles;
+DROP POLICY IF EXISTS "Admins can update profiles" ON profiles;
+DROP POLICY IF EXISTS "Admins can delete profiles" ON profiles;
+
+-- SELECT propio: cualquier autenticado puede ver SU perfil (necesario para página "cuenta pendiente")
+CREATE POLICY "Users can view own profile CLERK" ON profiles
+  FOR SELECT USING (auth.jwt()->>'sub' = id);
+
+-- SELECT todos: solo usuarios aprobados (rankings, listas de alumnos, gestión admin)
+-- NOTA: is_approved_user() usa SECURITY DEFINER → no hay recursión infinita
+CREATE POLICY "Approved users can read all profiles" ON profiles
+  FOR SELECT USING (auth.role() = 'authenticated' AND public.is_approved_user());
+
+-- INSERT: al registrarse se crea el propio perfil (inicia en 'pending')
+CREATE POLICY "Users can insert own profile via Clerk app" ON profiles
+  FOR INSERT WITH CHECK (auth.jwt()->>'sub' = id);
+
+-- UPDATE propio: campos seguros solamente (role/status/eco_points bloqueados por trigger PASO 7)
+CREATE POLICY "Users can update own profile CLERK" ON profiles
+  FOR UPDATE USING (auth.jwt()->>'sub' = id)
+  WITH CHECK (auth.jwt()->>'sub' = id);
+
+-- UPDATE admin: admins y mentors pueden actualizar cualquier perfil (aprobar, cambiar rol)
+CREATE POLICY "Admins can update profiles" ON profiles
+  FOR UPDATE USING (public.is_admin_or_mentor_clerk());
+
+-- DELETE: solo admins
+CREATE POLICY "Admins can delete profiles" ON profiles
+  FOR DELETE USING (public.is_admin_clerk());
+
+-- -------------------------------------------------------------------------
+-- MODULES
+-- -------------------------------------------------------------------------
+ALTER TABLE public.modules ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can view active modules" ON modules;
+DROP POLICY IF EXISTS "Admins can manage modules" ON modules;
+DROP POLICY IF EXISTS "Anyone can view active modules CLERK" ON modules;
+DROP POLICY IF EXISTS "Admins can manage modules CLERK" ON modules;
+
+CREATE POLICY "Approved users can view active modules" ON modules
+  FOR SELECT USING (is_active = true AND public.is_approved_user());
+
+CREATE POLICY "Admins can manage modules CLERK" ON modules
+  FOR ALL USING (public.is_admin_clerk());
+
+-- -------------------------------------------------------------------------
+-- LESSONS
+-- -------------------------------------------------------------------------
+ALTER TABLE public.lessons ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can view lessons of active modules" ON lessons;
+DROP POLICY IF EXISTS "Admins can manage lessons" ON lessons;
+DROP POLICY IF EXISTS "Anyone can view active lessons CLERK" ON lessons;
+DROP POLICY IF EXISTS "Admins can manage lessons CLERK" ON lessons;
+
+CREATE POLICY "Approved users can view active lessons" ON lessons
+  FOR SELECT USING (
+    public.is_approved_user() AND
+    EXISTS (SELECT 1 FROM modules WHERE modules.id = lessons.module_id AND modules.is_active = true)
+  );
+
+CREATE POLICY "Admins can manage lessons CLERK" ON lessons
+  FOR ALL USING (public.is_admin_clerk());
+
+-- -------------------------------------------------------------------------
+-- LESSON RESOURCES
+-- -------------------------------------------------------------------------
+ALTER TABLE public.lesson_resources ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Lesson resources are viewable by authenticated users." ON lesson_resources;
+DROP POLICY IF EXISTS "Admins can manage lesson resources." ON lesson_resources;
+
+CREATE POLICY "Approved users can view lesson resources" ON lesson_resources
+  FOR SELECT USING (public.is_approved_user());
+
+CREATE POLICY "Admins can manage lesson resources." ON lesson_resources
+  FOR ALL USING (public.is_admin_clerk());
+
+-- -------------------------------------------------------------------------
+-- USER PROGRESS
+-- -------------------------------------------------------------------------
+ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own progress." ON user_progress;
+DROP POLICY IF EXISTS "Users can update own progress." ON user_progress;
+DROP POLICY IF EXISTS "Users can insert own progress." ON user_progress;
+DROP POLICY IF EXISTS "Admins can view all progress." ON user_progress;
+DROP POLICY IF EXISTS "Users can view own progress" ON user_progress;
+DROP POLICY IF EXISTS "Users can update own progress" ON user_progress;
+DROP POLICY IF EXISTS "Users can insert own progress" ON user_progress;
+DROP POLICY IF EXISTS "Admins can view all progress" ON user_progress;
+DROP POLICY IF EXISTS "Users can view own progress CLERK" ON user_progress;
+DROP POLICY IF EXISTS "Users can update own progress CLERK" ON user_progress;
+DROP POLICY IF EXISTS "Users can insert own progress CLERK" ON user_progress;
+
+CREATE POLICY "Users can view own progress CLERK" ON user_progress
+  FOR SELECT USING (auth.jwt()->>'sub' = user_id AND public.is_approved_user());
+
+-- INSERT y UPDATE separados (sin DELETE para estudiantes)
+CREATE POLICY "Users can insert own progress CLERK" ON user_progress
+  FOR INSERT WITH CHECK (auth.jwt()->>'sub' = user_id AND public.is_approved_user());
+
+CREATE POLICY "Users can update own progress CLERK" ON user_progress
+  FOR UPDATE USING (auth.jwt()->>'sub' = user_id AND public.is_approved_user());
+
+CREATE POLICY "Admins can view all progress" ON user_progress
+  FOR SELECT USING (public.is_admin_or_mentor_clerk());
+
+-- -------------------------------------------------------------------------
+-- LESSON PROGRESS
+-- -------------------------------------------------------------------------
+ALTER TABLE public.lesson_progress ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own lesson progress." ON lesson_progress;
+DROP POLICY IF EXISTS "Users can insert own lesson progress." ON lesson_progress;
+DROP POLICY IF EXISTS "Users can update own lesson progress." ON lesson_progress;
+DROP POLICY IF EXISTS "Admins can view all lesson progress." ON lesson_progress;
+DROP POLICY IF EXISTS "Users can view own lesson progress" ON lesson_progress;
+DROP POLICY IF EXISTS "Users can insert own lesson progress" ON lesson_progress;
+DROP POLICY IF EXISTS "Users can update own lesson progress" ON lesson_progress;
+DROP POLICY IF EXISTS "Admins can view all lesson progress" ON lesson_progress;
+DROP POLICY IF EXISTS "Users can view own lesson progress CLERK" ON lesson_progress;
+DROP POLICY IF EXISTS "Users can update own lesson progress CLERK" ON lesson_progress;
+DROP POLICY IF EXISTS "Users can insert own lesson progress CLERK" ON lesson_progress;
+
+CREATE POLICY "Users can view own lesson progress CLERK" ON lesson_progress
+  FOR SELECT USING (auth.jwt()->>'sub' = user_id AND public.is_approved_user());
+
+-- INSERT y UPDATE separados (sin DELETE para estudiantes)
+CREATE POLICY "Users can insert own lesson progress CLERK" ON lesson_progress
+  FOR INSERT WITH CHECK (auth.jwt()->>'sub' = user_id AND public.is_approved_user());
+
+CREATE POLICY "Users can update own lesson progress CLERK" ON lesson_progress
+  FOR UPDATE USING (auth.jwt()->>'sub' = user_id AND public.is_approved_user());
+
+CREATE POLICY "Admins can view all lesson progress" ON lesson_progress
+  FOR SELECT USING (public.is_admin_or_mentor_clerk());
+
+-- -------------------------------------------------------------------------
+-- ASSIGNMENTS
+-- -------------------------------------------------------------------------
+ALTER TABLE public.assignments ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own assignments." ON assignments;
+DROP POLICY IF EXISTS "Users can insert own assignments." ON assignments;
+DROP POLICY IF EXISTS "Mentors can view all assignments." ON assignments;
+DROP POLICY IF EXISTS "Mentors can grade assignments." ON assignments;
+DROP POLICY IF EXISTS "Users can view own assignments" ON assignments;
+DROP POLICY IF EXISTS "Users can insert own assignments" ON assignments;
+DROP POLICY IF EXISTS "Mentors can view all assignments" ON assignments;
+DROP POLICY IF EXISTS "Mentors can grade assignments" ON assignments;
+DROP POLICY IF EXISTS "Admins and mentors view all assignments CLERK" ON assignments;
+DROP POLICY IF EXISTS "Users can view own assignments CLERK" ON assignments;
+DROP POLICY IF EXISTS "Users can insert own assignments CLERK" ON assignments;
+DROP POLICY IF EXISTS "Users can update own assignments CLERK" ON assignments;
+DROP POLICY IF EXISTS "Admins and Mentors update assignments CLERK" ON assignments;
+
+CREATE POLICY "Admins and mentors view all assignments CLERK" ON assignments
+  FOR SELECT USING (public.is_admin_or_mentor_clerk());
+
+CREATE POLICY "Users can view own assignments CLERK" ON assignments
+  FOR SELECT USING (auth.jwt()->>'sub' = user_id AND public.is_approved_user());
+
+-- INSERT y UPDATE (sin DELETE para estudiantes)
+CREATE POLICY "Users can insert own assignments CLERK" ON assignments
+  FOR INSERT WITH CHECK (auth.jwt()->>'sub' = user_id AND public.is_approved_user());
+
+CREATE POLICY "Users can update own assignments CLERK" ON assignments
+  FOR UPDATE
+  USING (auth.jwt()->>'sub' = user_id AND public.is_approved_user())
+  WITH CHECK (auth.jwt()->>'sub' = user_id);
+
+CREATE POLICY "Admins and Mentors update assignments CLERK" ON assignments
+  FOR UPDATE USING (public.is_admin_or_mentor_clerk());
+
+-- -------------------------------------------------------------------------
+-- QUIZ QUESTIONS
+-- -------------------------------------------------------------------------
+ALTER TABLE public.quiz_questions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Quiz questions are viewable by authenticated users." ON quiz_questions;
+DROP POLICY IF EXISTS "Admins can manage quiz questions." ON quiz_questions;
+DROP POLICY IF EXISTS "Quiz questions are viewable by authenticated users CLERK" ON quiz_questions;
+DROP POLICY IF EXISTS "Admins can manage quiz questions CLERK" ON quiz_questions;
+
+CREATE POLICY "Approved users can view quiz questions" ON quiz_questions
+  FOR SELECT USING (public.is_approved_user());
+
+CREATE POLICY "Admins can manage quiz questions CLERK" ON quiz_questions
+  FOR ALL USING (public.is_admin_clerk());
+
+-- -------------------------------------------------------------------------
+-- QUIZ OPTIONS
+-- -------------------------------------------------------------------------
+ALTER TABLE public.quiz_options ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Quiz options are viewable by authenticated users." ON quiz_options;
+DROP POLICY IF EXISTS "Admins can manage quiz options." ON quiz_options;
+DROP POLICY IF EXISTS "Quiz options are viewable by authenticated users CLERK" ON quiz_options;
+DROP POLICY IF EXISTS "Admins can manage quiz options CLERK" ON quiz_options;
+
+CREATE POLICY "Approved users can view quiz options" ON quiz_options
+  FOR SELECT USING (public.is_approved_user());
+
+CREATE POLICY "Admins can manage quiz options CLERK" ON quiz_options
+  FOR ALL USING (public.is_admin_clerk());
+
+-- -------------------------------------------------------------------------
+-- QUIZ ATTEMPTS
+-- -------------------------------------------------------------------------
+ALTER TABLE public.quiz_attempts ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own quiz attempts." ON quiz_attempts;
+DROP POLICY IF EXISTS "Users can insert own quiz attempts." ON quiz_attempts;
+DROP POLICY IF EXISTS "Admins can view all quiz attempts." ON quiz_attempts;
+DROP POLICY IF EXISTS "Users can view own quiz attempts" ON quiz_attempts;
+DROP POLICY IF EXISTS "Users can insert own quiz attempts" ON quiz_attempts;
+DROP POLICY IF EXISTS "Admins can view all quiz attempts" ON quiz_attempts;
+DROP POLICY IF EXISTS "Users can view own quiz attempts CLERK" ON quiz_attempts;
+DROP POLICY IF EXISTS "Users can insert own quiz attempts CLERK" ON quiz_attempts;
+DROP POLICY IF EXISTS "Admins can view all quiz attempts CLERK" ON quiz_attempts;
+
+CREATE POLICY "Users can view own quiz attempts CLERK" ON quiz_attempts
+  FOR SELECT USING (auth.jwt()->>'sub' = user_id AND public.is_approved_user());
+
+CREATE POLICY "Users can insert own quiz attempts CLERK" ON quiz_attempts
+  FOR INSERT WITH CHECK (auth.jwt()->>'sub' = user_id AND public.is_approved_user());
+
+CREATE POLICY "Admins and mentors can view all quiz attempts CLERK" ON quiz_attempts
+  FOR SELECT USING (public.is_admin_or_mentor_clerk());
+
+-- -------------------------------------------------------------------------
+-- QUIZ ANSWERS
+-- -------------------------------------------------------------------------
+ALTER TABLE public.quiz_answers ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own quiz answers." ON quiz_answers;
+DROP POLICY IF EXISTS "Users can insert own quiz answers." ON quiz_answers;
+DROP POLICY IF EXISTS "Admins can view all quiz answers." ON quiz_answers;
+DROP POLICY IF EXISTS "Users can view own quiz answers" ON quiz_answers;
+DROP POLICY IF EXISTS "Users can insert own quiz answers" ON quiz_answers;
+DROP POLICY IF EXISTS "Admins can view all quiz answers" ON quiz_answers;
+DROP POLICY IF EXISTS "Users can view own quiz answers CLERK" ON quiz_answers;
+DROP POLICY IF EXISTS "Users can insert own quiz answers CLERK" ON quiz_answers;
+DROP POLICY IF EXISTS "Admins can view all quiz answers CLERK" ON quiz_answers;
+
+CREATE POLICY "Users can view own quiz answers CLERK" ON quiz_answers
+  FOR SELECT USING (
+    public.is_approved_user() AND
+    EXISTS (SELECT 1 FROM quiz_attempts WHERE id = attempt_id AND user_id = auth.jwt()->>'sub')
+  );
+
+CREATE POLICY "Users can insert own quiz answers CLERK" ON quiz_answers
+  FOR INSERT WITH CHECK (
+    public.is_approved_user() AND
+    EXISTS (SELECT 1 FROM quiz_attempts WHERE id = attempt_id AND user_id = auth.jwt()->>'sub')
+  );
+
+CREATE POLICY "Admins and mentors can view all quiz answers CLERK" ON quiz_answers
+  FOR SELECT USING (public.is_admin_or_mentor_clerk());
+
+-- -------------------------------------------------------------------------
+-- ATTENDANCE
+-- -------------------------------------------------------------------------
+ALTER TABLE public.attendance ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view their own attendance" ON attendance;
+DROP POLICY IF EXISTS "Admins and Mentors can manage attendance" ON attendance;
+DROP POLICY IF EXISTS "Users can view their own attendance CLERK" ON attendance;
+DROP POLICY IF EXISTS "Admins and Mentors can manage attendance CLERK" ON attendance;
+
+-- Estudiantes: solo pueden VER su propia asistencia (no insertar/modificar)
+CREATE POLICY "Users can view their own attendance CLERK" ON attendance
+  FOR SELECT USING (auth.jwt()->>'sub' = user_id AND public.is_approved_user());
+
+-- Admins y mentors: gestión completa (marcar asistencia, editar, borrar)
+CREATE POLICY "Admins and Mentors can manage attendance CLERK" ON attendance
+  FOR ALL
+  USING (public.is_admin_or_mentor_clerk())
+  WITH CHECK (public.is_admin_or_mentor_clerk());
+
+-- -------------------------------------------------------------------------
+-- NOTIFICATIONS
+-- -------------------------------------------------------------------------
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can view their own notifications CLERK" ON public.notifications FOR SELECT USING (auth.jwt()->>'sub' = user_id);
-CREATE POLICY "Users can update their own notifications CLERK" ON public.notifications FOR UPDATE USING (auth.jwt()->>'sub' = user_id);
-CREATE POLICY "Admins can insert notifications CLERK" ON public.notifications FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.jwt()->>'sub' AND role IN ('admin', 'mentor'))
-);
+
+DROP POLICY IF EXISTS "Users can view their own notifications CLERK" ON notifications;
+DROP POLICY IF EXISTS "Users can update their own notifications CLERK" ON notifications;
+DROP POLICY IF EXISTS "Admins can insert notifications CLERK" ON notifications;
+
+CREATE POLICY "Users can view their own notifications CLERK" ON notifications
+  FOR SELECT USING (auth.jwt()->>'sub' = user_id AND public.is_approved_user());
+
+CREATE POLICY "Users can update their own notifications CLERK" ON notifications
+  FOR UPDATE USING (auth.jwt()->>'sub' = user_id AND public.is_approved_user());
+
+CREATE POLICY "Admins can insert notifications CLERK" ON notifications
+  FOR INSERT WITH CHECK (public.is_admin_or_mentor_clerk());
 
 -- Realtime
 DO $$ BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE public.user_progress; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
@@ -607,17 +845,16 @@ DO $$ BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications; 
 
 
 -- =========================================================================
--- PASO 5: STORAGE BUCKETS
+-- PASO 6: STORAGE BUCKETS
 -- =========================================================================
--- Bucket for student assignment uploads
+
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
-  'assignments', 'assignments', false, 10485760,
+  'assignments', 'assignments', true, 10485760,
   ARRAY['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document']
 )
 ON CONFLICT (id) DO NOTHING;
 
--- Bucket for lesson resource PDFs (admin uploads)
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'lesson-resources', 'lesson-resources', true, 52428800,
@@ -625,7 +862,6 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
--- Bucket for module cover images (admin uploads, public read)
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'module-covers', 'module-covers', true, 5242880,
@@ -633,11 +869,22 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
--- Storage RLS policies
+-- assignments permanece público para que getPublicUrl() funcione en el frontend
+UPDATE storage.buckets SET public = true WHERE id = 'assignments';
+
+
+-- =========================================================================
+-- PASO 7: STORAGE RLS
+-- =========================================================================
+
+-- Estudiantes: solo pueden subir/actualizar en SU PROPIA carpeta ({user_id}/archivo)
 DROP POLICY IF EXISTS "Students can upload assignments" ON storage.objects;
 CREATE POLICY "Students can upload assignments"
   ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'assignments' AND auth.jwt()->>'sub' = (storage.foldername(name))[1]);
+  WITH CHECK (
+    bucket_id = 'assignments'
+    AND auth.jwt()->>'sub' = (storage.foldername(name))[1]
+  );
 
 DROP POLICY IF EXISTS "Students can view own assignments" ON storage.objects;
 CREATE POLICY "Students can view own assignments"
@@ -645,180 +892,68 @@ CREATE POLICY "Students can view own assignments"
   USING (bucket_id = 'assignments' AND auth.jwt()->>'sub' = (storage.foldername(name))[1]);
 
 DROP POLICY IF EXISTS "Students can update own assignments files" ON storage.objects;
+DROP POLICY IF EXISTS "Students can update assignments" ON storage.objects;
 CREATE POLICY "Students can update own assignments files"
   ON storage.objects FOR UPDATE
-  USING (bucket_id = 'assignments' AND auth.jwt()->>'sub' = (storage.foldername(name))[1]);
+  USING (
+    bucket_id = 'assignments'
+    AND auth.jwt()->>'sub' = (storage.foldername(name))[1]
+  );
 
+-- Admins y mentors: pueden ver TODAS las tareas de todos los alumnos
 DROP POLICY IF EXISTS "Admins and Mentors can view all assignments" ON storage.objects;
 CREATE POLICY "Admins and Mentors can view all assignments"
   ON storage.objects FOR SELECT
-  USING (bucket_id = 'assignments' AND EXISTS (
-    SELECT 1 FROM public.profiles WHERE id = auth.jwt()->>'sub' AND role IN ('admin', 'mentor')
-  ));
+  USING (bucket_id = 'assignments' AND public.is_admin_or_mentor_clerk());
 
+-- Recursos de lecciones: solo admins gestionan, solo usuarios aprobados ven
 DROP POLICY IF EXISTS "Admins can manage lesson resources storage" ON storage.objects;
 CREATE POLICY "Admins can manage lesson resources storage"
   ON storage.objects FOR ALL
-  USING (bucket_id = 'lesson-resources' AND EXISTS (
-    SELECT 1 FROM public.profiles WHERE id = auth.jwt()->>'sub' AND role = 'admin'
-  ));
+  USING (bucket_id = 'lesson-resources' AND public.is_admin_clerk());
 
 DROP POLICY IF EXISTS "Authenticated can view lesson resources" ON storage.objects;
 CREATE POLICY "Authenticated can view lesson resources"
   ON storage.objects FOR SELECT
-  USING (bucket_id = 'lesson-resources' AND auth.role() = 'authenticated');
+  USING (bucket_id = 'lesson-resources' AND public.is_approved_user());
 
+-- Portadas de módulos: solo admins gestionan, cualquiera puede ver
 DROP POLICY IF EXISTS "Admins can manage module covers" ON storage.objects;
 CREATE POLICY "Admins can manage module covers"
   ON storage.objects FOR ALL
-  USING (bucket_id = 'module-covers' AND EXISTS (
-    SELECT 1 FROM public.profiles WHERE id = auth.jwt()->>'sub' AND role = 'admin'
-  ));
+  USING (bucket_id = 'module-covers' AND public.is_admin_clerk());
 
 DROP POLICY IF EXISTS "Public can view module covers" ON storage.objects;
 CREATE POLICY "Public can view module covers"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'module-covers');
 
--- 1. Helper function for Admin (Security definer omite bloqueos paralelos)
-CREATE OR REPLACE FUNCTION public.is_admin_clerk()
-RETURNS boolean
+
+-- =========================================================================
+-- PASO 8: TRIGGER ANTI-ESCALADA DE PRIVILEGIOS
+-- Impide que cualquier usuario modifique su propio role, status o eco_points
+-- directamente desde el cliente, incluso con un JWT válido de Clerk.
+-- Opera a nivel base de datos: no puede bypassearse via API REST de Supabase.
+-- =========================================================================
+
+CREATE OR REPLACE FUNCTION public.prevent_privilege_escalation()
+RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
-DECLARE
-  _is_admin boolean;
 BEGIN
-  SELECT EXISTS(
-    SELECT 1 FROM profiles
-    WHERE id = coalesce(auth.jwt()->>'sub', '') AND role::text = 'admin'
-  ) INTO _is_admin;
-  RETURN coalesce(_is_admin, false);
+  -- Solo admins pueden cambiar role, status y eco_points
+  IF NOT public.is_admin_clerk() THEN
+    NEW.role       := OLD.role;
+    NEW.status     := OLD.status;
+    NEW.eco_points := OLD.eco_points;
+  END IF;
+  RETURN NEW;
 END;
 $$;
 
--- 2. Helper function for Admin or Mentor
-CREATE OR REPLACE FUNCTION public.is_admin_or_mentor_clerk()
-RETURNS boolean
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  _has_access boolean;
-BEGIN
-  SELECT EXISTS(
-    SELECT 1 FROM profiles
-    WHERE id = coalesce(auth.jwt()->>'sub', '') AND role::text IN ('admin', 'mentor')
-  ) INTO _has_access;
-  RETURN coalesce(_has_access, false);
-END;
-$$;
-
--- 3. Actualizar políticas que usan Admin
-
-DROP POLICY IF EXISTS "Admins can view all profiles CLERK" ON public.profiles;
-DROP POLICY IF EXISTS "Admins y Mentors can view all profiles CLERK" ON public.profiles;
-CREATE POLICY "Admins y Mentors can view all profiles CLERK" ON public.profiles FOR SELECT USING ( public.is_admin_or_mentor_clerk() );
-
-DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
-
-DROP POLICY IF EXISTS "Admins can manage lessons CLERK" ON public.lessons;
-CREATE POLICY "Admins can manage lessons CLERK" ON public.lessons FOR ALL USING ( public.is_admin_clerk() );
-
-DROP POLICY IF EXISTS "Admins can manage modules CLERK" ON public.modules;
-CREATE POLICY "Admins can manage modules CLERK" ON public.modules FOR ALL USING ( public.is_admin_clerk() );
-
-DROP POLICY IF EXISTS "Admins can manage quiz questions CLERK" ON public.quiz_questions;
-CREATE POLICY "Admins can manage quiz questions CLERK" ON public.quiz_questions FOR ALL USING ( public.is_admin_clerk() );
-
-DROP POLICY IF EXISTS "Admins can manage quiz options CLERK" ON public.quiz_options;
-CREATE POLICY "Admins can manage quiz options CLERK" ON public.quiz_options FOR ALL USING ( public.is_admin_clerk() );
-
-DROP POLICY IF EXISTS "Admins can manage lesson resources." ON public.lesson_resources;
-CREATE POLICY "Admins can manage lesson resources." ON public.lesson_resources FOR ALL USING ( public.is_admin_clerk() );
-
--- 4. Actualizar políticas que usan Admin + Mentor
-
-DROP POLICY IF EXISTS "Admins and mentors view all assignments CLERK" ON public.assignments;
-CREATE POLICY "Admins and mentors view all assignments CLERK" ON public.assignments FOR SELECT USING ( public.is_admin_or_mentor_clerk() );
-
-DROP POLICY IF EXISTS "Admins and Mentors update assignments CLERK" ON public.assignments;
-CREATE POLICY "Admins and Mentors update assignments CLERK" ON public.assignments FOR UPDATE USING ( public.is_admin_or_mentor_clerk() );
-
-DROP POLICY IF EXISTS "Admins can view all quiz attempts CLERK" ON public.quiz_attempts;
-CREATE POLICY "Admins can view all quiz attempts CLERK" ON public.quiz_attempts FOR SELECT USING ( public.is_admin_or_mentor_clerk() );
-
-DROP POLICY IF EXISTS "Admins can view all quiz answers CLERK" ON public.quiz_answers;
-CREATE POLICY "Admins can view all quiz answers CLERK" ON public.quiz_answers FOR SELECT USING ( public.is_admin_or_mentor_clerk() );
-
-DROP POLICY IF EXISTS "Admins and Mentors can manage attendance CLERK" ON public.attendance;
-CREATE POLICY "Admins and Mentors can manage attendance CLERK" ON public.attendance FOR ALL USING ( public.is_admin_or_mentor_clerk() ) WITH CHECK ( public.is_admin_or_mentor_clerk() );
-
-DROP POLICY IF EXISTS "Admins can insert notifications CLERK" ON public.notifications;
-CREATE POLICY "Admins can insert notifications CLERK" ON public.notifications FOR INSERT WITH CHECK ( public.is_admin_or_mentor_clerk() );
-
--- Opcional: Actualizar el Storage Bucket
-DROP POLICY IF EXISTS "Admins and Mentors can view all assignments" ON storage.objects;
-CREATE POLICY "Admins and Mentors can view all assignments"
-  ON storage.objects FOR SELECT
-  USING (bucket_id = 'assignments' AND public.is_admin_or_mentor_clerk());
-
-DROP POLICY IF EXISTS "Admins can manage lesson resources storage" ON storage.objects;
-CREATE POLICY "Admins can manage lesson resources storage"
-  ON storage.objects FOR ALL
-  USING (bucket_id = 'lesson-resources' AND public.is_admin_clerk());
-/*
-👉 FEDE: EJECUTA ESTO EN EL SQL EDITOR.
-¡Descubrí el error final! Tu base de datos estaba cayendo en una "recursión infinita" 
-porque para saber si un usuario es "Admin", el sistema buscaba en la tabla perfiles... 
-¡Pero la política "Admins y Mentors can view all profiles CLERK" bloqueaba su lectura exigiendo saber primero si eras Admin/Mentor!
-
-Esto lo soluciona DE RAÍZ exterminando absolutamente TODAS las políticas SELECT restrictivas en profiles.
-*/
--- 1. Eliminamos TODAS las políticas posibles que causaban el bucle de "el huevo y la gallina"
-DROP POLICY IF EXISTS "Admins can view all profiles CLERK" ON public.profiles;
-DROP POLICY IF EXISTS "Admins y Mentors can view all profiles CLERK" ON public.profiles;
-DROP POLICY IF EXISTS "Users can view own profile CLERK" ON public.profiles;
-DROP POLICY IF EXISTS "Anyone can read profiles" ON public.profiles;
-DROP POLICY IF EXISTS "Users can view all profiles" ON public.profiles;
-DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
-
--- 2. Hacemos que CUALQUIER usuario autenticado (con token Clerk) pueda "leer" los perfiles libremente 
--- (Necesario a futuro para los Ranking de Puntos, lista de asistencias y EVITAR BUCLES)
-CREATE POLICY "Anyone can read profiles" ON public.profiles FOR SELECT USING (
-  auth.jwt() IS NOT NULL
-);
-
--- 3. IMPORTANTE: Agregamos la política para que los Admins puedan ACTUALIZAR el Rol y Estado de los estudiantes.
--- Usamos explicitamente la función `is_admin_or_mentor_clerk()` que es SECURITY DEFINER para que NO cause recursión al guardar.
-DROP POLICY IF EXISTS "Admins can update profiles" ON public.profiles;
-CREATE POLICY "Admins can update profiles" ON public.profiles FOR UPDATE USING (
-  public.is_admin_or_mentor_clerk()
-);
-/*
-👉 FEDE: EJECUTA ESTO EN EL SQL EDITOR.
-Esto quita los bloqueos ultra-estrictos de subida de archivos para que las carpetas 
-de los alumnos puedan crearse y guardar las tareas y luego los mentores puedan descargar el archivo sin error 403.
-*/
-
--- 1. Hacemos el bucket "público" a nivel lecturas para que el link generado permita descargar
-UPDATE storage.buckets SET public = true WHERE id = 'assignments';
-
--- 2. Quitamos el bloqueo estricto de carpetas para Subidas
-DROP POLICY IF EXISTS "Students can upload assignments" ON storage.objects;
-CREATE POLICY "Students can upload assignments"
-  ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'assignments' AND auth.role() = 'authenticated');
-  
--- 3. Quitamos el bloqueo estricto de Actualizaciones de Archivo
-DROP POLICY IF EXISTS "Students can update assignments" ON storage.objects;
-CREATE POLICY "Students can update assignments"
-  ON storage.objects FOR UPDATE
-  USING (bucket_id = 'assignments' AND auth.role() = 'authenticated');
-
--- Admins can delete user profiles (CASCADE borra todo lo relacionado)
-DROP POLICY IF EXISTS "Admins can delete profiles" ON public.profiles;
-CREATE POLICY "Admins can delete profiles" ON public.profiles
-FOR DELETE USING (public.is_admin_clerk());
+DROP TRIGGER IF EXISTS enforce_no_privilege_escalation ON public.profiles;
+CREATE TRIGGER enforce_no_privilege_escalation
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.prevent_privilege_escalation();
