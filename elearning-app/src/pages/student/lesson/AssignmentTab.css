@@ -78,3 +78,12 @@
     border: 1px solid #eee;
     border-radius: 8px;
 }
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+    .task-desc { padding: 12px; }
+    .eco-quill .ql-editor { min-height: 150px; }
+    .assignment-actions { flex-wrap: wrap; gap: 10px; }
+    .graded-notice { padding: 16px; }
+    .feedback-box { padding: 12px; }
+}

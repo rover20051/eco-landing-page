@@ -1,5 +1,5 @@
-import React from 'react';
-import { Outlet, NavLink, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, NavLink, Link, useLocation } from 'react-router-dom';
 import { useClerk } from '@clerk/react';
 import { useUserProfile } from '../../hooks/useSupabase';
 import './AdminApp.css';
@@ -9,13 +9,21 @@ const BASE = import.meta.env.BASE_URL;
 export default function AdminApp() {
     const { signOut } = useClerk();
     const { profile, loading } = useUserProfile();
+    const location = useLocation();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // Close sidebar on navigation
+    useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
     if (loading) return <div className="admin-loading">Cargando...</div>;
 
     return (
         <div className="layout admin-layout">
+            {/* Mobile overlay */}
+            {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+
             {/* SIDEBAR */}
-            <nav className="sidebar admin-sidebar">
+            <nav className={`sidebar admin-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
                 <div className="logo-container">
                     <img
                         src={`${BASE}images/logo eco final.png`}
@@ -75,6 +83,11 @@ export default function AdminApp() {
             {/* MAIN CONTENT */}
             <main className="main-content">
                 <header className="topbar admin-topbar">
+                    <button className="hamburger-btn" onClick={() => setSidebarOpen(v => !v)} aria-label="Menu">
+                        <span className="hamburger-line" />
+                        <span className="hamburger-line" />
+                        <span className="hamburger-line" />
+                    </button>
                     <div className="admin-topbar-brand">
                         <span className="admin-topbar-title">
                             {profile?.role === 'admin' ? 'Administración' : 'Tutorías'}

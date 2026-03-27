@@ -151,3 +151,15 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+    .modules-grid { grid-template-columns: 1fr; gap: 20px; margin-top: 24px; }
+    .module-image-container { height: 150px; }
+    .module-content { padding: 18px; }
+    .module-title { font-size: 1.2rem; }
+}
+
+@media (max-width: 480px) {
+    .module-image-container { height: 130px; }
+}

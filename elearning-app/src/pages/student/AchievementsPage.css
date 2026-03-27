@@ -154,3 +154,13 @@
     padding: 4px 12px;
     border-radius: 20px;
 }
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+    .achievements-summary { flex-wrap: wrap; gap: 10px; }
+    .summary-pill { padding: 10px 16px; }
+    .pill-num { font-size: 1.2rem; }
+    .achievements-grid { grid-template-columns: 1fr; }
+    .achievement-card { padding: 14px 16px; }
+    .achievement-icon { width: 42px; height: 42px; font-size: 1.6rem; }
+}

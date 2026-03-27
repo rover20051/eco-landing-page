@@ -205,3 +205,29 @@
 .attendance-hint-box p {
     margin: 0;
 }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+    .attendance-controls {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+        padding: 16px;
+    }
+
+    .admin-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .attendance-table th,
+    .attendance-table td {
+        white-space: nowrap;
+        padding: 10px 8px;
+        font-size: 0.85rem;
+    }
+
+    .notes-input { max-width: 150px; }
+
+    .attendance-summary { flex-wrap: wrap; }
+}

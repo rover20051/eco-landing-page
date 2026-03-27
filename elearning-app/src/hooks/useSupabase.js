@@ -15,6 +15,18 @@ export function useUserProfile() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const updateProfile = async (fields) => {
+        if (!user?.id) return { data: null, error: new Error('No user') };
+        const { data, error: updateError } = await supabase
+            .from('profiles')
+            .update(fields)
+            .eq('id', user.id)
+            .select()
+            .single();
+        if (!updateError && data) setProfile(data);
+        return { data, error: updateError };
+    };
+
     useEffect(() => {
         // Wait until Clerk finishes loading auth state
         if (!clAuthLoaded || !clUserLoaded) return;
@@ -96,5 +108,5 @@ export function useUserProfile() {
         // Use user?.id instead of user object to avoid refetching when Clerk mutates user reference on window focus
     }, [clAuthLoaded, clUserLoaded, isSignedIn, user?.id, supabase]);
 
-    return { profile, loading, error };
+    return { profile, loading, error, updateProfile };
 }

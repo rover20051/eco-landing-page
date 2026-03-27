@@ -168,3 +168,13 @@
     margin: 0 auto !important;
     line-height: 1.5;
 }
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+    .notif-header { flex-direction: column; gap: 12px; }
+    .notif-item { padding: 14px; gap: 10px; }
+    .notif-icon-wrap { width: 38px; height: 38px; }
+    .notif-type-icon { font-size: 1.1rem; }
+    .notif-title { font-size: 0.9rem; }
+    .notif-message { font-size: 0.82rem; }
+}

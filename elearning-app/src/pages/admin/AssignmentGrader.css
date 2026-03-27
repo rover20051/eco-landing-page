@@ -332,3 +332,10 @@
         align-items: flex-start;
     }
 }
+
+@media (max-width: 600px) {
+    .grader-filter-bar { gap: 8px; }
+    .grader-filter-bar select,
+    .grader-filter-bar input { font-size: 0.85rem; }
+    .already-graded-info { padding: 10px; font-size: 0.82rem; }
+}

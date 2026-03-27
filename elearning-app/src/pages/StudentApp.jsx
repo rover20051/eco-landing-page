@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Outlet, Link, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useClerk } from '@clerk/react';
 import { useUserProfile } from '../hooks/useSupabase';
 import { useSupabase } from '../contexts/SupabaseContext';
@@ -19,14 +19,26 @@ function timeAgo(dateStr) {
 
 export default function StudentApp() {
     const { signOut } = useClerk();
-    const { profile, loading } = useUserProfile();
+    const { profile, loading, updateProfile } = useUserProfile();
     const supabase = useSupabase();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [unreadCount, setUnreadCount] = useState(0);
     const [recentNotifs, setRecentNotifs] = useState([]);
     const [showBell, setShowBell] = useState(false);
     const bellRef = useRef(null);
+
+    // Mobile sidebar
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // Edit name
+    const [editingName, setEditingName] = useState(false);
+    const [nameInput, setNameInput] = useState('');
+    const [savingName, setSavingName] = useState(false);
+
+    // Close sidebar on navigation
+    useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
     const fetchNotifs = useCallback(async () => {
         if (!profile) return;
@@ -43,7 +55,6 @@ export default function StudentApp() {
 
     useEffect(() => { fetchNotifs(); }, [fetchNotifs]);
 
-    // Realtime: refresh badge when any notification for this user is updated (e.g. marked as read)
     useEffect(() => {
         if (!profile) return;
         const channel = supabase
@@ -76,12 +87,32 @@ export default function StudentApp() {
         navigate('/dashboard/notifications');
     }
 
+    function startEditName() {
+        setNameInput(profile?.full_name || '');
+        setEditingName(true);
+    }
+
+    async function saveName() {
+        const trimmed = nameInput.trim();
+        if (!trimmed || trimmed === profile?.full_name) {
+            setEditingName(false);
+            return;
+        }
+        setSavingName(true);
+        await updateProfile({ full_name: trimmed });
+        setSavingName(false);
+        setEditingName(false);
+    }
+
     if (loading) return <div className="student-loading">Cargando perfil...</div>;
 
     return (
         <div className="layout">
+            {/* Mobile overlay */}
+            {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+
             {/* SIDEBAR */}
-            <nav className="sidebar">
+            <nav className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
                 <div className="logo-container">
                     <img
                         src={`${BASE}images/logo eco final.png`}
@@ -94,7 +125,34 @@ export default function StudentApp() {
                     <div className="avatar">
                         <img src={profile?.avatar_url || `${BASE}images/teens-worshipping.png`} alt="Avatar" />
                     </div>
-                    <p className="user-name">{profile?.full_name || 'Estudiante'}</p>
+                    {editingName ? (
+                        <div className="edit-name-container">
+                            <input
+                                className="edit-name-input"
+                                value={nameInput}
+                                onChange={e => setNameInput(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false); }}
+                                autoFocus
+                                maxLength={60}
+                                placeholder="Tu nombre"
+                            />
+                            <div className="edit-name-actions">
+                                <button className="edit-name-save" onClick={saveName} disabled={savingName}>
+                                    {savingName ? '...' : 'Guardar'}
+                                </button>
+                                <button className="edit-name-cancel" onClick={() => setEditingName(false)}>
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="user-name-row">
+                            <p className="user-name">{profile?.full_name || 'Estudiante'}</p>
+                            <button className="edit-name-btn" onClick={startEditName} title="Editar nombre">
+                                &#9998;
+                            </button>
+                        </div>
+                    )}
                     <div className="user-stats">
                         <span>⚡ {profile?.current_streak || 0} días</span>
                         <span>⭐ {profile?.eco_points || 0} pts</span>
@@ -142,8 +200,14 @@ export default function StudentApp() {
 
             {/* MAIN CONTENT */}
             <main className="main-content">
-                {/* TOPBAR with bell */}
+                {/* TOPBAR with hamburger + bell */}
                 <header className="topbar">
+                    <button className="hamburger-btn" onClick={() => setSidebarOpen(v => !v)} aria-label="Menu">
+                        <span className="hamburger-line" />
+                        <span className="hamburger-line" />
+                        <span className="hamburger-line" />
+                    </button>
+
                     <div className="topbar-right" ref={bellRef}>
                         <button className="bell-btn" onClick={() => setShowBell(v => !v)} aria-label="Notificaciones">
                             🔔

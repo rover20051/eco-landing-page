@@ -169,3 +169,19 @@
 .eco-primary-btn:hover {
     background-color: #a33930;
 }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+    .page-title { font-size: 1.6rem; }
+    .page-subtitle { font-size: 0.95rem; margin-bottom: 24px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .stat-card { padding: 16px; }
+    .stat-icon { font-size: 1.8rem; padding: 8px; margin-right: 10px; }
+    .stat-content p { font-size: 1.4rem; }
+    .resume-card { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .resume-section h2 { font-size: 1.4rem; }
+}
+
+@media (max-width: 480px) {
+    .stats-grid { grid-template-columns: 1fr; }
+}

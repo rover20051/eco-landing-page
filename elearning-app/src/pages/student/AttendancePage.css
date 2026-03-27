@@ -231,9 +231,29 @@
         flex-direction: column;
         align-items: center;
         text-align: center;
+        padding: 24px;
+        gap: 24px;
     }
 
     .att-total-row span:not(.att-dot) {
         text-align: left;
     }
+
+    .att-percentage-ring,
+    .att-percentage-ring svg {
+        width: 100px;
+        height: 100px;
+    }
+
+    .att-pct-num { font-size: 1.3rem; }
+
+    .att-record-item {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 12px 14px;
+    }
+
+    .att-record-date { min-width: auto; }
+
+    .section-heading { font-size: 1.2rem; }
 }

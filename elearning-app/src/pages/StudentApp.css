@@ -1,10 +1,10 @@
 .layout {
     display: flex;
     height: 100vh;
-    width: 100vw;
+    width: 100%;
     font-family: 'DM Sans', sans-serif;
     background-color: #FAFAEE;
-    /* Crema ECO */
+    overflow: hidden;
 }
 
 .student-loading {
@@ -14,16 +14,17 @@
     height: 100vh;
     font-size: 1.5rem;
     color: #112F4E;
-    /* Azul marino */
 }
 
 .sidebar {
     width: 260px;
+    min-width: 260px;
     background-color: #112F4E;
     color: #FAFAEE;
     display: flex;
     flex-direction: column;
     padding: 24px;
+    overflow-y: auto;
 }
 
 .logo-container {
@@ -47,7 +48,6 @@
     height: 80px;
     border-radius: 50%;
     border: 2px solid #BD4339;
-    /* Rojo ECO */
     object-fit: cover;
     margin-bottom: 12px;
 }
@@ -59,6 +59,99 @@
     font-family: 'Playfair Display', serif;
 }
 
+/* Edit name */
+.user-name-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.user-name-row .user-name {
+    margin: 0;
+}
+
+.edit-name-btn {
+    background: none;
+    border: none;
+    color: rgba(250, 250, 238, 0.5);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.2s;
+    line-height: 1;
+}
+
+.edit-name-btn:hover {
+    color: #FAFAEE;
+}
+
+.edit-name-container {
+    margin-bottom: 8px;
+}
+
+.edit-name-input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid rgba(250, 250, 238, 0.3);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #FAFAEE;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    text-align: center;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.edit-name-input:focus {
+    border-color: #BD4339;
+}
+
+.edit-name-input::placeholder {
+    color: rgba(250, 250, 238, 0.4);
+}
+
+.edit-name-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    justify-content: center;
+}
+
+.edit-name-save,
+.edit-name-cancel {
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    transition: opacity 0.2s;
+}
+
+.edit-name-save {
+    background: #BD4339;
+    color: white;
+}
+
+.edit-name-save:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.edit-name-cancel {
+    background: rgba(255, 255, 255, 0.15);
+    color: #FAFAEE;
+}
+
+.edit-name-cancel:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
 .user-stats {
     display: flex;
     justify-content: center;
@@ -68,7 +161,6 @@
     padding: 8px;
     border-radius: 8px;
     color: #BA9D83;
-    /* Crema oscuro */
 }
 
 .nav-links {
@@ -178,6 +270,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-width: 0;
 }
 
 /* ── Topbar ── */
@@ -194,6 +287,32 @@
 
 .topbar-right {
     position: relative;
+}
+
+/* Hamburger — hidden on desktop */
+.hamburger-btn {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    margin-right: auto;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.hamburger-line {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background-color: #112F4E;
+    border-radius: 2px;
+    transition: transform 0.2s;
+}
+
+/* Mobile overlay */
+.sidebar-overlay {
+    display: none;
 }
 
 /* Bell button */
@@ -338,4 +457,50 @@
     flex-grow: 1;
     padding: 32px;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ================================================================
+   MOBILE RESPONSIVE — max-width: 768px
+   ================================================================ */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    .sidebar.sidebar-open {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 999;
+    }
+
+    .hamburger-btn {
+        display: flex;
+    }
+
+    .topbar {
+        padding: 0 16px;
+        gap: 8px;
+    }
+
+    .content-container {
+        padding: 20px 16px;
+    }
+
+    .bell-popup {
+        width: min(320px, calc(100vw - 32px));
+        right: -8px;
+    }
 }
