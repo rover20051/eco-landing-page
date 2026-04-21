@@ -241,3 +241,84 @@
     cursor: pointer;
     background: white;
 }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+    .approve-users {
+        padding: 0;
+    }
+
+    .approve-header {
+        flex-wrap: wrap;
+    }
+
+    .approve-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .approve-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .view-tabs {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .tab-btn {
+        flex: 1;
+        text-align: center;
+        padding: 10px 8px;
+        font-size: 0.82rem;
+    }
+
+    .search-input {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .user-card {
+        padding: 14px;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .user-info {
+        width: 100%;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .user-details strong {
+        font-size: 0.95rem;
+    }
+
+    .user-email {
+        font-size: 0.78rem;
+        word-break: break-word;
+    }
+
+    .user-actions {
+        width: 100%;
+        gap: 6px;
+    }
+
+    .approve-btn,
+    .reject-btn,
+    .reset-btn {
+        flex: 1;
+        padding: 10px 8px;
+        font-size: 0.8rem;
+    }
+
+    .role-select {
+        flex: 1;
+        min-width: 120px;
+    }
+}

@@ -198,12 +198,60 @@
 }
 
 @media (max-width: 768px) {
-    .lesson-view { height: auto; min-height: 0; }
-    .lesson-title { font-size: 1.4rem; margin-bottom: 16px; }
-    .lesson-header { margin-bottom: 16px; }
-    .lesson-content-layout { gap: 20px; }
-    .lesson-main { padding-right: 0; }
-    .tab-content { padding: 16px; }
-    .tab-content h3 { font-size: 1.2rem; }
-    .tab-btn { padding: 12px 8px; font-size: 0.85rem; }
+    .lesson-view {
+        height: auto;
+        min-height: 0;
+        max-width: 100%;
+    }
+
+    .lesson-title {
+        font-size: 1.3rem;
+        margin-bottom: 14px;
+        line-height: 1.3;
+    }
+
+    .lesson-header {
+        margin-bottom: 14px;
+    }
+
+    .back-btn {
+        padding: 6px 10px;
+        font-size: 0.9rem;
+    }
+
+    .lesson-content-layout {
+        gap: 16px;
+    }
+
+    .lesson-main {
+        padding-right: 0;
+    }
+
+    .video-container {
+        margin-bottom: 16px;
+        border-radius: 8px;
+    }
+
+    .lesson-description {
+        font-size: 0.95rem;
+    }
+
+    .tab-content {
+        padding: 14px;
+    }
+
+    .tab-content h3 {
+        font-size: 1.1rem;
+        margin-bottom: 14px;
+    }
+
+    .tab-btn {
+        padding: 12px 4px;
+        font-size: 0.8rem;
+    }
+
+    .resources-list a {
+        padding: 12px 14px;
+        font-size: 0.9rem;
+    }
 }

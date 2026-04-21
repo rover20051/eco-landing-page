@@ -87,3 +87,29 @@
     background-color: #BD4339;
     color: #FFF7E7;
 }
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+    .pending-container {
+        padding: 16px;
+    }
+
+    .pending-card {
+        padding: 32px 20px;
+        border-radius: 16px;
+    }
+
+    .pending-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+    }
+
+    .pending-card h1 {
+        font-size: 1.3rem;
+    }
+
+    .pending-card p {
+        font-size: 0.92rem;
+        line-height: 1.6;
+    }
+}

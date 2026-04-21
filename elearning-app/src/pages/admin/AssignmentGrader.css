@@ -321,6 +321,7 @@
 @media (max-width: 1024px) {
     .grader-layout {
         flex-direction: column;
+        gap: 20px;
     }
 
     .grading-panel {
@@ -333,7 +334,65 @@
     }
 }
 
-@media (max-width: 600px) {
+/* ── Mobile ── */
+@media (max-width: 768px) {
+    .submission-content {
+        padding: 18px;
+    }
+
+    .submission-header h2 {
+        font-size: 1.3rem;
+    }
+
+    .student-name {
+        font-size: 1rem;
+    }
+
+    .grading-panel {
+        padding: 18px;
+    }
+
+    .grading-panel h3 {
+        font-size: 1.2rem;
+    }
+
+    .form-group textarea {
+        min-height: 120px;
+    }
+
+    .grade-btn {
+        padding: 14px;
+        font-size: 1rem;
+    }
+
+    .task-description-box {
+        padding: 12px 14px;
+    }
+
+    .file-submission-box,
+    .no-file-box {
+        padding: 16px;
+    }
+
+    .file-link {
+        word-break: break-all;
+    }
+
+    .filter-tabs {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .filter-tab {
+        flex: 1;
+        min-width: 90px;
+        text-align: center;
+        font-size: 0.78rem;
+        padding: 7px 10px;
+    }
+}
+
+@media (max-width: 480px) {
     .grader-filter-bar { gap: 8px; }
     .grader-filter-bar select,
     .grader-filter-bar input { font-size: 0.85rem; }

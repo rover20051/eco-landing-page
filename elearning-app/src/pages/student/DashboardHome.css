@@ -172,16 +172,21 @@
 
 /* ── Mobile ── */
 @media (max-width: 768px) {
-    .page-title { font-size: 1.6rem; }
-    .page-subtitle { font-size: 0.95rem; margin-bottom: 24px; }
-    .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
-    .stat-card { padding: 16px; }
-    .stat-icon { font-size: 1.8rem; padding: 8px; margin-right: 10px; }
-    .stat-content p { font-size: 1.4rem; }
-    .resume-card { flex-direction: column; align-items: flex-start; gap: 16px; }
-    .resume-section h2 { font-size: 1.4rem; }
+    .page-title { font-size: 1.6rem; line-height: 1.2; }
+    .page-subtitle { font-size: 0.92rem; margin-bottom: 24px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+    .stat-card { padding: 14px; }
+    .stat-icon { font-size: 1.6rem; padding: 8px; margin-right: 10px; }
+    .stat-content h3 { font-size: 0.72rem; }
+    .stat-content p { font-size: 1.3rem; }
+    .resume-card { flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px; }
+    .resume-info h3 { font-size: 1.15rem; }
+    .resume-section h2 { font-size: 1.4rem; margin-bottom: 18px; }
+    .eco-primary-btn { width: 100%; text-align: center; }
 }
 
 @media (max-width: 480px) {
+    .page-title { font-size: 1.4rem; }
     .stats-grid { grid-template-columns: 1fr; }
+    .stat-card { padding: 16px; }
 }

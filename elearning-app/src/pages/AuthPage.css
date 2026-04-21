@@ -75,21 +75,38 @@
 @media (max-width: 768px) {
     .auth-container {
         flex-direction: column;
+        min-height: auto;
     }
 
     .auth-left {
-        padding: 60px 20px;
+        padding: 40px 20px;
         text-align: center;
         flex: none;
+        min-height: 200px;
     }
 
     .auth-right {
         padding: 24px 16px;
+        flex: none;
+        min-height: calc(100vh - 200px);
+    }
+
+    .auth-branding h2 {
+        font-size: 2.5rem;
+        margin-bottom: 14px;
+    }
+
+    .auth-branding p {
+        font-size: 1rem;
+        line-height: 1.4;
     }
 }
 
 @media (max-width: 480px) {
-    .auth-branding h2 { font-size: 2.2rem; }
-    .auth-branding p { font-size: 1rem; }
-    .auth-left { padding: 40px 16px; }
+    .auth-branding h2 { font-size: 2rem; }
+    .auth-branding p { font-size: 0.92rem; }
+    .auth-left { padding: 32px 16px; min-height: 160px; }
+    .auth-right { padding: 20px 12px; }
+
+    .cl-eco-auth-title { font-size: 1.4rem !important; }
 }

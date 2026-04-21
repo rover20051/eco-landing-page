@@ -3,7 +3,7 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
+  color-scheme: light;
   color: #112F4E;
   background-color: #FFF7E7;
 
@@ -11,6 +11,16 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
 }
 
 body {
@@ -37,6 +47,36 @@ a:hover {
   color: #a33930;
 }
 
+/* ── Mobile input fix: prevent iOS zoom on focus (requires 16px min) ── */
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Buttons: minimum touch target 44x44 */
+  button,
+  .eco-primary-btn,
+  .eco-secondary-btn,
+  a.admin-link,
+  a.student-link {
+    min-height: 40px;
+  }
+
+  /* Tap targets: remove 300ms delay and highlight */
+  a, button {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Images never overflow */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
 /* Global Loaders */
 .eco-fullscreen-loader {
   display: flex;
@@ -52,7 +92,6 @@ a:hover {
   height: 50px;
   border: 4px solid rgba(17, 47, 78, 0.1);
   border-left-color: #112F4E;
-  /* Blue dark ECO */
   border-radius: 50%;
   animation: eco-spin 1s linear infinite;
 }

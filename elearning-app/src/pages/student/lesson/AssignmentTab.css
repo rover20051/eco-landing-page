@@ -80,10 +80,51 @@
 }
 
 /* ── Mobile ── */
-@media (max-width: 600px) {
-    .task-desc { padding: 12px; }
-    .eco-quill .ql-editor { min-height: 150px; }
-    .assignment-actions { flex-wrap: wrap; gap: 10px; }
-    .graded-notice { padding: 16px; }
-    .feedback-box { padding: 12px; }
+@media (max-width: 768px) {
+    .task-desc {
+        padding: 12px;
+        font-size: 0.9rem;
+        margin-bottom: 18px;
+    }
+
+    .eco-quill .ql-editor {
+        min-height: 160px;
+        font-size: 0.95rem;
+    }
+
+    .assignment-actions {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .assignment-actions .eco-primary-btn {
+        width: 100%;
+    }
+
+    .status-badge {
+        font-size: 0.8rem;
+    }
+
+    .graded-notice {
+        padding: 16px;
+    }
+
+    .grade-badge {
+        font-size: 1rem;
+        padding: 6px 12px;
+    }
+
+    .feedback-box {
+        padding: 14px;
+    }
+
+    .readonly-content {
+        padding: 12px;
+        font-size: 0.9rem;
+    }
+
+    /* Quill toolbar responsive */
+    .eco-quill .ql-toolbar {
+        flex-wrap: wrap;
+    }
 }
