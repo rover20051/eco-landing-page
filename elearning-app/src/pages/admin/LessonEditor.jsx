@@ -6,8 +6,10 @@ import './CourseManager.css';
 function extractYoutubeId(url) {
     if (!url) return null;
     const patterns = [
+        /youtube\.com\/live\/([^?&/]+)/,
         /youtube\.com\/embed\/([^?&/]+)/,
         /youtube\.com\/watch\?v=([^&]+)/,
+        /youtube\.com\/shorts\/([^?&/]+)/,
         /youtu\.be\/([^?&/]+)/,
     ];
     for (const p of patterns) {
@@ -89,6 +91,10 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
     // ── Info + Content tab save ──────────────────────────────
     const handleSaveInfo = async () => {
         if (!title.trim()) { showError('El título es obligatorio'); return false; }
+        if (videoUrl.trim() && !extractYoutubeId(videoUrl)) {
+            showError('No se pudo reconocer el enlace de YouTube. Pegá un link tipo watch, youtu.be, /live/ o embed.');
+            return false;
+        }
         setSaving(true);
         setErrorMsg('');
         try {
@@ -128,6 +134,10 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
 
     const handleSaveVideoUrl = async () => {
         if (!lessonId) { showError('Guardá primero la información básica de la lección.'); return false; }
+        if (videoUrl.trim() && !extractYoutubeId(videoUrl)) {
+            showError('No se pudo reconocer el enlace de YouTube. Pegá un link tipo watch, youtu.be, /live/ o embed.');
+            return false;
+        }
         setSaving(true);
         try {
             const ytId = extractYoutubeId(videoUrl);
@@ -430,11 +440,11 @@ export default function LessonEditor({ lesson, moduleNumber, onClose, onSaved })
                                     type="text"
                                     value={videoUrl}
                                     onChange={e => setVideoUrl(e.target.value)}
-                                    placeholder="https://www.youtube.com/watch?v=... o https://youtu.be/... o embed URL"
+                                    placeholder="watch?v=... · youtu.be/... · /live/... · embed URL"
                                     className="form-input"
                                 />
                                 <small style={{ color: '#888', display: 'block', margin: '6px 0 10px' }}>
-                                    Podés pegar cualquier formato de URL de YouTube (watch, youtu.be o embed).
+                                    Podés pegar cualquier formato de URL de YouTube (watch, youtu.be, /live/, shorts o embed).
                                 </small>
                                 <button className="eco-primary-btn" onClick={handleSaveVideoUrl} disabled={saving || isNew} style={{ padding: '8px 20px' }}>
                                     {saving ? 'Guardando...' : 'Guardar Enlace de Video'}
