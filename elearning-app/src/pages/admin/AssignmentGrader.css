@@ -151,6 +151,40 @@
     font-size: 1.1rem;
 }
 
+/* Error box (replaces old raw-Supabase-message inline style) */
+.grader-error-box {
+    padding: 15px;
+    background-color: #ffebee;
+    color: #c62828;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #ef5350;
+}
+
+/* Sticky action column — first column of the desktop table so "Corregir"
+   never scrolls out of view during horizontal scroll on smaller desktops/tablets. */
+.action-col {
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 2;
+    box-shadow: 2px 0 4px rgba(17, 47, 78, 0.04);
+}
+
+.admin-table thead .action-col {
+    background: #fff;
+    z-index: 3;
+}
+
+.row-pending .action-col {
+    background: #fffdf5;
+}
+
+/* Mobile cards for the assignments list — hidden on desktop, shown via media query below */
+.assignment-cards-mobile {
+    display: none;
+}
+
 /* Filter bar */
 .grader-filter-bar {
     display: flex;
@@ -332,6 +366,21 @@
         flex-direction: column;
         align-items: flex-start;
     }
+
+    /* Touch-friendly targets in the grading panel once it stacks below 1024px */
+    .grade-select {
+        min-height: 44px;
+    }
+
+    .grade-btn {
+        min-height: 44px;
+    }
+
+    .back-link {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+    }
 }
 
 /* ── Mobile ── */
@@ -363,6 +412,7 @@
     .grade-btn {
         padding: 14px;
         font-size: 1rem;
+        min-height: 44px;
     }
 
     .task-description-box {
@@ -389,6 +439,72 @@
         text-align: center;
         font-size: 0.78rem;
         padding: 7px 10px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Hide the desktop table (with sticky action column) and show cards instead */
+    .assignment-table-desktop {
+        display: none;
+    }
+
+    .assignment-cards-mobile {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .assignment-card {
+        background: white;
+        border-radius: var(--eco-radius, 12px);
+        border: 1px solid var(--eco-border, rgba(17, 47, 78, 0.12));
+        box-shadow: var(--eco-shadow, 0 4px 16px rgba(17, 47, 78, 0.10));
+        padding: 14px;
+    }
+
+    .assignment-card.row-pending {
+        border-left: 4px solid var(--eco-warn, #b26a00);
+    }
+
+    .assignment-card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+    }
+
+    .assignment-card-student {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--eco-navy, #112F4E);
+        margin-bottom: 4px;
+    }
+
+    .assignment-card-lesson {
+        font-size: 0.9rem;
+        color: #555;
+        margin-bottom: 10px;
+    }
+
+    .assignment-card-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        color: #888;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+
+    .assignment-card-action {
+        width: 100%;
+        min-height: 44px;
+        font-size: 0.95rem;
     }
 }
 

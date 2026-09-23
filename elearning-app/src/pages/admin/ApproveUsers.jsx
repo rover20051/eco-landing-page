@@ -1,19 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { useSession } from '@clerk/react';
 import { useSupabase } from '../../contexts/SupabaseContext';
+import { Skeleton, useToast } from '../../components/Toast';
 import './ApproveUsers.css';
 
 export default function ApproveUsers() {
     const supabase = useSupabase();
+    const toast = useToast();
     const { session } = useSession();
     const [pendingUsers, setPendingUsers] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [view, setView] = useState('pending'); // 'pending' | 'all'
     const [search, setSearch] = useState('');
+    const [loadError, setLoadError] = useState(false);
 
     useEffect(() => {
         loadUsers();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [supabase]);
 
     async function loadUsers() {
@@ -24,14 +28,24 @@ export default function ApproveUsers() {
             .order('created_at', { ascending: false });
 
         if (!error && data) {
+            setLoadError(false);
             setPendingUsers(data.filter(u => u.status === 'pending'));
             setAllUsers(data);
         } else if (error) {
             console.error("Supabase Error fetching users:", error);
-            alert("Error cargando usuarios: " + error.message);
+            setLoadError(true);
+            toast.error('No pudimos cargar la lista de usuarios.');
         }
         setLoading(false);
     }
+
+    const STATUS_MSG = {
+        approved: 'Usuario aprobado.',
+        rejected: 'Usuario rechazado.',
+        pending: 'Usuario vuelto a pendiente.'
+    };
+
+    const ROLE_MSG = { mentor: 'mentor', admin: 'admin', student: 'alumno' };
 
     async function updateStatus(userId, newStatus, newRole = null) {
         const updates = { status: newStatus };
@@ -42,14 +56,24 @@ export default function ApproveUsers() {
             .update(updates)
             .eq('id', userId);
 
-        if (!error) {
-            loadUsers();
+        if (error) {
+            console.error('Error updating profile status:', error);
+            toast.error('No pudimos actualizar a este usuario. Intentá de nuevo.');
+            return;
         }
+
+        toast.success(
+            newRole
+                ? `Listo, ahora es ${ROLE_MSG[newRole] || newRole}.`
+                : (STATUS_MSG[newStatus] || 'Usuario actualizado.')
+        );
+        loadUsers();
     }
 
     async function deleteUser(userId, userName) {
-        const confirmed = window.confirm(
-            `¿Eliminar completamente al usuario "${userName}"?\n\nEsto borrará su perfil, progreso, tareas y todos sus datos. Esta acción no se puede deshacer.`
+        const confirmed = await toast.confirm(
+            `¿Eliminar completamente a "${userName || 'este usuario'}"? Se borra su perfil, progreso, tareas y todos sus datos. No se puede deshacer.`,
+            { okLabel: 'Eliminar', cancelLabel: 'Cancelar' }
         );
         if (!confirmed) return;
 
@@ -60,7 +84,8 @@ export default function ApproveUsers() {
             .eq('id', userId);
 
         if (dbError) {
-            alert('Error al eliminar de Supabase: ' + dbError.message);
+            console.error('Error deleting profile:', dbError);
+            toast.error('No pudimos eliminar a este usuario.');
             return;
         }
 
@@ -77,11 +102,11 @@ export default function ApproveUsers() {
                 },
                 body: JSON.stringify({ userId }),
             });
-        } catch (_) {
+        } catch {
             // Clerk deletion failed silently — user is already removed from Supabase
         }
 
-        alert(`Usuario "${userName}" eliminado correctamente.`);
+        toast.success(`Usuario "${userName || 'sin nombre'}" eliminado correctamente.`);
         loadUsers();
     }
 
@@ -134,7 +159,18 @@ export default function ApproveUsers() {
             </div>
 
             {loading ? (
-                <div className="loading-msg">Cargando usuarios...</div>
+                <div className="users-list">
+                    {[0, 1, 2].map(i => (
+                        <div key={i} className="user-card">
+                            <Skeleton lines={2} height={18} />
+                        </div>
+                    ))}
+                </div>
+            ) : loadError ? (
+                <div className="admin-error-banner">
+                    <span>No pudimos cargar la lista de usuarios.</span>
+                    <button className="eco-secondary-btn" onClick={loadUsers}>Reintentar</button>
+                </div>
             ) : displayed.length === 0 ? (
                 <div className="empty-msg">
                     {view === 'pending' ? '¡No hay usuarios pendientes! 🎉' : 'No se encontraron usuarios.'}

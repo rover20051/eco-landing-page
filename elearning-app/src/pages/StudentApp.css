@@ -152,17 +152,6 @@
     background: rgba(255, 255, 255, 0.25);
 }
 
-.user-stats {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    font-size: 0.85rem;
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 8px;
-    border-radius: 8px;
-    color: #BA9D83;
-}
-
 .nav-links {
     list-style: none;
     padding: 0;
@@ -405,10 +394,18 @@
     display: flex;
     align-items: flex-start;
     gap: 12px;
+    width: 100%;
     padding: 12px 18px;
+    border: none;
     border-bottom: 1px solid rgba(17, 47, 78, 0.05);
-    cursor: default;
+    background: none;
+    text-align: left;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s;
 }
+
+.bell-popup-item:hover { background: rgba(17, 47, 78, 0.05); }
 
 .bell-popup-item:last-child { border-bottom: none; }
 

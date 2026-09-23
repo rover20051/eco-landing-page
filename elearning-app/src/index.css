@@ -1,4 +1,16 @@
 :root {
+  /* Paleta ECO — usar estas variables en vez de hex hardcodeados */
+  --eco-navy: #112F4E;
+  --eco-red: #BD4339;
+  --eco-cream: #FFF7E7;
+  --eco-white: #FFFFFF;
+  --eco-ok: #2e7d32;
+  --eco-warn: #b26a00;
+  --eco-muted: #6b7a8c;
+  --eco-border: rgba(17, 47, 78, 0.12);
+  --eco-shadow: 0 4px 16px rgba(17, 47, 78, 0.10);
+  --eco-radius: 12px;
+
   font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;

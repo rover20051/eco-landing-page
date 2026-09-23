@@ -5,6 +5,7 @@ import { useAuth } from '@clerk/react'
 import AuthPage from './pages/AuthPage'
 import PendingApproval from './pages/PendingApproval'
 import ProtectedRoute from './components/ProtectedRoute'
+import { ToastProvider } from './components/Toast'
 import DashboardHome from './pages/student/DashboardHome'
 import ModulesGrid from './pages/student/ModulesGrid'
 import ModuleDetail from './pages/student/ModuleDetail'
@@ -22,6 +23,10 @@ import ApproveUsers from './pages/admin/ApproveUsers'
 import AttendanceManager from './pages/admin/AttendanceManager'
 import CourseManager from './pages/admin/CourseManager'
 import AssignmentGrader from './pages/admin/AssignmentGrader'
+import ProgressMatrix from './pages/admin/ProgressMatrix'
+import StudentProfile from './pages/admin/StudentProfile'
+import QuizStats from './pages/admin/QuizStats'
+import AttendanceStats from './pages/admin/AttendanceStats'
 
 function HomeRedirect() {
   const { isSignedIn, isLoaded } = useAuth()
@@ -31,6 +36,7 @@ function HomeRedirect() {
 
 export default function App() {
   return (
+    <ToastProvider>
     <Routes>
       {/* RUTAS PÚBLICAS */}
       <Route path="/" element={<HomeRedirect />} />
@@ -68,11 +74,17 @@ export default function App() {
           <Route path="assignments" element={<AssignmentGrader />} />
           <Route path="assignments/:assignmentId" element={<AssignmentGrader />} />
           <Route path="attendance" element={<AttendanceManager />} />
+          {/* Radar del discipulador */}
+          <Route path="progress" element={<ProgressMatrix />} />
+          <Route path="students/:userId" element={<StudentProfile />} />
+          <Route path="quizzes" element={<QuizStats />} />
+          <Route path="attendance-stats" element={<AttendanceStats />} />
         </Route>
       </Route>
 
       {/* Fallback */}
       <Route path="*" element={<HomeRedirect />} />
     </Routes>
+    </ToastProvider>
   )
 }

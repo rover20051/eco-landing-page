@@ -1,8 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useSupabase } from '../../contexts/SupabaseContext';
 import { useUserProfile } from '../../hooks/useSupabase';
+import { Skeleton } from '../../components/Toast';
 import './AchievementsPage.css';
 
+/*
+ * IMPORTANTE: acá sólo viven logros calculables con datos reales
+ * (lesson_progress, assignments, attendance, quiz_attempts).
+ * Se retiraron los que dependían de profiles.eco_points, profiles.current_streak
+ * y de la tabla user_progress porque hoy nadie las escribe → eran inalcanzables.
+ */
 const ACHIEVEMENTS = [
     // ── Clases ──────────────────────────────────────────────
     {
@@ -76,40 +83,6 @@ const ACHIEVEMENTS = [
         desc: '¡Completaste las 16 clases! Sos parte de ECO.',
         category: 'Clases',
         check: (s) => s.completedLessons >= 16,
-    },
-
-    // ── Módulos ──────────────────────────────────────────────
-    {
-        id: 'module_1',
-        icon: '🏅',
-        title: 'Módulo Completado',
-        desc: 'Terminaste tu primer módulo.',
-        category: 'Módulos',
-        check: (s) => s.completedModules >= 1,
-    },
-    {
-        id: 'module_2',
-        icon: '🥈',
-        title: 'Segundo Nivel',
-        desc: 'Completaste 2 módulos.',
-        category: 'Módulos',
-        check: (s) => s.completedModules >= 2,
-    },
-    {
-        id: 'module_3',
-        icon: '🥇',
-        title: 'Explorador ECO',
-        desc: 'Completaste 3 módulos.',
-        category: 'Módulos',
-        check: (s) => s.completedModules >= 3,
-    },
-    {
-        id: 'module_4',
-        icon: '🌿',
-        title: 'Arraigado',
-        desc: 'Completaste 4 módulos.',
-        category: 'Módulos',
-        check: (s) => s.completedModules >= 4,
     },
 
     // ── Tareas ──────────────────────────────────────────────
@@ -236,58 +209,6 @@ const ACHIEVEMENTS = [
         check: (s) => s.attendances >= 16,
     },
 
-    // ── Rachas ──────────────────────────────────────────────
-    {
-        id: 'streak_3',
-        icon: '🌟',
-        title: 'Racha de Fuego',
-        desc: 'Mantuviste una racha de 3 días.',
-        category: 'Rachas',
-        check: (s) => s.currentStreak >= 3,
-    },
-    {
-        id: 'streak_7',
-        icon: '🚀',
-        title: 'Una Semana Seguida',
-        desc: 'Mantuviste una racha de 7 días.',
-        category: 'Rachas',
-        check: (s) => s.currentStreak >= 7,
-    },
-    {
-        id: 'streak_14',
-        icon: '☄️',
-        title: 'Dos Semanas Seguidas',
-        desc: 'Mantuviste una racha de 14 días.',
-        category: 'Rachas',
-        check: (s) => s.currentStreak >= 14,
-    },
-
-    // ── Puntos ──────────────────────────────────────────────
-    {
-        id: 'points_50',
-        icon: '⭐',
-        title: 'Acumulando Gloria',
-        desc: 'Alcanzaste 50 puntos ECO.',
-        category: 'Puntos',
-        check: (s) => s.ecoPoints >= 50,
-    },
-    {
-        id: 'points_100',
-        icon: '👑',
-        title: 'Cien Puntos',
-        desc: 'Alcanzaste 100 puntos ECO.',
-        category: 'Puntos',
-        check: (s) => s.ecoPoints >= 100,
-    },
-    {
-        id: 'points_200',
-        icon: '💫',
-        title: 'Doscientos Puntos',
-        desc: 'Alcanzaste 200 puntos ECO.',
-        category: 'Puntos',
-        check: (s) => s.ecoPoints >= 200,
-    },
-
     // ── Quiz ──────────────────────────────────────────────
     {
         id: 'quiz_1',
@@ -312,38 +233,68 @@ export default function AchievementsPage() {
     const { profile } = useUserProfile();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    useEffect(() => {
+    const loadStats = useCallback(async () => {
         if (!profile) return;
-        let isMounted = true;
+        setLoading(true);
+        setError(null);
 
-        async function loadStats() {
-            const [lessonsRes, modulesRes, assignmentsRes, attendanceRes, quizRes] = await Promise.all([
+        try {
+            const [lessonsRes, assignmentsRes, attendanceRes, quizRes] = await Promise.all([
                 supabase.from('lesson_progress').select('id', { count: 'exact', head: true }).eq('user_id', profile.id).eq('video_completed', true),
-                supabase.from('user_progress').select('id', { count: 'exact', head: true }).eq('user_id', profile.id).eq('status', 'completed'),
                 supabase.from('assignments').select('id', { count: 'exact', head: true }).eq('user_id', profile.id).in('status', ['submitted', 'graded']),
                 supabase.from('attendance').select('id', { count: 'exact', head: true }).eq('user_id', profile.id).eq('status', 'present'),
                 supabase.from('quiz_attempts').select('id', { count: 'exact', head: true }).eq('user_id', profile.id),
             ]);
 
-            if (isMounted) {
-                setStats({
-                    completedLessons: lessonsRes.count || 0,
-                    completedModules: modulesRes.count || 0,
-                    submittedAssignments: assignmentsRes.count || 0,
-                    attendances: attendanceRes.count || 0,
-                    quizAttempts: quizRes.count || 0,
-                    currentStreak: profile.current_streak || 0,
-                    ecoPoints: profile.eco_points || 0,
-                });
-            }
-        }
+            if (lessonsRes.error) throw lessonsRes.error;
+            if (assignmentsRes.error) throw assignmentsRes.error;
+            if (attendanceRes.error) throw attendanceRes.error;
+            if (quizRes.error) throw quizRes.error;
 
-        loadStats().finally(() => isMounted && setLoading(false));
-        return () => { isMounted = false; };
+            setStats({
+                completedLessons: lessonsRes.count || 0,
+                submittedAssignments: assignmentsRes.count || 0,
+                attendances: attendanceRes.count || 0,
+                quizAttempts: quizRes.count || 0,
+            });
+        } catch (err) {
+            console.error('Error loading achievements:', err);
+            setError(err);
+        } finally {
+            setLoading(false);
+        }
     }, [profile, supabase]);
 
-    if (loading) return <div className="dashboard-loading">Cargando logros...</div>;
+    useEffect(() => { loadStats(); }, [loadStats]);
+
+    if (error) {
+        return (
+            <div className="achievements-page">
+                <h1 className="page-title">Mis Logros</h1>
+                <p className="page-subtitle">Cada paso cuenta. Seguí avanzando.</p>
+                <div className="achievements-error">
+                    <p className="achievements-error-title">No pudimos cargar tus logros.</p>
+                    <p className="achievements-error-sub">Revisá tu conexión e intentá de nuevo.</p>
+                    <button className="eco-primary-btn" onClick={loadStats}>Reintentar</button>
+                </div>
+            </div>
+        );
+    }
+
+    if (loading || !stats) {
+        return (
+            <div className="achievements-page">
+                <h1 className="page-title">Mis Logros</h1>
+                <p className="page-subtitle">Cada paso cuenta. Seguí avanzando.</p>
+                <Skeleton height={56} style={{ marginBottom: 32 }} />
+                <div className="achievements-grid">
+                    {[0, 1, 2, 3, 4, 5].map(i => <Skeleton key={i} height={88} />)}
+                </div>
+            </div>
+        );
+    }
 
     const unlocked = ACHIEVEMENTS.filter(a => a.check(stats));
     const locked = ACHIEVEMENTS.filter(a => !a.check(stats));

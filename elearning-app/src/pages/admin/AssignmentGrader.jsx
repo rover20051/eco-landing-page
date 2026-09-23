@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSupabase } from '../../contexts/SupabaseContext';
 import { useUserProfile } from '../../hooks/useSupabase';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useToast } from '../../components/Toast';
 import './AssignmentGrader.css';
 
 // Extract the original filename from a Supabase storage URL
@@ -23,6 +24,7 @@ export default function AssignmentGrader() {
     const navigate = useNavigate();
     const supabase = useSupabase();
     const { profile: currentUserProfile } = useUserProfile();
+    const toast = useToast();
 
     const [assignment, setAssignment] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -35,6 +37,9 @@ export default function AssignmentGrader() {
     // Grading form state
     const [grade, setGrade] = useState('');
     const [feedback, setFeedback] = useState('');
+
+    // Bumped to force a reload after a fetch error
+    const [reloadKey, setReloadKey] = useState(0);
 
     useEffect(() => {
         let isMounted = true;
@@ -96,7 +101,7 @@ export default function AssignmentGrader() {
                 }
             } catch (err) {
                 console.error('Error fetching assignment(s):', err);
-                if (isMounted) setFetchError(err.message || 'Error desconocido al cargar entregas.');
+                if (isMounted) setFetchError('No se pudieron cargar las entregas. Intentá de nuevo en unos segundos.');
             } finally {
                 if (isMounted) setLoading(false);
             }
@@ -104,11 +109,11 @@ export default function AssignmentGrader() {
 
         fetchAssignment();
         return () => { isMounted = false; };
-    }, [assignmentId, supabase]);
+    }, [assignmentId, supabase, reloadKey]);
 
     const handleGradeSubmit = async () => {
         if (grade === '') {
-            alert('Debes seleccionar una evaluación.');
+            toast.info('Debes seleccionar una evaluación.');
             return;
         }
 
@@ -144,12 +149,12 @@ export default function AssignmentGrader() {
                 });
             }
 
-            alert('¡Tarea calificada con éxito! El alumno fue notificado.');
+            toast.success('¡Tarea calificada con éxito! El alumno fue notificado.');
             navigate('/admin/assignments');
 
         } catch (err) {
             console.error('Error updating grade:', err);
-            alert('Error al guardar la calificación: ' + err.message);
+            toast.error('Error al guardar la calificación: ' + err.message);
         } finally {
             setSubmitting(false);
         }
@@ -168,10 +173,14 @@ export default function AssignmentGrader() {
                 <h1 className="admin-page-title">Entregas de Tareas</h1>
 
                 {fetchError && (
-                    <div style={{ padding: '15px', backgroundColor: '#ffebee', color: '#c62828', borderRadius: '8px', marginBottom: '20px', border: '1px solid #ef5350' }}>
-                        <strong>⚠️ Error de base de datos Supabase:</strong><br />
-                        {fetchError}<br />
-                        <small>Si ves un error de recursión o "infinite loop", debes volver a ejecutar el master_setup.sql en Supabase.</small>
+                    <div className="grader-error-box">
+                        <strong>⚠️ No pudimos cargar las entregas</strong><br />
+                        {fetchError}
+                        <div>
+                            <button className="eco-secondary-btn" onClick={() => setReloadKey(k => k + 1)} style={{ marginTop: '10px' }}>
+                                Reintentar
+                            </button>
+                        </div>
                     </div>
                 )}
 
@@ -203,22 +212,33 @@ export default function AssignmentGrader() {
                     </div>
                 </div>
 
-                <div className="admin-table-container">
+                {/* Desktop table — "Acción" is the first column and stays sticky so it
+                    never scrolls out of view when the table scrolls horizontally. */}
+                <div className="admin-table-container assignment-table-desktop">
                     <table className="admin-table">
                         <thead>
                             <tr>
+                                <th className="action-col">Acción</th>
                                 <th>Estado</th>
                                 <th>Alumno</th>
                                 <th>Lección</th>
                                 <th>Archivo</th>
                                 <th>Fecha Entrega</th>
                                 <th>Evaluación</th>
-                                <th>Acción</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filtered.map(a => (
                                 <tr key={a.id} className={a.status === 'submitted' ? 'row-pending' : ''}>
+                                    <td className="action-col">
+                                        <button
+                                            className="eco-secondary-btn"
+                                            onClick={() => navigate(`/admin/assignments/${a.id}`)}
+                                            style={{ padding: '6px 14px', fontSize: '0.85rem' }}
+                                        >
+                                            {a.status === 'submitted' ? 'Corregir' : 'Ver / Editar'}
+                                        </button>
+                                    </td>
                                     <td>
                                         <span className={`status-pill ${a.status}`}>
                                             {a.status === 'submitted' ? 'Pendiente' : 'Corregida'}
@@ -254,19 +274,60 @@ export default function AssignmentGrader() {
                                             <span style={{ color: '#999', fontSize: '0.85rem' }}>Sin calificar</span>
                                         )}
                                     </td>
-                                    <td>
-                                        <button
-                                            className="eco-secondary-btn"
-                                            onClick={() => navigate(`/admin/assignments/${a.id}`)}
-                                            style={{ padding: '6px 14px', fontSize: '0.85rem' }}
-                                        >
-                                            {a.status === 'submitted' ? 'Corregir' : 'Ver / Editar'}
-                                        </button>
-                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+                    {filtered.length === 0 && (
+                        <div className="admin-empty-state">
+                            {filterStatus === 'submitted'
+                                ? '¡Todo al día! No hay entregas pendientes de corrección.'
+                                : 'No hay entregas registradas.'}
+                        </div>
+                    )}
+                </div>
+
+                {/* Mobile cards */}
+                <div className="assignment-cards-mobile">
+                    {filtered.map(a => (
+                        <div key={a.id} className={`assignment-card ${a.status === 'submitted' ? 'row-pending' : ''}`}>
+                            <div className="assignment-card-top">
+                                <span className={`status-pill ${a.status}`}>
+                                    {a.status === 'submitted' ? 'Pendiente' : 'Corregida'}
+                                </span>
+                                {a.status === 'graded' && (
+                                    <span className={`grade-pill ${a.grade === 100 ? 'approved' : 'rejected'}`}>
+                                        {a.grade === 100 ? '✅ Recibida' : '❌ Incompleta'}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="assignment-card-student">{a.profiles?.full_name}</div>
+                            <div className="assignment-card-lesson">M{a.lessons?.modules?.module_number} – {a.lessons?.title}</div>
+                            <div className="assignment-card-meta">
+                                <span>{a.submitted_at ? new Date(a.submitted_at).toLocaleDateString('es-AR') : '—'}</span>
+                                {a.file_url ? (
+                                    <a
+                                        href={a.file_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        download={getOriginalFilename(a.file_url)}
+                                        className="file-link"
+                                        title={getOriginalFilename(a.file_url)}
+                                    >
+                                        📄 {getOriginalFilename(a.file_url)}
+                                    </a>
+                                ) : (
+                                    <span style={{ color: '#aaa' }}>Sin archivo</span>
+                                )}
+                            </div>
+                            <button
+                                className="eco-primary-btn assignment-card-action"
+                                onClick={() => navigate(`/admin/assignments/${a.id}`)}
+                            >
+                                {a.status === 'submitted' ? 'Corregir' : 'Ver / Editar'}
+                            </button>
+                        </div>
+                    ))}
                     {filtered.length === 0 && (
                         <div className="admin-empty-state">
                             {filterStatus === 'submitted'

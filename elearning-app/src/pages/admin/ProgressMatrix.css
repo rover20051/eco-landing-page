@@ -1,0 +1,350 @@
+/* ProgressMatrix.css — matriz alumnos × lecciones */
+
+.pm-page {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.pm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.pm-subtitle {
+    margin: 8px 0 0 0;
+    color: var(--eco-muted);
+    font-size: 0.95rem;
+    max-width: 620px;
+}
+
+.pm-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 0.8rem;
+    color: var(--eco-muted);
+}
+
+.pm-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pm-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.pm-dot--done { background: var(--eco-ok); }
+.pm-dot--partial { background: var(--eco-warn); }
+.pm-dot--todo { background: rgba(17, 47, 78, 0.18); }
+.pm-dot--na {
+    background: transparent;
+    border: 1px dashed var(--eco-border);
+}
+
+.pm-card {
+    background: var(--eco-white);
+    border: 1px solid var(--eco-border);
+    border-radius: var(--eco-radius);
+    box-shadow: var(--eco-shadow);
+    padding: 24px;
+}
+
+/* ── Tabla ── */
+.pm-table-wrap {
+    background: var(--eco-white);
+    border: 1px solid var(--eco-border);
+    border-radius: var(--eco-radius);
+    box-shadow: var(--eco-shadow);
+    overflow: auto;
+    max-height: 72vh;
+}
+
+.pm-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: max-content;
+    min-width: 100%;
+}
+
+.pm-table th,
+.pm-table td {
+    border-bottom: 1px solid var(--eco-border);
+    background: var(--eco-white);
+}
+
+.pm-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f7f9fb;
+    color: var(--eco-navy);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    padding: 8px 10px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.pm-table thead tr:nth-child(2) th {
+    top: 38px;
+    font-weight: 600;
+    color: var(--eco-muted);
+    border-left: 1px solid rgba(17, 47, 78, 0.05);
+}
+
+.pm-th-module {
+    border-left: 2px solid var(--eco-border) !important;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pm-th-lesson {
+    min-width: 42px;
+}
+
+.pm-th-student {
+    text-align: left !important;
+    min-width: 200px;
+    z-index: 4 !important;
+}
+
+.pm-th-progress {
+    min-width: 130px;
+    z-index: 3;
+}
+
+/* Primera columna pegada */
+.pm-sticky {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+}
+
+.pm-td-student {
+    text-align: left;
+    padding: 8px 14px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    box-shadow: 2px 0 0 0 var(--eco-border);
+}
+
+.pm-student-link {
+    color: var(--eco-navy);
+    text-decoration: none;
+}
+
+.pm-student-link:hover {
+    color: var(--eco-red);
+    text-decoration: underline;
+}
+
+.pm-td-progress {
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+.pm-bar {
+    display: inline-block;
+    vertical-align: middle;
+    width: 74px;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(17, 47, 78, 0.10);
+    overflow: hidden;
+}
+
+.pm-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+
+.pm-bar-fill.is-low { background: var(--eco-red); }
+.pm-bar-fill.is-mid { background: var(--eco-warn); }
+.pm-bar-fill.is-high { background: var(--eco-ok); }
+
+.pm-bar-label {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--eco-navy);
+    vertical-align: middle;
+}
+
+.pm-td-cell {
+    padding: 6px 4px;
+    text-align: center;
+}
+
+.pm-cell {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 5px;
+    cursor: default;
+}
+
+.pm-cell:hover {
+    background: rgba(17, 47, 78, 0.06);
+}
+
+.pm-tick {
+    width: 7px;
+    height: 14px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+.pm-tick--done { background: var(--eco-ok); }
+.pm-tick--partial { background: var(--eco-warn); }
+.pm-tick--todo { background: rgba(17, 47, 78, 0.16); }
+.pm-tick--na {
+    background: transparent;
+    border: 1px dashed rgba(17, 47, 78, 0.18);
+}
+
+.pm-table tbody tr:hover td {
+    background: #fdfaf4;
+}
+
+/* ── Móvil ── */
+.pm-mobile { display: none; }
+
+.pm-select-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--eco-muted);
+    margin-bottom: 6px;
+}
+
+.pm-select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--eco-border);
+    border-radius: 10px;
+    background: var(--eco-white);
+    color: var(--eco-navy);
+    font-weight: 600;
+}
+
+.pm-mobile-summary {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: var(--eco-white);
+    border: 1px solid var(--eco-border);
+    border-radius: var(--eco-radius);
+    box-shadow: var(--eco-shadow);
+    padding: 14px 16px;
+    margin: 14px 0 20px;
+}
+
+.pm-mobile-summary .pm-bar { width: 100px; }
+
+.pm-mobile-summary .admin-link-btn { margin-left: auto; }
+
+.pm-mobile-module {
+    margin-bottom: 22px;
+}
+
+.pm-mobile-module-title {
+    font-size: 0.95rem;
+    color: var(--eco-navy);
+    margin: 0 0 8px 0;
+}
+
+.pm-mobile-lesson {
+    background: var(--eco-white);
+    border: 1px solid var(--eco-border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+}
+
+.pm-mobile-lesson-title {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--eco-navy);
+    margin-bottom: 8px;
+}
+
+.pm-mobile-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.pm-chip {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+}
+
+.pm-chip--done {
+    background: rgba(46, 125, 50, 0.12);
+    color: var(--eco-ok);
+}
+
+.pm-chip--partial {
+    background: rgba(178, 106, 0, 0.14);
+    color: var(--eco-warn);
+}
+
+.pm-chip--todo {
+    background: rgba(17, 47, 78, 0.07);
+    color: var(--eco-muted);
+}
+
+.pm-chip--na {
+    background: transparent;
+    color: rgba(107, 122, 140, 0.7);
+    border-color: var(--eco-border);
+    text-decoration: line-through;
+}
+
+@media (max-width: 900px) {
+    .pm-desktop { display: none; }
+    .pm-mobile { display: block; }
+
+    .pm-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* ── Presente en clase (cuenta como video visto) ── */
+.pm-tick--present {
+    background: repeating-linear-gradient(
+        135deg,
+        var(--eco-ok) 0 3px,
+        rgba(255, 255, 255, 0.55) 3px 5px
+    );
+}
+.pm-dot--present {
+    background: repeating-linear-gradient(
+        135deg,
+        var(--eco-ok) 0 3px,
+        rgba(255, 255, 255, 0.55) 3px 5px
+    );
+}
+.pm-chip--present::before {
+    content: '🙋 ';
+}

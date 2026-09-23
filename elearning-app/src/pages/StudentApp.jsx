@@ -77,12 +77,37 @@ export default function StudentApp() {
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
-    async function markAndGo() {
-        if (profile && unreadCount > 0) {
-            await supabase.from('notifications').update({ is_read: true }).eq('user_id', profile.id).eq('is_read', false);
-            setUnreadCount(0);
-            setRecentNotifs([]);
+    // Resuelve a qué clase apunta una notificación (null si no apunta a ninguna)
+    const resolveNotifTarget = useCallback(async (n) => {
+        const isAssignment = n.type === 'assignment_graded';
+        const suffix = isAssignment ? '?scroll=assignment' : '';
+
+        if (n.data?.lesson_id) return `/dashboard/lesson/${n.data.lesson_id}${suffix}`;
+
+        if (isAssignment && n.data?.assignment_id) {
+            const { data } = await supabase
+                .from('assignments')
+                .select('lesson_id')
+                .eq('id', n.data.assignment_id)
+                .single();
+            if (data?.lesson_id) return `/dashboard/lesson/${data.lesson_id}${suffix}`;
         }
+        return null;
+    }, [supabase]);
+
+    // Al clickear UNA notificación se marca leída SOLO esa (antes se marcaban todas)
+    async function openNotif(n) {
+        setShowBell(false);
+        if (!n.is_read) {
+            await supabase.from('notifications').update({ is_read: true }).eq('id', n.id);
+            setRecentNotifs(prev => prev.filter(x => x.id !== n.id));
+            setUnreadCount(c => Math.max(0, c - 1));
+        }
+        const target = await resolveNotifTarget(n);
+        if (target) navigate(target);
+    }
+
+    function goToAllNotifs() {
         setShowBell(false);
         navigate('/dashboard/notifications');
     }
@@ -153,10 +178,6 @@ export default function StudentApp() {
                             </button>
                         </div>
                     )}
-                    <div className="user-stats">
-                        <span>⚡ {profile?.current_streak || 0} días</span>
-                        <span>⭐ {profile?.eco_points || 0} pts</span>
-                    </div>
                 </div>
                 <ul className="nav-links">
                     <li>
@@ -229,17 +250,23 @@ export default function StudentApp() {
                                         <p className="bell-popup-empty">Sin notificaciones nuevas</p>
                                     ) : (
                                         recentNotifs.map(n => (
-                                            <div key={n.id} className="bell-popup-item">
+                                            <button
+                                                type="button"
+                                                key={n.id}
+                                                className="bell-popup-item"
+                                                onClick={() => openNotif(n)}
+                                                title="Marcar como leída"
+                                            >
                                                 <span className="bell-item-icon">{TYPE_ICON[n.type] || '📌'}</span>
                                                 <div className="bell-item-body">
                                                     <p className="bell-item-title">{n.title}</p>
                                                     <span className="bell-item-time">{timeAgo(n.created_at)}</span>
                                                 </div>
-                                            </div>
+                                            </button>
                                         ))
                                     )}
                                 </div>
-                                <button className="bell-popup-footer" onClick={markAndGo}>
+                                <button className="bell-popup-footer" onClick={goToAllNotifs}>
                                     Ver todas las notificaciones →
                                 </button>
                             </div>

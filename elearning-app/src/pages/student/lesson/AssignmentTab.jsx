@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useSupabase } from '../../../contexts/SupabaseContext';
 import { useUserProfile } from '../../../hooks/useSupabase';
+import { useToast } from '../../../components/Toast';
 import './AssignmentTab.css';
 
 export default function AssignmentTab({ lessonId, taskDescription }) {
     const supabase = useSupabase();
     const { profile } = useUserProfile();
+    const toast = useToast();
 
     const [assignment, setAssignment] = useState(null);
     const [file, setFile] = useState(null);
@@ -43,7 +45,7 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
 
     const handleSubmit = async () => {
         if (!file && !assignment?.file_url) {
-            alert('Por favor selecciona un archivo (.pdf o .docx) antes de enviar.');
+            toast.error('Seleccioná un archivo (.pdf o .docx) antes de enviar.');
             return;
         }
 
@@ -100,10 +102,10 @@ export default function AssignmentTab({ lessonId, taskDescription }) {
                 }, { onConflict: 'user_id,lesson_id' });
 
             setAssignment(data);
-            alert('¡Tarea enviada exitosamente!');
+            toast.success('¡Tarea enviada exitosamente!');
         } catch (err) {
             console.error('Error submitting assignment:', err);
-            alert(err.message || 'Hubo un error al enviar la tarea. Intenta de nuevo.');
+            toast.error(err.message || 'Hubo un error al enviar la tarea. Intentá de nuevo.');
         } finally {
             setSubmitting(false);
         }

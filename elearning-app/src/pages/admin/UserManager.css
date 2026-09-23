@@ -46,6 +46,121 @@
     color: #383d41;
 }
 
+/* Email secundario bajo el nombre */
+.um-email {
+    display: block;
+    font-weight: 400;
+    font-size: 0.78rem;
+    color: var(--eco-muted);
+    margin-top: 2px;
+    word-break: break-all;
+}
+
+/* Marca de estado para quien todavía no está aprobado */
+.um-status {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    background: rgba(178, 106, 0, 0.15);
+    color: var(--eco-warn);
+}
+
+.um-card-badges {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: flex-end;
+}
+
+/* Última actividad */
+.um-activity {
+    font-size: 0.84rem;
+    color: var(--eco-navy);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.um-activity.is-idle {
+    color: var(--eco-muted);
+    font-weight: 500;
+    font-style: italic;
+}
+
+.um-profile-btn {
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+}
+
+/* Cards de alumno (móvil) */
+.um-mobile { display: none; }
+
+.um-card {
+    background: var(--eco-white);
+    border: 1px solid var(--eco-border);
+    border-radius: var(--eco-radius);
+    box-shadow: var(--eco-shadow);
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.um-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.um-card-name {
+    display: block;
+    color: var(--eco-navy);
+    font-size: 1rem;
+}
+
+.um-card-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin: 14px 0;
+    padding: 12px 0;
+    border-top: 1px solid var(--eco-border);
+    border-bottom: 1px solid var(--eco-border);
+}
+
+.um-card-metrics > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.um-metric-value {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--eco-navy);
+    line-height: 1.2;
+}
+
+.um-metric-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--eco-muted);
+}
+
+.um-card-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
 /* ── Mobile ── */
 @media (max-width: 768px) {
     .admin-search-input { width: 100%; }
@@ -61,4 +176,7 @@
         font-size: 0.82rem;
         padding: 10px 12px;
     }
+
+    .um-desktop { display: none; }
+    .um-mobile { display: block; }
 }

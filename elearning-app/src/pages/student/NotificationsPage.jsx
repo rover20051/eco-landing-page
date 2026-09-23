@@ -27,12 +27,12 @@ export default function NotificationsPage() {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Fetch and immediately mark all as read when entering the page
+    // Traer sin marcar: las no leídas se distinguen y se marcan al tocarlas
     useEffect(() => {
         if (!profile) return;
         let isMounted = true;
 
-        async function fetchAndMarkRead() {
+        async function fetchNotifications() {
             const { data } = await supabase
                 .from('notifications')
                 .select('*')
@@ -41,26 +41,32 @@ export default function NotificationsPage() {
                 .limit(50);
 
             if (!isMounted) return;
-            setNotifications((data || []).map(n => ({ ...n, is_read: true })));
+            setNotifications(data || []);
             setLoading(false);
-
-            // Mark all unread ones as read in the DB
-            const hasUnread = (data || []).some(n => !n.is_read);
-            if (hasUnread) {
-                await supabase
-                    .from('notifications')
-                    .update({ is_read: true })
-                    .eq('user_id', profile.id)
-                    .eq('is_read', false);
-            }
         }
 
-        fetchAndMarkRead();
+        fetchNotifications();
         return () => { isMounted = false; };
     }, [profile, supabase]);
 
+    async function markOneRead(n) {
+        if (n.is_read) return;
+        setNotifications(ns => ns.map(x => x.id === n.id ? { ...x, is_read: true } : x));
+        await supabase.from('notifications').update({ is_read: true }).eq('id', n.id);
+    }
+
+    async function markAllRead() {
+        setNotifications(ns => ns.map(x => ({ ...x, is_read: true })));
+        await supabase
+            .from('notifications')
+            .update({ is_read: true })
+            .eq('user_id', profile.id)
+            .eq('is_read', false);
+    }
+
     // Navigate to the relevant lesson when clicking a notification
     async function handleNotifClick(n) {
+        markOneRead(n);
         const isAssignment = n.type === 'assignment_graded';
         const suffix = isAssignment ? '?scroll=assignment' : '';
 
@@ -95,8 +101,17 @@ export default function NotificationsPage() {
             <div className="notif-header">
                 <div>
                     <h1 className="page-title">Notificaciones</h1>
-                    <p className="page-subtitle">Todo al día</p>
+                    <p className="page-subtitle">
+                        {notifications.some(n => !n.is_read)
+                            ? `${notifications.filter(n => !n.is_read).length} sin leer`
+                            : 'Todo al día'}
+                    </p>
                 </div>
+                {notifications.some(n => !n.is_read) && (
+                    <button className="notif-mark-all" onClick={markAllRead}>
+                        Marcar todas como leídas
+                    </button>
+                )}
             </div>
 
             {notifications.length === 0 ? (
@@ -113,8 +128,8 @@ export default function NotificationsPage() {
                         return (
                             <div
                                 key={n.id}
-                                className={`notif-item ${clickable ? 'notif-item--clickable' : ''}`}
-                                onClick={clickable ? () => handleNotifClick(n) : undefined}
+                                className={`notif-item ${clickable ? 'notif-item--clickable' : ''} ${!n.is_read ? 'notif-item--unread' : ''}`}
+                                onClick={clickable ? () => handleNotifClick(n) : () => markOneRead(n)}
                                 title={clickable ? 'Ir a la clase' : undefined}
                             >
                                 <div className="notif-icon-wrap" style={{ backgroundColor: `${meta.color}18` }}>

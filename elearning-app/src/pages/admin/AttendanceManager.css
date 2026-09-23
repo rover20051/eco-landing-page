@@ -206,6 +206,26 @@
     margin: 0;
 }
 
+/* Error box (replaces old raw-Supabase-message inline style) */
+.attendance-error-box {
+    padding: 15px;
+    background-color: #ffebee;
+    color: #c62828;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #ef5350;
+}
+
+/* Sticky compact counter — mobile only, see media query below */
+.attendance-sticky-summary {
+    display: none;
+}
+
+/* Mobile cards — hidden on desktop, shown via media query below */
+.attendance-cards-mobile {
+    display: none;
+}
+
 /* ── Mobile ── */
 @media (max-width: 768px) {
     .attendance-controls {
@@ -215,19 +235,158 @@
         padding: 16px;
     }
 
-    .admin-table-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+    /* Hide the desktop table entirely and show cards instead */
+    .attendance-table-desktop {
+        display: none;
     }
 
-    .attendance-table th,
-    .attendance-table td {
-        white-space: nowrap;
-        padding: 10px 8px;
+    .attendance-cards-mobile {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /* Replaced by the sticky compact counter below to avoid duplicating info on small screens */
+    .attendance-summary { display: none; }
+
+    /* Sticky "P: X · A: Y · J: Z" counter pinned to the top of the viewport
+       while the mentor scrolls through the card list during the meeting */
+    .attendance-sticky-summary {
+        display: flex;
+        gap: 8px;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: var(--eco-cream, #FFF7E7);
+        padding: 10px 4px;
+        margin-bottom: 12px;
+        border-bottom: 1px solid var(--eco-border, rgba(17, 47, 78, 0.12));
+    }
+
+    .attendance-sticky-summary .summary-chip {
+        flex: 1;
+        text-align: center;
+    }
+
+    /* Card layout */
+    .attendance-card {
+        background: white;
+        border-radius: var(--eco-radius, 12px);
+        border: 1px solid var(--eco-border, rgba(17, 47, 78, 0.12));
+        box-shadow: var(--eco-shadow, 0 4px 16px rgba(17, 47, 78, 0.10));
+        padding: 14px;
+    }
+
+    .attendance-card.row-absent {
+        border-left: 4px solid var(--eco-red, #BD4339);
+    }
+
+    .attendance-card.row-excused {
+        border-left: 4px solid var(--eco-warn, #b26a00);
+    }
+
+    .attendance-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .attendance-card-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--eco-navy, #112F4E);
+        line-height: 1.3;
+    }
+
+    .pending-tag {
+        display: inline-block;
+        font-size: 0.7rem;
+        color: #e65100;
+        background-color: #fff3e0;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
+
+    /* Big touch-friendly status buttons */
+    .attendance-status-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    .status-btn {
+        min-height: 44px;
+        border-radius: 8px;
+        border: 2px solid #ddd;
+        background: #fafafa;
+        color: #555;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 600;
         font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.15s;
+        padding: 8px 4px;
     }
 
-    .notes-input { max-width: 150px; }
+    .status-btn:active {
+        transform: scale(0.97);
+    }
 
-    .attendance-summary { flex-wrap: wrap; }
+    .status-btn-present.active {
+        background: var(--eco-ok, #2e7d32);
+        border-color: var(--eco-ok, #2e7d32);
+        color: white;
+    }
+
+    .status-btn-absent.active {
+        background: var(--eco-red, #BD4339);
+        border-color: var(--eco-red, #BD4339);
+        color: white;
+    }
+
+    .status-btn-excused.active {
+        background: var(--eco-warn, #b26a00);
+        border-color: var(--eco-warn, #b26a00);
+        color: white;
+    }
+
+    .attendance-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .notes-toggle-btn {
+        background: transparent;
+        border: none;
+        color: var(--eco-muted, #6b7a8c);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 8px 4px;
+        min-height: 44px;
+    }
+
+    .card-clear-btn {
+        background: transparent;
+        border: 1px solid #ccc;
+        color: #666;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        padding: 8px 12px;
+        min-height: 44px;
+        cursor: pointer;
+    }
+
+    .notes-input-mobile {
+        width: 100%;
+        max-width: none;
+        margin-top: 10px;
+        box-sizing: border-box;
+    }
 }

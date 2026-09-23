@@ -103,7 +103,7 @@ export default function LessonView() {
 
     if (isLocked) {
         return (
-            <div className="lesson-view locked-screen" style={{ textAlign: 'center', padding: '100px 20px', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="lesson-view locked-screen" style={{ textAlign: 'center', padding: '64px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 <div style={{ fontSize: '4rem', marginBottom: '20px' }}>🔒</div>
                 <h1 style={{ color: '#112F4E', fontFamily: 'Playfair Display' }}>Lección Bloqueada</h1>
                 <p style={{ color: '#666', fontSize: '1.2rem', marginTop: '10px' }}>
@@ -146,6 +146,7 @@ export default function LessonView() {
                                         .from('lesson_progress')
                                         .update({
                                             video_completed: true,
+                                            via_attendance: false,
                                             completed_at: new Date().toISOString()
                                         })
                                         .eq('user_id', profile.id)

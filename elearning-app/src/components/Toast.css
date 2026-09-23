@@ -1,0 +1,112 @@
+.eco-toast-stack {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 9999;
+  width: min(420px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.eco-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--eco-radius);
+  background: var(--eco-navy);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: var(--eco-shadow);
+  cursor: pointer;
+  animation: eco-toast-in 0.25s ease;
+}
+
+@keyframes eco-toast-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.eco-toast-icon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.eco-toast--success .eco-toast-icon { background: var(--eco-ok); }
+.eco-toast--error { background: var(--eco-red); }
+.eco-toast--error .eco-toast-icon { background: rgba(255, 255, 255, 0.22); }
+
+.eco-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 47, 78, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 9998;
+  padding: 16px;
+}
+
+.eco-confirm-card {
+  background: #fff;
+  border-radius: var(--eco-radius);
+  padding: 22px;
+  width: min(400px, 100%);
+  box-shadow: var(--eco-shadow);
+}
+
+.eco-confirm-card p {
+  margin: 0 0 18px;
+  color: var(--eco-navy);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.eco-confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.eco-confirm-actions button {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 42px;
+}
+
+.eco-confirm-cancel {
+  background: transparent;
+  border: 1px solid var(--eco-border) !important;
+  color: var(--eco-navy);
+}
+
+.eco-confirm-ok {
+  background: var(--eco-red);
+  color: #fff;
+}
+
+.eco-skeleton {
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(17,47,78,0.08) 25%, rgba(17,47,78,0.16) 50%, rgba(17,47,78,0.08) 75%);
+  background-size: 200% 100%;
+  animation: eco-skeleton-shimmer 1.4s infinite;
+}
+
+@keyframes eco-skeleton-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}

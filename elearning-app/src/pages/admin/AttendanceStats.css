@@ -1,0 +1,197 @@
+/* AttendanceStats.css — resumen de asistencia por alumno y por fecha */
+
+.as-page {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.as-subtitle {
+    margin: 0 0 20px 0;
+    color: var(--eco-muted);
+    font-size: 0.95rem;
+}
+
+.as-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.as-tab {
+    border: 1px solid var(--eco-border);
+    background: var(--eco-white);
+    color: var(--eco-muted);
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 9px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.as-tab:hover { color: var(--eco-navy); }
+
+.as-tab.is-active {
+    background: var(--eco-navy);
+    border-color: var(--eco-navy);
+    color: var(--eco-cream);
+}
+
+.as-card {
+    background: var(--eco-white);
+    border: 1px solid var(--eco-border);
+    border-radius: var(--eco-radius);
+    box-shadow: var(--eco-shadow);
+    padding: 20px 22px;
+}
+
+/* ── Por alumno ── */
+.as-student-list,
+.as-date-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.as-student-row {
+    display: grid;
+    grid-template-columns: 190px 1fr 52px;
+    grid-template-areas:
+        'name bar pct'
+        'name detail detail';
+    align-items: center;
+    gap: 6px 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--eco-border);
+}
+
+.as-student-row:last-child { border-bottom: none; }
+
+.as-student-name {
+    grid-area: name;
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--eco-navy);
+    text-decoration: none;
+}
+
+.as-student-name:hover { color: var(--eco-red); text-decoration: underline; }
+
+.as-bar {
+    grid-area: bar;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(17, 47, 78, 0.10);
+    overflow: hidden;
+}
+
+.as-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+
+.as-bar-fill.is-high { background: var(--eco-ok); }
+.as-bar-fill.is-mid { background: var(--eco-warn); }
+.as-bar-fill.is-low { background: var(--eco-red); }
+.as-bar-fill.is-none { background: transparent; }
+
+.as-student-pct {
+    grid-area: pct;
+    text-align: right;
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--eco-navy);
+}
+
+.as-student-detail {
+    grid-area: detail;
+    font-size: 0.76rem;
+    color: var(--eco-muted);
+}
+
+/* ── Por fecha ── */
+.as-date-row {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--eco-border);
+}
+
+.as-date-row:last-child { border-bottom: none; }
+
+.as-date-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+}
+
+.as-date-label {
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--eco-navy);
+    text-transform: capitalize;
+}
+
+.as-date-pct {
+    font-weight: 700;
+    font-size: 0.88rem;
+}
+
+.as-date-pct.is-high { color: var(--eco-ok); }
+.as-date-pct.is-mid { color: var(--eco-warn); }
+.as-date-pct.is-low { color: var(--eco-red); }
+.as-date-pct.is-none { color: var(--eco-muted); }
+
+.as-stacked {
+    display: flex;
+    height: 12px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(17, 47, 78, 0.08);
+}
+
+.as-seg { height: 100%; }
+.as-seg--present { background: var(--eco-ok); }
+.as-seg--excused { background: var(--eco-warn); }
+.as-seg--absent { background: var(--eco-red); }
+
+.as-date-counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 8px;
+    font-size: 0.78rem;
+    color: var(--eco-muted);
+}
+
+.as-date-counts span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.as-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.as-dot--present { background: var(--eco-ok); }
+.as-dot--absent { background: var(--eco-red); }
+.as-dot--excused { background: var(--eco-warn); }
+
+@media (max-width: 768px) {
+    .as-card { padding: 16px; }
+
+    .as-student-row {
+        grid-template-columns: 1fr 52px;
+        grid-template-areas:
+            'name pct'
+            'bar bar'
+            'detail detail';
+        gap: 6px 10px;
+    }
+
+    .as-date-counts { gap: 10px; font-size: 0.74rem; }
+}

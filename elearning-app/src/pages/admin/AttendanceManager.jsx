@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSupabase } from '../../contexts/SupabaseContext';
+import { useToast } from '../../components/Toast';
 import './AttendanceManager.css';
 
 const ROLE_LABELS = {
@@ -16,6 +17,7 @@ const ROLE_COLORS = {
 
 export default function AttendanceManager() {
     const supabase = useSupabase();
+    const toast = useToast();
 
     const [participants, setParticipants] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -27,6 +29,12 @@ export default function AttendanceManager() {
     const [attendanceRecord, setAttendanceRecord] = useState({});
     const [saving, setSaving] = useState(false);
     const [fetchError, setFetchError] = useState(null);
+
+    // Which participant's notes field is expanded (mobile cards)
+    const [expandedNotes, setExpandedNotes] = useState(null);
+
+    // Bumped to force a reload after a fetch error, since selectedDate alone may not change
+    const [reloadKey, setReloadKey] = useState(0);
 
     useEffect(() => {
         let isMounted = true;
@@ -68,7 +76,7 @@ export default function AttendanceManager() {
 
             } catch (err) {
                 console.error('Error fetching attendance:', err);
-                if (isMounted) setFetchError(err.message || 'Error desconocido al cargar alumnos.');
+                if (isMounted) setFetchError('No se pudieron cargar los participantes. Intentá de nuevo en unos segundos.');
             } finally {
                 if (isMounted) setLoading(false);
             }
@@ -77,7 +85,7 @@ export default function AttendanceManager() {
         loadAttendanceData();
         return () => { isMounted = false; };
 
-    }, [supabase, selectedDate]);
+    }, [supabase, selectedDate, reloadKey]);
 
     const handleStatusChange = (userId, status) => {
         setAttendanceRecord(prev => ({
@@ -102,7 +110,7 @@ export default function AttendanceManager() {
     // Marks EVERYONE as present (overwrites any existing status) and auto-saves
     const handleCrearClase = async () => {
         if (participants.length === 0) {
-            alert('No hay participantes registrados en el sistema.');
+            toast.info('No hay participantes registrados en el sistema.');
             return;
         }
 
@@ -129,17 +137,18 @@ export default function AttendanceManager() {
 
             if (error) throw error;
 
-            alert(`¡Clase iniciada! ${participants.length} participantes marcados como presentes. Ahora podés marcar quiénes estuvieron ausentes.`);
+            toast.success(`¡Clase iniciada! ${participants.length} participantes marcados como presentes.`);
         } catch (err) {
             console.error(err);
-            alert('Error al iniciar la clase: ' + err.message);
+            toast.error('Error al iniciar la clase: ' + err.message);
         } finally {
             setSaving(false);
         }
     };
 
     const handleClearAttendance = async (userId) => {
-        if (!window.confirm('¿Seguro que deseas borrar el registro de este participante para la fecha seleccionada?')) return;
+        const ok = await toast.confirm('¿Seguro que deseas borrar el registro de este participante para la fecha seleccionada?');
+        if (!ok) return;
         try {
             setSaving(true);
             const { error } = await supabase
@@ -157,7 +166,7 @@ export default function AttendanceManager() {
             });
         } catch (err) {
             console.error(err);
-            alert('Error al borrar la asistencia.');
+            toast.error('Error al borrar la asistencia.');
         } finally {
             setSaving(false);
         }
@@ -177,7 +186,7 @@ export default function AttendanceManager() {
                 }));
 
             if (recordsToSave.length === 0) {
-                alert('No hay asistencias marcadas para guardar. Primero iniciá la clase.');
+                toast.info('No hay asistencias marcadas para guardar. Primero iniciá la clase.');
                 return;
             }
 
@@ -187,11 +196,11 @@ export default function AttendanceManager() {
 
             if (error) throw error;
 
-            alert('¡Planilla guardada con éxito!');
+            toast.success('¡Planilla guardada con éxito!');
 
         } catch (err) {
             console.error(err);
-            alert('Hubo un error al guardar la asistencia.');
+            toast.error('Hubo un error al guardar la asistencia.');
         } finally {
             setSaving(false);
         }
@@ -211,10 +220,22 @@ export default function AttendanceManager() {
             </p>
 
             {fetchError && (
-                <div style={{ padding: '15px', backgroundColor: '#ffebee', color: '#c62828', borderRadius: '8px', marginBottom: '20px', border: '1px solid #ef5350' }}>
-                    <strong>⚠️ Error al leer usuarios (Supabase):</strong><br />
-                    {fetchError}<br />
-                    <small>Si ves un error de recursión o "infinite loop", debes volver a ejecutar el master_setup.sql en Supabase.</small>
+                <div className="attendance-error-box">
+                    <strong>⚠️ No pudimos cargar la lista</strong><br />
+                    {fetchError}
+                    <div>
+                        <button className="eco-secondary-btn" onClick={() => setReloadKey(k => k + 1)} style={{ marginTop: '10px' }}>
+                            Reintentar
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {classStarted && (
+                <div className="attendance-sticky-summary">
+                    <span className="summary-chip present-chip">P: {presentCount}</span>
+                    <span className="summary-chip absent-chip">A: {absentCount}</span>
+                    <span className="summary-chip excused-chip">J: {excusedCount}</span>
                 </div>
             )}
 
@@ -264,109 +285,199 @@ export default function AttendanceManager() {
             {loading ? (
                 <div className="admin-loading">Cargando participantes...</div>
             ) : (
-                <div className="admin-table-container">
-                    <table className="admin-table attendance-table">
-                        <thead>
-                            <tr>
-                                <th>Participante</th>
-                                <th>Rol</th>
-                                <th>Email</th>
-                                <th style={{ textAlign: 'center' }}>Presente</th>
-                                <th style={{ textAlign: 'center' }}>Ausente</th>
-                                <th style={{ textAlign: 'center' }}>Justificado</th>
-                                <th>Notas (Opcional)</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {participants.map(participant => {
-                                const currentStatus = attendanceRecord[participant.id]?.status || '';
-                                const roleColor = ROLE_COLORS[participant.role] || ROLE_COLORS.student;
-                                return (
-                                    <tr key={participant.id} className={currentStatus === 'absent' ? 'row-absent' : currentStatus === 'excused' ? 'row-excused' : ''}>
-                                        <td style={{ fontWeight: 600, color: '#112F4E' }}>
-                                            {participant.full_name}
-                                            {participant.status === 'pending' && (
-                                                <span style={{ fontSize: '0.7rem', color: '#e65100', backgroundColor: '#fff3e0', padding: '2px 6px', borderRadius: '4px', marginLeft: '6px' }}>Pendiente</span>
-                                            )}
-                                        </td>
-                                        <td>
-                                            <span className="role-badge" style={{ background: roleColor.background, color: roleColor.color }}>
-                                                {ROLE_LABELS[participant.role] || participant.role}
-                                            </span>
-                                        </td>
-                                        <td style={{ fontSize: '0.85rem', color: '#666' }}>{participant.email || 'N/A'}</td>
+                <>
+                    {/* Desktop table */}
+                    <div className="admin-table-container attendance-table-desktop">
+                        <table className="admin-table attendance-table">
+                            <thead>
+                                <tr>
+                                    <th>Participante</th>
+                                    <th>Rol</th>
+                                    <th>Email</th>
+                                    <th style={{ textAlign: 'center' }}>Presente</th>
+                                    <th style={{ textAlign: 'center' }}>Ausente</th>
+                                    <th style={{ textAlign: 'center' }}>Justificado</th>
+                                    <th>Notas (Opcional)</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {participants.map(participant => {
+                                    const currentStatus = attendanceRecord[participant.id]?.status || '';
+                                    const roleColor = ROLE_COLORS[participant.role] || ROLE_COLORS.student;
+                                    return (
+                                        <tr key={participant.id} className={currentStatus === 'absent' ? 'row-absent' : currentStatus === 'excused' ? 'row-excused' : ''}>
+                                            <td style={{ fontWeight: 600, color: '#112F4E' }}>
+                                                {participant.full_name}
+                                                {participant.status === 'pending' && (
+                                                    <span style={{ fontSize: '0.7rem', color: '#e65100', backgroundColor: '#fff3e0', padding: '2px 6px', borderRadius: '4px', marginLeft: '6px' }}>Pendiente</span>
+                                                )}
+                                            </td>
+                                            <td>
+                                                <span className="role-badge" style={{ background: roleColor.background, color: roleColor.color }}>
+                                                    {ROLE_LABELS[participant.role] || participant.role}
+                                                </span>
+                                            </td>
+                                            <td style={{ fontSize: '0.85rem', color: '#666' }}>{participant.email || 'N/A'}</td>
 
-                                        <td align="center">
-                                            <label className="custom-radio present-radio">
+                                            <td align="center">
+                                                <label className="custom-radio present-radio">
+                                                    <input
+                                                        type="radio"
+                                                        name={`status_${participant.id}`}
+                                                        checked={currentStatus === 'present'}
+                                                        onChange={() => handleStatusChange(participant.id, 'present')}
+                                                    />
+                                                    <span className="checkmark"></span>
+                                                </label>
+                                            </td>
+
+                                            <td align="center">
+                                                <label className="custom-radio absent-radio">
+                                                    <input
+                                                        type="radio"
+                                                        name={`status_${participant.id}`}
+                                                        checked={currentStatus === 'absent'}
+                                                        onChange={() => handleStatusChange(participant.id, 'absent')}
+                                                    />
+                                                    <span className="checkmark"></span>
+                                                </label>
+                                            </td>
+
+                                            <td align="center">
+                                                <label className="custom-radio excused-radio">
+                                                    <input
+                                                        type="radio"
+                                                        name={`status_${participant.id}`}
+                                                        checked={currentStatus === 'excused'}
+                                                        onChange={() => handleStatusChange(participant.id, 'excused')}
+                                                    />
+                                                    <span className="checkmark"></span>
+                                                </label>
+                                            </td>
+
+                                            <td>
                                                 <input
-                                                    type="radio"
-                                                    name={`status_${participant.id}`}
-                                                    checked={currentStatus === 'present'}
-                                                    onChange={() => handleStatusChange(participant.id, 'present')}
+                                                    type="text"
+                                                    className="eco-input notes-input"
+                                                    placeholder="Ej. Llegó tarde, viajó..."
+                                                    value={attendanceRecord[participant.id]?.notes || ''}
+                                                    onChange={(e) => handleNotesChange(participant.id, e.target.value)}
                                                 />
-                                                <span className="checkmark"></span>
-                                            </label>
-                                        </td>
-
-                                        <td align="center">
-                                            <label className="custom-radio absent-radio">
-                                                <input
-                                                    type="radio"
-                                                    name={`status_${participant.id}`}
-                                                    checked={currentStatus === 'absent'}
-                                                    onChange={() => handleStatusChange(participant.id, 'absent')}
-                                                />
-                                                <span className="checkmark"></span>
-                                            </label>
-                                        </td>
-
-                                        <td align="center">
-                                            <label className="custom-radio excused-radio">
-                                                <input
-                                                    type="radio"
-                                                    name={`status_${participant.id}`}
-                                                    checked={currentStatus === 'excused'}
-                                                    onChange={() => handleStatusChange(participant.id, 'excused')}
-                                                />
-                                                <span className="checkmark"></span>
-                                            </label>
-                                        </td>
-
-                                        <td>
-                                            <input
-                                                type="text"
-                                                className="eco-input notes-input"
-                                                placeholder="Ej. Llegó tarde, viajó..."
-                                                value={attendanceRecord[participant.id]?.notes || ''}
-                                                onChange={(e) => handleNotesChange(participant.id, e.target.value)}
-                                            />
-                                        </td>
-                                        <td align="center">
-                                            {currentStatus && (
-                                                <button
-                                                    className="eco-secondary-btn"
-                                                    onClick={() => handleClearAttendance(participant.id)}
-                                                    style={{ padding: '4px 8px', fontSize: '0.8rem', background: 'transparent', border: '1px solid #ccc', color: '#666' }}
-                                                    title="Borrar registro de asistencia"
-                                                >
-                                                    Borrar
-                                                </button>
-                                            )}
+                                            </td>
+                                            <td align="center">
+                                                {currentStatus && (
+                                                    <button
+                                                        className="eco-secondary-btn"
+                                                        onClick={() => handleClearAttendance(participant.id)}
+                                                        style={{ padding: '4px 8px', fontSize: '0.8rem', background: 'transparent', border: '1px solid #ccc', color: '#666' }}
+                                                        title="Borrar registro de asistencia"
+                                                    >
+                                                        Borrar
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                {participants.length === 0 && (
+                                    <tr>
+                                        <td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: '#666' }}>
+                                            No hay participantes registrados en el sistema actualmente. (Los usuarios rechazados no aparecen aquí).
                                         </td>
                                     </tr>
-                                );
-                            })}
-                            {participants.length === 0 && (
-                                <tr>
-                                    <td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: '#666' }}>
-                                        No hay participantes registrados en el sistema actualmente. (Los usuarios rechazados no aparecen aquí).
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Mobile cards */}
+                    <div className="attendance-cards-mobile">
+                        {participants.map(participant => {
+                            const currentStatus = attendanceRecord[participant.id]?.status || '';
+                            const roleColor = ROLE_COLORS[participant.role] || ROLE_COLORS.student;
+                            const notes = attendanceRecord[participant.id]?.notes || '';
+                            const notesOpen = expandedNotes === participant.id;
+                            return (
+                                <div
+                                    key={participant.id}
+                                    className={`attendance-card ${currentStatus === 'absent' ? 'row-absent' : currentStatus === 'excused' ? 'row-excused' : ''}`}
+                                >
+                                    <div className="attendance-card-header">
+                                        <div className="attendance-card-name">
+                                            {participant.full_name}
+                                            {participant.status === 'pending' && (
+                                                <span className="pending-tag">Pendiente</span>
+                                            )}
+                                        </div>
+                                        <span className="role-badge" style={{ background: roleColor.background, color: roleColor.color }}>
+                                            {ROLE_LABELS[participant.role] || participant.role}
+                                        </span>
+                                    </div>
+
+                                    <div className="attendance-status-buttons">
+                                        <button
+                                            type="button"
+                                            className={`status-btn status-btn-present ${currentStatus === 'present' ? 'active' : ''}`}
+                                            onClick={() => handleStatusChange(participant.id, 'present')}
+                                        >
+                                            Presente
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`status-btn status-btn-absent ${currentStatus === 'absent' ? 'active' : ''}`}
+                                            onClick={() => handleStatusChange(participant.id, 'absent')}
+                                        >
+                                            Ausente
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`status-btn status-btn-excused ${currentStatus === 'excused' ? 'active' : ''}`}
+                                            onClick={() => handleStatusChange(participant.id, 'excused')}
+                                        >
+                                            Justificado
+                                        </button>
+                                    </div>
+
+                                    <div className="attendance-card-footer">
+                                        <button
+                                            type="button"
+                                            className="notes-toggle-btn"
+                                            onClick={() => setExpandedNotes(notesOpen ? null : participant.id)}
+                                        >
+                                            📝 Notas{notes ? ' •' : ''}
+                                        </button>
+                                        {currentStatus && (
+                                            <button
+                                                type="button"
+                                                className="card-clear-btn"
+                                                onClick={() => handleClearAttendance(participant.id)}
+                                            >
+                                                Borrar
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {notesOpen && (
+                                        <input
+                                            type="text"
+                                            className="eco-input notes-input notes-input-mobile"
+                                            placeholder="Ej. Llegó tarde, viajó..."
+                                            value={notes}
+                                            onChange={(e) => handleNotesChange(participant.id, e.target.value)}
+                                            autoFocus
+                                        />
+                                    )}
+                                </div>
+                            );
+                        })}
+                        {participants.length === 0 && (
+                            <div className="admin-empty-state">
+                                No hay participantes registrados en el sistema actualmente. (Los usuarios rechazados no aparecen aquí).
+                            </div>
+                        )}
+                    </div>
+                </>
             )}
         </div>
     );

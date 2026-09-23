@@ -6,6 +6,19 @@ import './AdminApp.css';
 
 const BASE = import.meta.env.BASE_URL;
 
+/* Separador de sección dentro del sidebar (AdminApp.css no define una clase para esto) */
+const NAV_SECTION_STYLE = {
+    margin: '20px 0 8px',
+    padding: '0 16px',
+    color: '#FAFAEE',
+    fontSize: '0.68rem',
+    fontWeight: 700,
+    letterSpacing: '1px',
+    textTransform: 'uppercase',
+    opacity: 0.55,
+    listStyle: 'none'
+};
+
 export default function AdminApp() {
     const { signOut } = useClerk();
     const { profile, loading } = useUserProfile();
@@ -68,6 +81,29 @@ export default function AdminApp() {
                     <li>
                         <NavLink to="/admin/attendance" className={({ isActive }) => isActive ? 'nav-active' : ''}>
                             <span className="nav-icon">✋</span> Asistencias
+                        </NavLink>
+                    </li>
+
+                    {/* Radar del discipulador */}
+                    <li style={NAV_SECTION_STYLE}>Radar del discipulador</li>
+                    <li>
+                        <NavLink to="/admin/progress" className={({ isActive }) => isActive ? 'nav-active' : ''}>
+                            <span className="nav-icon">🧭</span> Progreso
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink to="/admin/user-manager" className={({ isActive }) => isActive ? 'nav-active' : ''}>
+                            <span className="nav-icon">👤</span> Alumnos
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink to="/admin/quizzes" className={({ isActive }) => isActive ? 'nav-active' : ''}>
+                            <span className="nav-icon">🧠</span> Quizzes
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink to="/admin/attendance-stats" className={({ isActive }) => isActive ? 'nav-active' : ''}>
+                            <span className="nav-icon">📈</span> Estadísticas
                         </NavLink>
                     </li>
                 </ul>

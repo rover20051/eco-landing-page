@@ -1,0 +1,228 @@
+/* QuizStats.css — rendimiento de quizzes por lección */
+
+.qs-page {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.qs-subtitle {
+    margin: 0 0 24px 0;
+    color: var(--eco-muted);
+    font-size: 0.95rem;
+}
+
+.qs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.qs-card {
+    background: var(--eco-white);
+    border: 1px solid var(--eco-border);
+    border-radius: var(--eco-radius);
+    box-shadow: var(--eco-shadow);
+    padding: 20px 22px;
+}
+
+.qs-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--eco-border);
+}
+
+.qs-title-block h2 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.1rem;
+    color: var(--eco-navy);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.qs-question-count {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.8rem;
+    color: var(--eco-muted);
+}
+
+.qs-metrics {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+}
+
+.qs-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 64px;
+}
+
+.qs-metric-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--eco-navy);
+    line-height: 1.1;
+}
+
+.qs-metric-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--eco-muted);
+    text-align: center;
+}
+
+/* Anillo de error */
+.qs-ring-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 62px;
+}
+
+.qs-ring {
+    width: 54px;
+    height: 54px;
+}
+
+.qs-ring-bg {
+    fill: none;
+    stroke: rgba(17, 47, 78, 0.10);
+    stroke-width: 6;
+}
+
+.qs-ring-fill {
+    fill: none;
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.4s ease;
+}
+
+.qs-ring-fill.is-high { stroke: var(--eco-red); }
+.qs-ring-fill.is-mid { stroke: var(--eco-warn); }
+.qs-ring-fill.is-low { stroke: var(--eco-ok); }
+.qs-ring-fill.is-none { stroke: transparent; }
+
+.qs-ring-label {
+    position: absolute;
+    top: 18px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--eco-navy);
+}
+
+/* Preguntas falladas */
+.qs-fail-title {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--eco-muted);
+    margin: 16px 0 10px 0;
+}
+
+.qs-fail-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.qs-fail-item {
+    background: #fbfcfd;
+    border: 1px solid var(--eco-border);
+    border-radius: 10px;
+    padding: 10px 14px;
+}
+
+.qs-fail-text {
+    font-size: 0.9rem;
+    color: var(--eco-navy);
+    margin-bottom: 8px;
+}
+
+.qs-fail-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.qs-fail-bar {
+    flex: 1;
+    height: 8px;
+    min-width: 60px;
+    border-radius: 999px;
+    background: rgba(17, 47, 78, 0.10);
+    overflow: hidden;
+}
+
+.qs-fail-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+
+.qs-fail-bar-fill.is-high { background: var(--eco-red); }
+.qs-fail-bar-fill.is-mid { background: var(--eco-warn); }
+.qs-fail-bar-fill.is-low { background: var(--eco-ok); }
+.qs-fail-bar-fill.is-none { background: transparent; }
+
+.qs-fail-pct {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--eco-navy);
+    white-space: nowrap;
+}
+
+.qs-fail-count {
+    font-size: 0.76rem;
+    color: var(--eco-muted);
+    white-space: nowrap;
+}
+
+.qs-no-data {
+    margin: 14px 0 0 0;
+    color: var(--eco-muted);
+    font-size: 0.88rem;
+}
+
+.qs-toggle {
+    margin-top: 12px;
+    background: none;
+    border: none;
+    color: var(--eco-navy);
+    font-weight: 600;
+    font-size: 0.86rem;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+.qs-toggle:hover { color: var(--eco-red); text-decoration: underline; }
+
+@media (max-width: 768px) {
+    .qs-card { padding: 16px; }
+
+    .qs-card-head {
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .qs-metrics {
+        width: 100%;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .qs-fail-bar-count { display: none; }
+}

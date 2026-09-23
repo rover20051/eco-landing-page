@@ -178,3 +178,37 @@
     .notif-title { font-size: 0.9rem; }
     .notif-message { font-size: 0.82rem; }
 }
+
+/* No leídas + acción de marcar todas (2026-08-09) */
+.notif-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.notif-mark-all {
+  border: 1px solid var(--eco-border);
+  background: #fff;
+  color: var(--eco-navy);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 40px;
+}
+
+.notif-mark-all:hover {
+  background: var(--eco-cream);
+}
+
+.notif-item--unread {
+  background: #fff;
+  border-left: 4px solid var(--eco-red);
+}
+
+.notif-item--unread .notif-title {
+  font-weight: 700;
+}

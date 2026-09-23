@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useSupabase } from '../../../contexts/SupabaseContext';
 import { useUserProfile } from '../../../hooks/useSupabase';
+import { useToast } from '../../../components/Toast';
 import './QuizTab.css';
 
 export default function QuizTab({ lessonId }) {
     const supabase = useSupabase();
     const { profile } = useUserProfile();
+    const toast = useToast();
 
     const [questions, setQuestions] = useState([]);
     const [answers, setAnswers] = useState({}); // { questionId: optionId }
     const [attempt, setAttempt] = useState(null); // null if not attempted, or the attempt object
+    const [correctByQuestion, setCorrectByQuestion] = useState({}); // { questionId: correct_option_id } — solo tras rendir
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
 
@@ -33,12 +36,21 @@ export default function QuizTab({ lessonId }) {
 
                 if (attemptData) {
                     if (isMounted) setAttempt(attemptData);
+                    // Las respuestas correctas solo existen del lado del server;
+                    // esta RPC las entrega únicamente si el alumno ya rindió.
+                    const { data: correctRows } = await supabase
+                        .rpc('quiz_correct_options', { p_lesson_id: lessonId });
+                    if (isMounted && correctRows) {
+                        setCorrectByQuestion(Object.fromEntries(
+                            correctRows.map(r => [r.question_id, r.correct_option_id])
+                        ));
+                    }
                 }
 
-                // 2. Load questions and options
+                // 2. Load questions and options — sin is_correct: la corrección vive en el server
                 const { data: questionsData, error: qErr } = await supabase
                     .from('quiz_questions')
-                    .select('*, quiz_options(*)')
+                    .select('id, lesson_id, question_text, question_order, quiz_options(id, question_id, option_text, option_order)')
                     .eq('lesson_id', lessonId)
                     .order('question_order', { ascending: true });
 
@@ -70,80 +82,45 @@ export default function QuizTab({ lessonId }) {
     const handleSubmit = async () => {
         // Check if all questions are answered
         if (Object.keys(answers).length < questions.length) {
-            alert('Por favor responde todas las preguntas antes de enviar.');
+            toast.error('Respondé todas las preguntas antes de enviar.');
             return;
         }
 
         try {
             setSubmitting(true);
 
-            // 1. Calculate Score
-            let score = 0;
-            const computedAnswers = questions.map(q => {
-                const selectedOptId = answers[q.id];
-                const selectedOpt = q.quiz_options.find(o => o.id === selectedOptId);
-                const isCorrect = selectedOpt ? selectedOpt.is_correct : false;
-                if (isCorrect) score++;
+            // La corrección es 100% server-side: la RPC valida, puntúa,
+            // guarda intento + respuestas y actualiza lesson_progress.
+            const { data: result, error: rpcError } = await supabase
+                .rpc('submit_quiz', { p_lesson_id: lessonId, p_answers: answers });
 
-                return {
-                    question_id: q.id,
-                    selected_option_id: selectedOptId,
-                    is_correct: isCorrect
-                };
+            if (rpcError) throw rpcError;
+
+            setAttempt({
+                id: result.attempt_id,
+                score: result.score,
+                max_score: result.max_score,
+                quiz_answers: result.answers
             });
 
-            // 2. Save Attempt
-            const { data: newAttempt, error: attemptError } = await supabase
-                .from('quiz_attempts')
-                .insert({
-                    lesson_id: lessonId,
-                    user_id: profile.id,
-                    score,
-                    max_score: questions.length
-                })
-                .select()
-                .single();
+            // Recién ahora el server revela cuáles eran las correctas (para la revisión)
+            const { data: correctRows } = await supabase
+                .rpc('quiz_correct_options', { p_lesson_id: lessonId });
+            if (correctRows) {
+                setCorrectByQuestion(Object.fromEntries(
+                    correctRows.map(r => [r.question_id, r.correct_option_id])
+                ));
+            }
 
-            if (attemptError) throw attemptError;
-
-            // 3. Save Answers (we attach attempt_id to each)
-            const answersToInsert = computedAnswers.map(ans => ({
-                ...ans,
-                attempt_id: newAttempt.id
-            }));
-
-            await supabase.from('quiz_answers').insert(answersToInsert);
-
-            // 4. Update Lesson Progress Global
-            await supabase
-                .from('lesson_progress')
-                .upsert({
-                    user_id: profile.id,
-                    lesson_id: lessonId,
-                    quiz_completed: true
-                }, { onConflict: 'user_id,lesson_id' });
-
-            // Refresh component state to show results
-            const fullAttemptData = {
-                ...newAttempt,
-                quiz_answers: expectedAnswersFormat(computedAnswers)
-            };
-
-            setAttempt(fullAttemptData);
-
-            // Add points logic? We can just alert for now.
-            alert(`¡Quiz enviado! Tu resultado: ${score}/${questions.length}`);
+            toast.success(`¡Quiz enviado! Tu resultado: ${result.score}/${result.max_score}`);
 
         } catch (err) {
             console.error('Error submitting quiz:', err);
-            alert('Error enviando el quiz. Intentá de nuevo.');
+            toast.error('Error enviando el quiz. Intentá de nuevo.');
         } finally {
             setSubmitting(false);
         }
     };
-
-    // Helper just to format the answers temporarily for state before reload next time
-    const expectedAnswersFormat = (computed) => computed;
 
     if (loading) return <div className="tab-loading">Cargando cuestionario...</div>;
     if (questions.length === 0) return <div>No hay cuestionario disponible para esta lección.</div>;
@@ -173,9 +150,9 @@ export default function QuizTab({ lessonId }) {
                                     let icon = null;
 
                                     if (attempt) {
-                                        // ReadOnly Mode (Results)
+                                        // ReadOnly Mode (Results) — la correcta viene del server (RPC), no de la tabla
                                         const isSelected = userAnswer?.selected_option_id === opt.id;
-                                        const isCorrect = opt.is_correct;
+                                        const isCorrect = correctByQuestion[q.id] === opt.id;
 
                                         if (isSelected && isCorrect) {
                                             optionClass += ' correct-selected';
